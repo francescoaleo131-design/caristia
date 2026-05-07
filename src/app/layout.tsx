@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/footer";
 import Script from "next/script"; 
 import { Toaster } from 'sonner';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://elfsightcdn.com/platform.js" 
           strategy="afterInteractive" 
         />
+        <SpeedInsights />
       </body>
     </html>
   );
