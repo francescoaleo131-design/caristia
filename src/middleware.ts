@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
     // 3. Se non è admin -> 403
     if (!profile || profile.role !== 'admin') {
       console.log("Accesso Negato: Reindirizzamento a /403")
-      return NextResponse.redirect(new URL('/403', request.url))
+      return NextResponse.redirect(new URL('/forbidden', request.url))
     }
     
     console.log("Accesso Consentito ✅")

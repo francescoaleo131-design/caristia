@@ -3,10 +3,10 @@ import { useState } from "react";
 import Image from "next/image";
 import HeadOne from "@/components/main";
 import Card1, { Card2, Card3 } from "@/components/maincards"; 
-import Recensioni from "@/components/recensioni";
 import Carosello from "@/components/nuoviArrivi";
 import { Mail, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from 'sonner';
+import RecensioniGoogle from "@/components/recensioni";
 
 
 export default function Home() {
@@ -57,8 +57,8 @@ export default function Home() {
         {/* --- IMMAGINE PROMO --- */}
         <div className="w-full my-12 px-4 container mx-auto">
           <img 
-            src="/divider_1.png" 
-            alt="Promozione Giocattoli"
+            src="/divider_prodotti.png" 
+            alt="Prodotti"
             className="w-full h-auto"
             style={{ maxHeight: "400px" }}
           />
@@ -66,10 +66,10 @@ export default function Home() {
 
         <Carosello />
 
-        <div className="w-full my-12 px-4 container mx-auto">
+        <div className="w-full my-5 px-4 container mx-auto">
           <img 
-            src="/divider_2.png" 
-            alt="Promozione Giocattoli"
+            src="/divider_newsletter.png" 
+            alt="Newsletter"
             className="w-full h-auto "
             style={{ maxHeight: "400px" }}
           />
@@ -85,9 +85,6 @@ export default function Home() {
             ) : (
               <>
                 <div className="space-y-4 mb-10">
-                  <h2 className="text-center text-4xl md:text-5xl font-black uppercase tracking-tighter text-zinc-800">
-                    Unisciti alla <span className="text-[#1e73be]">Famiglia</span>
-                  </h2>
                   <p className="text-center text-zinc-400 font-bold uppercase tracking-[0.2em] text-sm md:text-base">
                     Novità, anteprime e sorprese magiche ogni settimana!
                   </p>
@@ -125,8 +122,8 @@ export default function Home() {
 
         <div className="w-full my-12 px-4 container mx-auto">
           <img 
-            src="/divider_3.png" 
-            alt="Promozione Giocattoli"
+            src="/divider_recensioni.png" 
+            alt="Recensioni"
             className="w-full h-auto"
             style={{ maxHeight: "400px" }}
           />
@@ -134,9 +131,8 @@ export default function Home() {
 
         {/* RECENSIONI */}
         <div className="mx-auto w-full max-w-5xl px-10 py-10">
-          <h2 className="text-4xl text-center font-black uppercase tracking-tighter text-[#6239ad]">Cosa dicono di noi?</h2>
         </div>
-        <Recensioni />
+        <RecensioniGoogle />
         
         <div className="w-full my-12 px-4 container mx-auto">
           <img 

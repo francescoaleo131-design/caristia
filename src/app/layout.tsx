@@ -28,6 +28,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it" className="scroll-smooth">
+      <head>
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-white text-zinc-900`}>
         <SpeedInsights />
         <Toaster 
@@ -54,10 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <Footer />
 
-        <Script 
-          src="https://elfsightcdn.com/platform.js" 
-          strategy="afterInteractive" 
-        />
+       
       </body>
     </html>
   );

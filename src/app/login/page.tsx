@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
-import { supabase } from "@/lib/supabase"
+// 1. IMPORTA IL CLIENT SSR PER IL BROWSER
+import { createBrowserClient } from "@supabase/ssr" 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from 'sonner'
@@ -11,10 +12,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  // 2. INIZIALIZZA IL CLIENT SSR
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
+    // Ora questo metodo scriverà automaticamente i COOKIE necessari al middleware
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -28,8 +36,14 @@ export default function LoginPage() {
 
     if (data.session) {
       toast.success("Bentornato!")
-      router.push("/")
-      router.refresh() // Forza l'aggiornamento dei componenti server-side (es. Navbar)
+      
+      // 3. IMPORTANTE: router.refresh() assicura che il middleware veda i nuovi cookie
+      router.refresh() 
+      
+      // Aspettiamo un micro-secondo che i cookie vengano settati prima di spostarci
+      setTimeout(() => {
+        router.push("/admin") // O dove preferisci
+      }, 100)
     }
     
     setLoading(false)
@@ -51,6 +65,7 @@ export default function LoginPage() {
               required 
               className="w-full p-4 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-[#1e73be] text-black" 
               placeholder="latua@email.it"
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
@@ -67,6 +82,7 @@ export default function LoginPage() {
               required 
               className="w-full p-4 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-[#1e73be] text-black" 
               placeholder="••••••••"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
