@@ -13,11 +13,11 @@ export default function Animazione() {
   
   {/* Sfondo con Blur e Posizionamento Ottimizzato */}
   <div className="absolute inset-0 z-0">
-    <img 
-      src="/main_animazioni.png" 
-      alt="Sfondo Animazione Caristia"
-      className="absolute inset-0 w-full h-full object-cover object-center md:object-top blur-[2px] md:blur-[4px]" 
-    />
+  <img 
+  src="/main_animazioni.png" 
+  alt="Sfondo Animazione Caristia"
+  className="absolute inset-0 w-full h-full object-cover object-[center_20%] md:object-center blur-[4px] scale-110 md:scale-100" 
+/>
     {/* Overlay sfumato per migliorare il contrasto su mobile */}
     <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white/60 backdrop-blur-[2px] z-1" />
   </div>
