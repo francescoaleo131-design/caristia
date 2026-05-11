@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, ShoppingBag, User, Phone, MapPin, Menu, X, ChevronDown, LogOut } from "lucide-react";
+import { Search, ShoppingBag, User, Phone, MapPin, Menu, X, ChevronDown, LogOut, } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useCart } from "@/app/shop/useCart";
@@ -60,7 +60,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Phone size={14} />
-            <span>0933 26865</span>
+            <span>+39 338 408 3646</span>
           </div>
         </div>
       </div>

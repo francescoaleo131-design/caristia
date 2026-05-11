@@ -1,4 +1,6 @@
 import { Mail, Phone, MapPin } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'
 
 export default function Footer() {
   return (
@@ -38,6 +40,20 @@ export default function Footer() {
                 <Mail size={18} />
                 <a href="mailto:info@giocattolicaristia.it">info@giocattolicaristia.it</a>
               </li>
+<li className="flex items-center gap-3">
+  {/* Link unico che avvolge icona e numero */}
+  <a 
+    href="https://wa.me/393384083646" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="flex items-center gap-3 hover:text-[#8cc665] transition-colors"
+  >
+    <div className="w-[18px] flex justify-center text-white">
+      <FontAwesomeIcon icon={faWhatsapp} style={{ fontSize: '18px' }} />
+    </div>
+    <span>+39 338 408 3646</span>
+  </a>
+</li>
             </ul>
           </div>
 
