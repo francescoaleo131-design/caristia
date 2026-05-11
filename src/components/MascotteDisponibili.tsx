@@ -1,13 +1,13 @@
 import React from "react"
 
 const mascotte = [
-  { nome: "Minnie", img: "/mascotte/topolino.png" },
-  { nome: "Topolino", img: "/mascotte/minnie.png" },
-  { nome: "Puffo", img: "/mascotte/spiderman.png" },
-  { nome: "Peppa pig", img: "/mascotte/elsa.png" },
-  { nome: "Stich", img: "/mascotte/olaf.png" },
-  { nome: "Angel", img: "/mascotte/sonic.png" },
-  { nome: "Bing", img: "/mascotte/bing.png" },
+  { nome: "Minnie", img: "/icon_mascotte_minnie.webp" },
+  { nome: "Topolino", img: "/icon_mascotte_topolino.webp" },
+  { nome: "Puffo", img: "/icon_mascotte_puffo.webp" },
+  { nome: "Peppa pig", img: "/icon_mascotte_peppa.webp" },
+  { nome: "Stich", img: "/icon_mascotte_stich.webp" },
+  { nome: "Angel", img: "/icon_mascotte_angel.webp" },
+  { nome: "Bing", img: "/icon_mascotte_bing.webp" },
 ]
 
 interface MascotteDisponibiliProps {
@@ -16,31 +16,35 @@ interface MascotteDisponibiliProps {
 
 export default function MascotteDisponibili({ onSelectMascot }: MascotteDisponibiliProps) {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-12 bg-white">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8 items-start justify-center">
+        {/* Usiamo justify-items-center per allineare perfettamente le colonne */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-6 justify-items-center">
           {mascotte.map((item, index) => (
             <button 
               key={index} 
               onClick={() => onSelectMascot(item.nome)}
-              className="flex flex-col items-center text-center group cursor-pointer border-none bg-transparent outline-none"
+              className="flex flex-col items-center text-center group cursor-pointer border-none bg-transparent outline-none w-full"
             >
               
-              {/* Contenitore Immagine con Placeholder */}
-              <div className="mb-4 h-24 w-24 md:h-32 md:w-32 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110 bg-slate-50 rounded-full p-2 border-2 border-dashed border-slate-200">
+              {/* CONTENITORE FISSO: h-32 w-32 garantisce che siano tutti quadrati uguali */}
+              <div className="mb-4 h-24 w-24 sm:h-32 sm:w-32 flex items-center justify-center bg-slate-50 rounded-2xl p-3 transition-all duration-300 group-hover:bg-pink-50 group-hover:shadow-md">
                 <img 
                   src={item.img} 
                   alt={item.nome}
-                  className="h-full w-full object-contain opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
+                  // w-full h-full + object-contain fa sì che l'immagine si adatti senza mai superare i bordi
+                  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                   onError={(e: any) => {
                     e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'block';
+                    if (e.target.nextSibling) e.target.nextSibling.style.display = 'block';
                   }}
                 />
-                <div className="hidden text-[10px] font-bold text-slate-300 uppercase">Immagine</div>
+                <div className="hidden text-[10px] font-bold text-slate-300 uppercase">
+                  {item.nome}
+                </div>
               </div>
               
-              <h3 className="text-[#1e73be] font-black text-sm md:text-base leading-tight uppercase tracking-tighter max-w-[120px] group-hover:text-pink-500 transition-colors">
+              <h3 className="text-[#1e73be] font-black text-xs md:text-sm leading-tight uppercase tracking-tighter group-hover:text-pink-500 transition-colors">
                 {item.nome}
               </h3>
             </button>

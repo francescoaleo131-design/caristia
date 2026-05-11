@@ -1,17 +1,25 @@
 import React from "react"
 import Link from "next/link"
-
+import Img from "next/image"
 export default function MascotteHero() {
   return (
     <section className="relative h-[350px] md:h-[500px] w-full flex items-center justify-center overflow-hidden bg-slate-200">
       {/* Sfondo con Blur (Placeholder per immagine) */}
-      <div className="absolute inset-0 z-0">
-        <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 animate-pulse flex items-center justify-center">
-          <span className="text-slate-400 font-bold uppercase tracking-widest opacity-30">Spazio per Immagine Mascotte</span>
-        </div>
-        {/* Overlay per leggibilità */}
-        <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-1" />
-      </div>
+ <div className="absolute inset-0 z-0">
+  {/* Sfondo di fallback mentre l'immagine carica */}
+  <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100" />
+  
+  <img
+    src="/main_mascotte.png"
+    alt="Mascotte Caristia"
+    // object-cover riempie tutto lo spazio, object-center la tiene centrata
+    className="relative w-full h-full object-cover object-center shadow-inner"
+    // Se usi Next.js "Image", aggiungi 'priority' per caricarla subito
+  />
+  
+  {/* Overlay opzionale se vuoi che il testo sopra si legga meglio */}
+  <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]" />
+</div>
 
       {/* CONTENITORE TESTUALE */}
       <div className="relative z-10 px-4 flex flex-col items-center justify-center text-center">
@@ -20,7 +28,7 @@ export default function MascotteHero() {
         </h1>
 
         <h4 className="mt-4 text-xl md:text-3xl lg:text-4xl font-extrabold max-w-4xl leading-tight">
-          Porta la magia dei tuoi <span className="text-pink-500">personaggi preferiti</span> direttamente alla tua festa!
+          Porta la magia dei tuoi personaggi preferiti direttamente alla tua festa!
         </h4>
         
         <Link 
