@@ -42,7 +42,7 @@ export default function LoginPage() {
       
       // Aspettiamo un micro-secondo che i cookie vengano settati prima di spostarci
       setTimeout(() => {
-        router.push("/admin") // O dove preferisci
+        router.push("/") // O dove preferisci
       }, 100)
     }
     
