@@ -12,15 +12,22 @@ export default function Animazione() {
 <section className="relative h-[450px] md:h-[500px] w-full flex items-center justify-center overflow-hidden bg-slate-100">
   
   {/* Sfondo con Blur e Posizionamento Ottimizzato */}
-  <div className="absolute inset-0 z-0">
-  <img 
-  src="/main_animazioni.png" 
-  alt="Sfondo Animazione Caristia"
-  className="absolute inset-0 w-full h-full object-cover object-[center_20%] md:object-center blur-[4px] scale-110 md:scale-100" 
-/>
-    {/* Overlay sfumato per migliorare il contrasto su mobile */}
-    <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white/60 backdrop-blur-[2px] z-1" />
-  </div>
+<div className="absolute inset-0 z-0">
+  <picture>
+    {/* Immagine per Mobile (Verticale o Quadrata) */}
+    <source 
+      media="(max-width: 768px)" 
+      srcSet="/main_animazioni_mobile.png" 
+    />
+    {/* Immagine per Desktop */}
+    <img 
+      src="/main_animazioni.png" 
+      alt="Sfondo Animazione"
+      className="absolute inset-0 w-full h-full object-cover object-center blur-[4px]" 
+    />
+  </picture>
+  <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-1" />
+</div>
 
   {/* CONTENITORE TESTUALE */}
   <div className="relative z-10 px-6 flex flex-col items-center justify-center text-center w-full max-w-4xl">
