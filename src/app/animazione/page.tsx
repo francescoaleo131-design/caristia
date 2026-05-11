@@ -16,7 +16,7 @@ export default function Animazione() {
       <img 
         src="/main_animazioni.png" 
         alt="Sfondo Animazione Caristia"
-        className="w-full h-full object-cover blur-[4px]" 
+        className="absolute inset-0 w-full h-full object-cover blur-[4px]" 
       />
       {/* Overlay per leggibilità */}
       <div className="absolute inset-0 bg-white/40 backdrop-blur-[4px] z-1" />
