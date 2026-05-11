@@ -8,37 +8,42 @@ export default function Animazione() {
   return (
     <div className="w-full flex flex-col">
       
-      {/* --- SEZIONE HERO PRINCIPALE --- */}
- <section className="relative h-[350px] md:h-[500px] w-full flex items-center justify-center overflow-hidden bg-slate-200">
+  {/* --- SEZIONE HERO PRINCIPALE --- */}
+<section className="relative h-[450px] md:h-[500px] w-full flex items-center justify-center overflow-hidden bg-slate-100">
+  
+  {/* Sfondo con Blur e Posizionamento Ottimizzato */}
+  <div className="absolute inset-0 z-0">
+    <img 
+      src="/main_animazioni.png" 
+      alt="Sfondo Animazione Caristia"
+      className="absolute inset-0 w-full h-full object-cover object-center md:object-top blur-[2px] md:blur-[4px]" 
+    />
+    {/* Overlay sfumato per migliorare il contrasto su mobile */}
+    <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white/60 backdrop-blur-[2px] z-1" />
+  </div>
+
+  {/* CONTENITORE TESTUALE */}
+  <div className="relative z-10 px-6 flex flex-col items-center justify-center text-center w-full max-w-4xl">
     
-    {/* Sfondo con Blur */}
-    <div className="absolute inset-0 z-0">
-      <img 
-        src="/main_animazioni.png" 
-        alt="Sfondo Animazione Caristia"
-        className="absolute inset-0 w-full h-full object-cover blur-[4px]" 
-      />
-      {/* Overlay per leggibilità */}
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-[4px] z-1" />
-    </div>
+    <h1 className="text-5xl md:text-7xl font-black text-blue-700 tracking-tighter drop-shadow-sm uppercase">
+      Animazione
+    </h1>
 
-    {/* UNICO CONTENITORE TESTUALE (Centra tutto verticalmente) */}
-    <div className="relative z-10 px-4 flex flex-col items-center justify-center text-center">
-      
-      <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-blue-700 tracking-tighter  drop-shadow-sm">
-        Animazione
-      </h1>
-
-      <h4 className="mt-4 text-xl md:text-3xl lg:text-4xl font-extrabold max-w-4xl leading-tight">
-        Rendiamo ogni festa <span className="text-green-500 text-bold">indimenticabile</span> con le nostre animazioni nel Calatino!
+    <div className="mt-4 space-y-2">
+      <h4 className="text-2xl md:text-4xl font-extrabold leading-tight text-slate-800">
+        Rendiamo ogni festa <span className="text-[#8cc665]">indimenticabile</span>
       </h4>
-      
-  <Link 
-  href="#contatti" 
-  className="mt-8 bg-[#8cc665] hover:bg-[#1e73be] text-white font-black py-4 px-10 rounded-full uppercase tracking-widest transition-all shadow-lg hover:shadow-green-500/20 active:scale-95 inline-block"
->
-  Prenota la tua animazione
-</Link>
+      <p className="text-lg md:text-2xl font-bold text-slate-700 pt-2">
+        con le nostre animazioni nel Calatino!
+      </p>
+    </div>
+    
+    <Link 
+      href="#contatti" 
+      className="mt-8 bg-[#8cc665] text-white font-black py-4 px-10 rounded-full uppercase tracking-widest transition-all"
+    >
+      Prenota ora
+    </Link>
     </div>
 </section>
 
