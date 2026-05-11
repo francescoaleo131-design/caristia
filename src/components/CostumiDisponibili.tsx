@@ -1,12 +1,11 @@
 import React from "react"
 
 const Costumi = [
-  { nome: "Batman", img: "/mascotte/topolino.png" },
-  { nome: "Spiderman", img: "/mascotte/minnie.png" },
-  { nome: "Superman", img: "/mascotte/spiderman.png" },
-  { nome: "Captain America", img: "/mascotte/elsa.png" },
-  { nome: "Elsa", img: "/mascotte/olaf.png" },
-  { nome: "Anna", img: "/mascotte/sonic.png" },
+  { nome: "Batman", img: "/icon_mascotte_batman.webp" },
+  { nome: "Spiderman", img: "/icon_mascotte_spiderman.webp" },
+  { nome: "Superman", img: "/icon_mascotte_superman.webp" },
+  { nome: "Elsa", img: "/icon_mascotte_frozen.webp" },
+  { nome: "Anna", img: "/icon_mascotte_anna.webp" },
 ]
 
 interface CostumiDisponibiliProps {
@@ -26,11 +25,11 @@ export default function CostumiDisponibili({ onSelectCostume }: CostumiDisponibi
             >
               
               {/* Contenitore Immagine con Placeholder */}
-              <div className="mb-4 h-24 w-24 md:h-32 md:w-32 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110 bg-slate-50 rounded-full p-2 border-2 border-dashed border-slate-200">
+              <div className="mb-4 h-24 w-24 md:h-32 md:w-32 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110">
                 <img 
                   src={item.img} 
                   alt={item.nome}
-                  className="h-full w-full object-contain opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
+                  className="h-full w-full object-contain"
                   onError={(e: any) => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'block';

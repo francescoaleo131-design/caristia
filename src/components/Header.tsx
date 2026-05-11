@@ -193,7 +193,7 @@ export default function Header() {
           <ul className="flex items-center justify-start">
             <li className={`transition-colors ${pathname === "/" ? "bg-[#8cc665] text-white" : "bg-white text-gray-700 hover:text-[#1e73be]"}`}>
               <Link href="/" className="px-8 py-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2">
-                Main
+                Home
               </Link>
             </li>
 
@@ -245,7 +245,7 @@ export default function Header() {
                   className={`block p-4 rounded-xl font-bold uppercase text-sm tracking-wide ${pathname === "/" ? "bg-[#8cc665] text-white" : "text-gray-700 hover:bg-gray-50"
                     }`}
                 >
-                  Main
+                  Home
                 </Link>
               </li>
               {navLinks.map((item) => (

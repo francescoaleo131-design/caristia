@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/admin/sidebar";
 import { Menu, X } from "lucide-react";
+import { Metadata } from "next";
 
 export default function AdminLayout({
   children,

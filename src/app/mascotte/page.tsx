@@ -5,7 +5,7 @@ import MascottePackages from "@/components/MascottePackages"
 import MascotteBookingForm from "@/components/MascotteBookingForm"
 import VantaggiPromo from "@/components/vantaggi"
 import MascotteDisponibili from "@/components/MascotteDisponibili"
-import CostumiDisponibili from "../../../CostumiDisponibili"
+import CostumiDisponibili from "../../components/CostumiDisponibili"
 
 export default function MascottePage() {
     const [selectedPackage, setSelectedPackage] = useState<any>(null)
