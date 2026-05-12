@@ -26,14 +26,14 @@ export default async function NegozioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-white">
       {/* Banner Promozionale */}
-      <div className="w-full bg-slate-50 border-b border-slate-100"> 
+      <div className="w-full bg-white border-b"> 
         <div className="container mx-auto px-4 py-6">
           <img 
-            src="/divider_servizi.png" 
+            src="/divider_negozio.png" 
             alt="Promozione Giocattoli"
-            className="w-full h-auto rounded-xl shadow-sm"
+            className="w-full h-auto rounded-xl"
             style={{ maxHeight: "300px", objectFit: "cover" }} 
           />
         </div>
