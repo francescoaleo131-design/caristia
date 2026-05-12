@@ -1,8 +1,7 @@
 import React from "react"
 
 const mascotte = [
-  { nome: "Minnie", img: "/icon_mascotte_minnie.webp" },
-  { nome: "Topolino", img: "/icon_mascotte_topolino.webp" },
+  { nome: "Minnie & Topolino", img: "/icon_mascotte_topolino.webp" },
   { nome: "Puffo", img: "/icon_mascotte_puffo.webp" },
   { nome: "Peppa pig", img: "/icon_mascotte_peppa.webp" },
   { nome: "Stich", img: "/icon_mascotte_stich.webp" },

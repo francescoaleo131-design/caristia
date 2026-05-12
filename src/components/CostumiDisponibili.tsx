@@ -1,7 +1,7 @@
 import React from "react"
 
 const Costumi = [
-  { nome: "Batman", img: "/icon_mascotte_batman.webp" },
+  { nome: "Captain America", img: "/icon_mascotte_captain.webp" },
   { nome: "Spiderman", img: "/icon_mascotte_spiderman.webp" },
   { nome: "Superman", img: "/icon_mascotte_superman.webp" },
   { nome: "Elsa", img: "/icon_mascotte_frozen.webp" },
@@ -29,7 +29,7 @@ export default function CostumiDisponibili({ onSelectCostume }: CostumiDisponibi
                 <img 
                   src={item.img} 
                   alt={item.nome}
-                  className="h-full w-full object-contain"
+                  className="my-10 h-full w-full object-contain"
                   onError={(e: any) => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'block';
@@ -38,7 +38,7 @@ export default function CostumiDisponibili({ onSelectCostume }: CostumiDisponibi
                 <div className="hidden text-[10px] font-bold text-slate-300 uppercase">Immagine</div>
               </div>
               
-              <h3 className="text-[#1e73be] font-black text-sm md:text-base leading-tight uppercase tracking-tighter max-w-[120px] group-hover:text-pink-500 transition-colors">
+              <h3 className="my-10 text-[#1e73be] font-black text-sm md:text-base leading-tight uppercase tracking-tighter max-w-[120px] group-hover:text-pink-500 transition-colors">
                 {item.nome}
               </h3>
             </button>
