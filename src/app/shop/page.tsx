@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/server';
+import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
 interface Prodotto {
@@ -9,12 +9,27 @@ interface Prodotto {
   image_url: string;
 }
 
-export default async function NegozioPage() {
+interface NegozioPageProps {
+  searchParams: Promise<{ search?: string }>;
+}
+
+export default async function NegozioPage({ searchParams }: NegozioPageProps) {
+  // 1. Estrai il parametro di ricerca dall'URL in modo asincrono
+  const { search } = await searchParams;
+
   const supabase = await createClient();
   
-  const { data: prodotti, error } = await supabase
+  // 2. Prepara la query base su Supabase
+  let query = supabase
     .from('prodotti')
     .select('*');
+
+  // 3. Se esiste una stringa di ricerca, filtra i prodotti per nome
+  if (search) {
+    query = query.ilike('name', `%${search}%`);
+  }
+
+  const { data: prodotti, error } = await query;
 
   if (error) {
     return (
@@ -55,6 +70,15 @@ export default async function NegozioPage() {
 
           {/* Griglia Prodotti Moderna */}
           <main className="flex-grow">
+            {/* Titolo contestuale se l'utente sta cercando qualcosa */}
+            {search && (
+              <div className="mb-6">
+                <p className="text-sm text-slate-500">
+                  Risultati della ricerca per: <span className="font-bold text-slate-800">"{search}"</span>
+                </p>
+              </div>
+            )}
+
             {prodotti && prodotti.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                 {prodotti.map((p: Prodotto) => (
@@ -92,7 +116,11 @@ export default async function NegozioPage() {
               </div>
             ) : (
               <div className="border-2 border-dashed border-slate-200 rounded-3xl p-20 text-center">
-                <p className="text-slate-400 font-medium italic">Nessun prodotto disponibile in questa categoria.</p>
+                <p className="text-slate-400 font-medium italic">
+                  {search 
+                    ? `Nessun prodotto corrisponde alla ricerca "${search}".` 
+                    : "Nessun prodotto disponibile in questa categoria."}
+                </p>
               </div>
             )}
           </main>

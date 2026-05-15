@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase/supabase"
 import { useRouter } from "next/navigation"
 import { User, Mail, Lock, LogOut, ShieldCheck, KeyRound } from "lucide-react"
 import { toast } from 'sonner'
@@ -118,10 +118,10 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-
+    
         {/* BOX SICUREZZA E LOGOUT */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white space-y-4">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2">            
             <KeyRound className="text-[#8cc665]" size={20} />
             <h2 className="font-black uppercase text-sm tracking-widest text-[#1e73be]">Azioni Rapide</h2>
           </div>

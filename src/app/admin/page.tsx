@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/server'; 
+import { createClient } from '@/lib/supabase/server'; 
 import { ShoppingBag, Users, Euro } from "lucide-react";
 import StatCard from "@/components/admin/StatCard";
 

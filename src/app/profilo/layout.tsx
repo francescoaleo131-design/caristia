@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, Package, Receipt, LogOut } from "lucide-react"
+import { User, Package, Receipt, LogOut, Tickets } from "lucide-react"
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -10,6 +10,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     { name: "Info Utente", href: "/profilo", icon: User },
     { name: "Ordini", href: "/profilo/ordini", icon: Package },
     { name: "Fatturazione", href: "/profilo/fatturazione", icon: Receipt },
+    { name: "Gift Card", href: "/profilo/giftcard", icon: Tickets },
   ]
 
   return (

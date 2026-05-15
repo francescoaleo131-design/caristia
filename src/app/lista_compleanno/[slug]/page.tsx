@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, use } from 'react'; // Aggiunto use
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/supabase';
 import { Gift, Calendar, Share2, Trash2, ShoppingBag, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';

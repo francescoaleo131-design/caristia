@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/client';
+import { createClient } from '@/lib/supabase/client';
 import { ArrowLeft, Save, ListPlus, Box } from "lucide-react";
 import Link from 'next/link';
 import { toast } from "sonner";

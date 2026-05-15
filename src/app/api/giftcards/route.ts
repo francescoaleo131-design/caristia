@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/supabase";
 // IMPORTANTE: Il nome tra le graffe deve essere IDENTICO a quello in giftcard-utils
-import { generateSecureGiftCode } from "@/lib/giftcard-utils";
+import { generateSecureGiftCode } from "@/lib/utils/giftcard-utils";
 
 export async function POST(req: Request) {
   try {

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/supabase';
 import { Gift, ChevronDown, Plus, Check } from 'lucide-react';
 import { toast } from 'sonner';
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/supabase";
 import Link from "next/link";
 import { 
   Camera, Store, Power, Loader2, ArrowDownCircle, 

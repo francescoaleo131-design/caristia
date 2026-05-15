@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, ShoppingBag, User, Phone, MapPin, Menu, X, ChevronDown, LogOut, } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/supabase";
 import Link from "next/link";
 import { useCart } from "@/app/shop/useCart";
 
@@ -13,6 +13,10 @@ export default function Header() {
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Stato interno per tracciare il testo inserito nella barra di ricerca
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
 
   // --- LOGICA CARRELLO ---
   const items = useCart((state) => state.items);
@@ -21,6 +25,11 @@ export default function Header() {
   // Calcolo quantità totale e prezzo totale
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+  // Sincronizza l'input se il parametro nell'URL cambia esternamente
+  useEffect(() => {
+    setSearchQuery(searchParams.get("search") || "");
+  }, [searchParams]);
 
   useEffect(() => {
     setMounted(true); // Evita hydration mismatch
@@ -35,6 +44,18 @@ export default function Header() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Funzione centralizzata per eseguire la ricerca ed aggiornare la rotta
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
+      router.push(`/shop?search=${encodeURIComponent(trimmed)}`);
+    } else {
+      router.push(`/shop`);
+    }
+    setSearchOpen(false); // Chiude il pannello mobile se aperto
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -79,11 +100,26 @@ export default function Header() {
             </Link>
           </div>
 
+          {/* BARRA DI RICERCA DESKTOP DINAMICA */}
           <div className="flex-1 max-w-5xl mx-2">
-            <div className="flex border-2 border-gray-200 rounded-full overflow-hidden focus-within:border-blue-400">
-              <input type="text" className="w-full px-4 py-1 outline-none" placeholder="Cerca prodotti..." />
-              <button className="bg-[#1e73be] text-white px-10 font-bold hover:bg-blue-700 transition-colors">Cerca</button>
-            </div>
+            <form 
+              onSubmit={handleSearchSubmit} 
+              className="flex border-2 border-gray-200 rounded-full overflow-hidden focus-within:border-blue-400"
+            >
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-1 outline-none text-zinc-700" 
+                placeholder="Cerca prodotti..." 
+              />
+              <button 
+                type="submit" 
+                className="bg-[#1e73be] text-white px-10 font-bold hover:bg-blue-700 transition-colors whitespace-nowrap"
+              >
+                Cerca
+              </button>
+            </form>
             <p className="text-[10px] mt-2 text-gray-400 uppercase font-bold tracking-widest pl-4">
               Scopri i Nuovi Prodotti in Vetrina! <span className="text-blue-500 cursor-pointer">CLICCA QUI</span>
             </p>
@@ -179,9 +215,19 @@ export default function Header() {
             </div>
           </div>
 
+          {/* BARRA DI RICERCA MOBILE DINAMICA */}
           {searchOpen && (
             <div className="mt-2 px-4 w-full animate-in fade-in slide-in-from-top-1 pb-2">
-              <input type="text" className="w-full border-2 border-blue-100 p-2 rounded-lg text-sm outline-none focus:border-blue-400" placeholder="Cerca..." autoFocus />
+              <form onSubmit={handleSearchSubmit}>
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full border-2 border-blue-100 p-2 rounded-lg text-sm outline-none focus:border-blue-400 text-zinc-700" 
+                  placeholder="Cerca prodotti..." 
+                  autoFocus 
+                />
+              </form>
             </div>
           )}
         </div>
@@ -219,14 +265,12 @@ export default function Header() {
 
       {/* --- MENU MOBILE SIDEBAR --- */}
       <div
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] transition-opacity duration-300 ${menuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-          }`}
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] transition-opacity duration-300 ${menuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
         onClick={() => setMenuOpen(false)}
       />
 
       <aside
-        className={`fixed top-0 left-0 h-full w-[280px] bg-white z-[101] shadow-2xl transition-transform duration-300 ease-in-out ${menuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        className={`fixed top-0 left-0 h-full w-[280px] bg-white z-[101] shadow-2xl transition-transform duration-300 ease-in-out ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex flex-col h-full">
           <div className="p-5 border-b flex items-center justify-between">
@@ -242,8 +286,7 @@ export default function Header() {
                 <Link
                   href="/"
                   onClick={() => setMenuOpen(false)}
-                  className={`block p-4 rounded-xl font-bold uppercase text-sm tracking-wide ${pathname === "/" ? "bg-[#8cc665] text-white" : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                  className={`block p-4 rounded-xl font-bold uppercase text-sm tracking-wide ${pathname === "/" ? "bg-[#8cc665] text-white" : "text-gray-700 hover:bg-gray-50"}`}
                 >
                   Home
                 </Link>
@@ -253,8 +296,7 @@ export default function Header() {
                   <Link
                     href={item.link}
                     onClick={() => setMenuOpen(false)}
-                    className={`block p-4 rounded-xl font-bold uppercase text-sm tracking-wide ${pathname === item.link ? "bg-[#8cc665] text-white" : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                    className={`block p-4 rounded-xl font-bold uppercase text-sm tracking-wide ${pathname === item.link ? "bg-[#8cc665] text-white" : "text-gray-700 hover:bg-gray-50"}`}
                   >
                     {item.name}
                   </Link>

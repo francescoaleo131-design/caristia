@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/server';
+import { createClient } from '@/lib/supabase/server';
 import { Eye } from "lucide-react";
 import StatusSelect from "@/components/StatusSelect"; // Importa il nuovo componente
 

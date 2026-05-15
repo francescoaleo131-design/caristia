@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/server';
+import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import AddToCartButton from '@/components/addToCart';
 import AddToWishlistButton from '@/components/addToWishlist';

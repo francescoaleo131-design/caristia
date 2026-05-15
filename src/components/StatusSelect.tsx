@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { createClient } from '@/lib/client' // Assicurati che punti al tuo client Supabase lato browser
+import { createClient } from '@/lib/supabase/client' // Assicurati che punti al tuo client Supabase lato browser
 import { toast } from 'sonner'
 import { Loader2 } from "lucide-react"
 

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { supabaseAdmin } from '@/lib/supabase/supabaseAdmin';
 import { NextResponse } from 'next/server';
 
 export async function PATCH(req: Request) {
