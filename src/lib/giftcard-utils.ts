@@ -12,5 +12,5 @@ export function generateSecureGiftCode(): string {
   };
 
   // Restituisce CART-XXXX-XXXX-XXXX
-  return `CART-${makeBlock()}-${makeBlock()}-${makeBlock()}`;
+  return `TEST-${makeBlock()}-${makeBlock()}-${makeBlock()}`;
 }

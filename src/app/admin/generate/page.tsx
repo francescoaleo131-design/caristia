@@ -60,7 +60,7 @@ export default function GenerateCardsPage() {
       <div className="max-w-xl mx-auto space-y-8">
         
         {/* LINK TORNA ALLA CASSA */}
-        <Link href="/admin/cassa" className="flex items-center gap-2 text-zinc-400 hover:text-[#1e73be] transition-colors font-black uppercase text-[10px] tracking-widest w-fit">
+        <Link href="/admin/giftcard" className="flex items-center gap-2 text-zinc-400 hover:text-[#1e73be] transition-colors font-black uppercase text-[10px] tracking-widest w-fit">
           <ArrowLeft size={16} /> Torna al Terminale Cassa
         </Link>
 
