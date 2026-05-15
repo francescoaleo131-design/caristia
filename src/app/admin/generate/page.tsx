@@ -12,7 +12,7 @@ export default function GenerateCardsPage() {
   const [loading, setLoading] = useState(false)
   const [generatedCards, setGeneratedCards] = useState<any[]>([])
 
-  const standardAmounts = [20, 50, 100];
+  const standardAmounts = [25, 50, 100];
 
   const handleGenerate = async () => {
     setLoading(true);

@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Gift, CheckCircle2, Send, Smartphone } from "lucide-react"
 
 const TAGLI = [
-  { amount: 20, image: "/card20.jpeg" },
+  { amount: 25, image: "/card20.jpeg" },
   { amount: 50, image: "/card50.jpeg" },
   { amount: 100, image: "/card100.jpeg" },
 ];

@@ -6,7 +6,6 @@ const mascotte = [
   { nome: "Peppa pig", img: "/icon_mascotte_peppa.webp" },
   { nome: "Stich", img: "/icon_mascotte_stich.webp" },
   { nome: "Angel", img: "/icon_mascotte_angel.webp" },
-  { nome: "Bing", img: "/icon_mascotte_bing.webp" },
 ]
 
 interface MascotteDisponibiliProps {

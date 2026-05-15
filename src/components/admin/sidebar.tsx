@@ -16,7 +16,7 @@ const menuItems = [
   { name: "Ordini", icon: ShoppingBag, href: "/admin/ordini" },
   { name: "Liste Compleanno", icon: Users, href: "/admin/liste" },
   { name: "Gift Cards", icon: Ticket, href: "/admin/giftcard" },
-  { name: "Magazzino", icon: Package, href: "/admin/prodotti" }, 
+  { name: "Magazzino", icon: Package, href: "/admin/magazzino" }, 
   { name: "Mascotte", icon: Panda, href: "/admin/mascotte" },
 ];
 
