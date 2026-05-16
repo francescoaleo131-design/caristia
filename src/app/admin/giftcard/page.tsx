@@ -185,22 +185,35 @@ export default function AdminCassa() {
         <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white">
           {!showScanner ? (
             <div className="space-y-6">
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="CODICE GIFT CARD"
-                  className="flex-1 min-w-0 bg-zinc-50 border-2 border-zinc-100 rounded-2xl p-5 text-xl font-mono uppercase focus:border-[#1e73be] outline-none transition-all"
-                />
-                <button 
-                  onClick={() => setShowScanner(true)} 
-                  className="bg-zinc-50 p-5 rounded-2xl text-[#1e73be] border border-zinc-100 hover:bg-zinc-200 transition-all active:scale-95"
-                  title="Apri fotocamera"
-                >
-                  <Camera size={28} />
-                </button>
+              
+              {/* Contenitore Input Relativo con Icona interna */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-zinc-400 ml-2 tracking-widest block">
+                  Inserisci o Scansiona il Codice
+                </label>
+                
+                <div className="relative flex items-center">
+                  <input 
+                    type="text" 
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="CODICE GIFT CARD"
+                    className="w-full bg-zinc-50 border-2 border-zinc-100 rounded-2xl p-5 pr-16 text-xl font-mono uppercase focus:border-[#1e73be] outline-none transition-all"
+                  />
+                  
+                  {/* Pulsante con Icona Fotocamera posizionato dentro l'input */}
+                  <button 
+                    type="button"
+                    onClick={() => setShowScanner(true)} 
+                    className="absolute right-3 p-3 bg-[#1e73be]/10 text-[#1e73be] rounded-xl hover:bg-[#1e73be]/20 active:scale-95 transition-all z-10"
+                    title="Apri fotocamera"
+                  >
+                    <Camera size={24} />
+                  </button>
+                </div>
               </div>
+
+              {/* Pulsante di Verifica manuale */}
               <button 
                 onClick={checkCard} 
                 disabled={loading || !code}
@@ -211,7 +224,7 @@ export default function AdminCassa() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Contenitore dello scanner HTML5, forziamo uno sfondo neutro e bordi curvi */}
+              {/* Finestra dello Scanner attiva */}
               <div className="overflow-hidden rounded-3xl bg-zinc-900 text-white border-4 border-zinc-100">
                 <div id="reader" className="w-full"></div>
               </div>
@@ -219,7 +232,7 @@ export default function AdminCassa() {
                 onClick={() => setShowScanner(false)} 
                 className="w-full bg-red-50 text-red-500 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
               >
-                Annulla
+                Annulla Scanner
               </button>
             </div>
           )}
