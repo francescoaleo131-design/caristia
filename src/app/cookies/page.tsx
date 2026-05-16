@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { ArrowLeft, Cookie, ShieldCheck, Settings, Eye } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default function CookiePolicyPage() {
   return (
     <div className="min-h-screen bg-white">

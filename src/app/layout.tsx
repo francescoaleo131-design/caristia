@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/footer";
 import Script from "next/script"; 
 import { Toaster } from 'sonner';
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,8 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-        <Header />
-
+    <Suspense fallback={<div className="h-20 bg-white animate-pulse" />}>
+          <Header />
+        </Suspense>
         <main className="flex-grow w-full">
           {children}
         </main>
