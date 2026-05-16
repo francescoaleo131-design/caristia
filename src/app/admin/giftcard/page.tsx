@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase/supabase";
 import Link from "next/link";
 import { 
   Camera, Store, Power, Loader2, ArrowDownCircle, 
   AlertCircle, RefreshCw, Settings, Calendar 
 } from "lucide-react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { toast } from "sonner";
 
 export default function AdminCassa() {
@@ -16,65 +16,71 @@ export default function AdminCassa() {
   const [amountToSubtract, setAmountToSubtract] = useState("");
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  
+  // Utilizziamo un riferimento per l'istanza dello scanner in modo da non perderla tra i render
+  const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
 
-  // --- LOGICA SCANNER OTTIMIZZATA PER SMARTPHONE ---
+  // --- LOGICA SCANNER ASINCRONA BLINDATA ---
   useEffect(() => {
-    let scanner: Html5QrcodeScanner | null = null;
-
     if (showScanner) {
-      // Funzione responsive per calcolare la dimensione ottimale del mirino sul telefono
-      const qrBoxFunction = (viewfinderWidth: number, viewfinderHeight: number) => {
-        const minEdgePercentage = 0.70; // 70% dello schermo mobile
-        const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-        const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-        return {
-          width: qrboxSize < 250 ? 230 : 250,
-          height: qrboxSize < 250 ? 230 : 250
-        };
-      };
+      // Inizializziamo l'istanza pura agganciata all'ID del DIV
+      const scanner = new Html5Qrcode("reader");
+      html5QrcodeRef.current = scanner;
 
-      // Inizializzazione dello scanner
-      scanner = new Html5QrcodeScanner(
-        "reader", 
-        { 
-          fps: 15, // Leggermente più alto per una scansione più reattiva in movimento
-          qrbox: qrBoxFunction,
-          // Forza l'uso della fotocamera posteriore sui dispositivi mobili
-          videoConstraints: { facingMode: "environment" },
-          rememberLastUsedCamera: true
-        }, 
-        /* verbose= */ false
-      );
-
-      scanner.render(
+      // Avviamo la telecamera posteriore in modo esplicito
+      scanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 15,
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+            const qrboxSize = Math.floor(minEdgeSize * 0.70);
+            return { width: qrboxSize, height: qrboxSize };
+          },
+        },
         (decodedText) => {
-          // Quando inquadra il codice/QR-Code:
+          // Successo: Codice Rilevato!
           const cleanedCode = decodedText.trim().toUpperCase();
           setCode(cleanedCode);
           toast.success(`Codice rilevato: ${cleanedCode}`);
           
-          // Chiudiamo lo scanner in modo sicuro
-          if (scanner) {
-            scanner.clear().then(() => {
-              setShowScanner(false);
-            }).catch((err) => {
-              console.error("Errore pulizia scanner:", err);
-              setShowScanner(false);
-            });
-          }
-        }, 
-        (error) => {
-          // Silenziamo i log continui di mancato rilevamento frame per non intasare la console del telefono
+          // Spegniamo prima la telecamera, e SOLO DOPO chiudiamo l'interfaccia
+          stopScanner();
+        },
+        (errorMessage) => {
+          // Silenziamo i tentativi di lettura falliti sui singoli frame
         }
-      );
+      ).catch((err) => {
+        console.error("Impossibile avviare la fotocamera:", err);
+        toast.error("Errore Fotocamera", {
+          description: "Controlla i permessi della fotocamera nel browser."
+        });
+        setShowScanner(false);
+      });
     }
 
-    return () => { 
-      if (scanner) {
-        scanner.clear().catch(err => console.error("Errore distruzione scanner:", err));
+    // Cleanup quando il componente si smonta improvvisamente
+    return () => {
+      if (html5QrcodeRef.current && html5QrcodeRef.current.isScanning) {
+        html5QrcodeRef.current.stop().catch(err => console.error("Errore unmount:", err));
       }
     };
   }, [showScanner]);
+
+  // Funzione sicura per spegnere la telecamera asincronamente prima di nascondere il DIV
+  const stopScanner = async () => {
+    if (html5QrcodeRef.current) {
+      if (html5QrcodeRef.current.isScanning) {
+        try {
+          await html5QrcodeRef.current.stop();
+        } catch (err) {
+          console.error("Errore durante lo stop dello scanner:", err);
+        }
+      }
+      html5QrcodeRef.current = null;
+    }
+    setShowScanner(false);
+  };
 
   // --- CONTROLLO CARTA ---
   const checkCard = async () => {
@@ -152,7 +158,7 @@ export default function AdminCassa() {
       toast.success("Pagamento confermato!", {
         description: `Saldo aggiornato: €${newBalance.toFixed(2)}`
       });
-      setCardData({ ...data[0], isExpired: false }); // Aggiorna lo stato locale col record restituito
+      setCardData({ ...data[0], isExpired: false });
       setAmountToSubtract("");
     }
     
@@ -185,8 +191,6 @@ export default function AdminCassa() {
         <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white">
           {!showScanner ? (
             <div className="space-y-6">
-              
-              {/* Contenitore Input Relativo con Icona interna */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-zinc-400 ml-2 tracking-widest block">
                   Inserisci o Scansiona il Codice
@@ -201,7 +205,6 @@ export default function AdminCassa() {
                     className="w-full bg-zinc-50 border-2 border-zinc-100 rounded-2xl p-5 pr-16 text-xl font-mono uppercase focus:border-[#1e73be] outline-none transition-all"
                   />
                   
-                  {/* Pulsante con Icona Fotocamera posizionato dentro l'input */}
                   <button 
                     type="button"
                     onClick={() => setShowScanner(true)} 
@@ -213,7 +216,6 @@ export default function AdminCassa() {
                 </div>
               </div>
 
-              {/* Pulsante di Verifica manuale */}
               <button 
                 onClick={checkCard} 
                 disabled={loading || !code}
@@ -224,12 +226,12 @@ export default function AdminCassa() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Finestra dello Scanner attiva */}
-              <div className="overflow-hidden rounded-3xl bg-zinc-900 text-white border-4 border-zinc-100">
-                <div id="reader" className="w-full"></div>
+              {/* Finestra dello Scanner attiva (Senza controlli nativi della libreria) */}
+              <div className="overflow-hidden rounded-3xl bg-zinc-900 border-4 border-zinc-100 aspect-square relative">
+                <div id="reader" className="w-full h-full object-cover"></div>
               </div>
               <button 
-                onClick={() => setShowScanner(false)} 
+                onClick={stopScanner} 
                 className="w-full bg-red-50 text-red-500 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
               >
                 Annulla Scanner
@@ -241,7 +243,6 @@ export default function AdminCassa() {
         {/* DETTAGLI E OPERAZIONI */}
         {cardData && (
           <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white animate-in zoom-in-95 duration-300">
-            
             {cardData.isExpired ? (
               <div className="text-center space-y-6">
                 <div className="bg-red-50 text-red-600 p-6 rounded-3xl border border-red-100">
@@ -285,7 +286,6 @@ export default function AdminCassa() {
                 </button>
               </div>
             ) : (
-              
               <div className="space-y-8">
                 <div className="text-center space-y-1">
                   <div className="flex flex-col gap-2 items-center">
