@@ -17,22 +17,63 @@ export default function AdminCassa() {
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
-  // --- LOGICA SCANNER ---
+  // --- LOGICA SCANNER OTTIMIZZATA PER SMARTPHONE ---
   useEffect(() => {
     let scanner: Html5QrcodeScanner | null = null;
-    if (showScanner) {
-      scanner = new Html5QrcodeScanner("reader", { 
-        fps: 10, 
-        qrbox: { width: 250, height: 250 } 
-      }, false);
 
-      scanner.render((decodedText) => {
-        setCode(decodedText.toUpperCase());
-        setShowScanner(false);
-        scanner?.clear();
-      }, () => {});
+    if (showScanner) {
+      // Funzione responsive per calcolare la dimensione ottimale del mirino sul telefono
+      const qrBoxFunction = (viewfinderWidth: number, viewfinderHeight: number) => {
+        const minEdgePercentage = 0.70; // 70% dello schermo mobile
+        const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+        const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+        return {
+          width: qrboxSize < 250 ? 230 : 250,
+          height: qrboxSize < 250 ? 230 : 250
+        };
+      };
+
+      // Inizializzazione dello scanner
+      scanner = new Html5QrcodeScanner(
+        "reader", 
+        { 
+          fps: 15, // Leggermente più alto per una scansione più reattiva in movimento
+          qrbox: qrBoxFunction,
+          // Forza l'uso della fotocamera posteriore sui dispositivi mobili
+          videoConstraints: { facingMode: "environment" },
+          rememberLastUsedCamera: true
+        }, 
+        /* verbose= */ false
+      );
+
+      scanner.render(
+        (decodedText) => {
+          // Quando inquadra il codice/QR-Code:
+          const cleanedCode = decodedText.trim().toUpperCase();
+          setCode(cleanedCode);
+          toast.success(`Codice rilevato: ${cleanedCode}`);
+          
+          // Chiudiamo lo scanner in modo sicuro
+          if (scanner) {
+            scanner.clear().then(() => {
+              setShowScanner(false);
+            }).catch((err) => {
+              console.error("Errore pulizia scanner:", err);
+              setShowScanner(false);
+            });
+          }
+        }, 
+        (error) => {
+          // Silenziamo i log continui di mancato rilevamento frame per non intasare la console del telefono
+        }
+      );
     }
-    return () => { if (scanner) scanner.clear(); };
+
+    return () => { 
+      if (scanner) {
+        scanner.clear().catch(err => console.error("Errore distruzione scanner:", err));
+      }
+    };
   }, [showScanner]);
 
   // --- CONTROLLO CARTA ---
@@ -52,9 +93,7 @@ export default function AdminCassa() {
         description: "Il codice inserito non esiste nel database."
       });
     } else {
-      // Calcolo scadenza (3 mesi dalla creazione)
       const isExpired = new Date() > new Date(data.expire_date);
-      
       setCardData({ ...data, isExpired });
 
       if (isExpired) {
@@ -113,7 +152,7 @@ export default function AdminCassa() {
       toast.success("Pagamento confermato!", {
         description: `Saldo aggiornato: €${newBalance.toFixed(2)}`
       });
-      setCardData({ ...cardData, current_balance: newBalance });
+      setCardData({ ...data[0], isExpired: false }); // Aggiorna lo stato locale col record restituito
       setAmountToSubtract("");
     }
     
@@ -152,11 +191,12 @@ export default function AdminCassa() {
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   placeholder="CODICE GIFT CARD"
-                  className="flex-1 bg-zinc-50 border-2 border-zinc-100 rounded-2xl p-5 text-xl font-mono uppercase focus:border-[#1e73be] outline-none transition-all"
+                  className="flex-1 min-w-0 bg-zinc-50 border-2 border-zinc-100 rounded-2xl p-5 text-xl font-mono uppercase focus:border-[#1e73be] outline-none transition-all"
                 />
                 <button 
                   onClick={() => setShowScanner(true)} 
-                  className="bg-zinc-50 p-5 rounded-2xl text-[#1e73be] border border-zinc-100 hover:bg-zinc-200 transition-all"
+                  className="bg-zinc-50 p-5 rounded-2xl text-[#1e73be] border border-zinc-100 hover:bg-zinc-200 transition-all active:scale-95"
+                  title="Apri fotocamera"
                 >
                   <Camera size={28} />
                 </button>
@@ -171,8 +211,16 @@ export default function AdminCassa() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div id="reader" className="overflow-hidden rounded-3xl border-4 border-zinc-100"></div>
-              <button onClick={() => setShowScanner(false)} className="w-full bg-red-50 text-red-500 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest">Annulla</button>
+              {/* Contenitore dello scanner HTML5, forziamo uno sfondo neutro e bordi curvi */}
+              <div className="overflow-hidden rounded-3xl bg-zinc-900 text-white border-4 border-zinc-100">
+                <div id="reader" className="w-full"></div>
+              </div>
+              <button 
+                onClick={() => setShowScanner(false)} 
+                className="w-full bg-red-50 text-red-500 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
+              >
+                Annulla
+              </button>
             </div>
           )}
         </div>
@@ -181,7 +229,6 @@ export default function AdminCassa() {
         {cardData && (
           <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white animate-in zoom-in-95 duration-300">
             
-            {/* STATO: SCADUTA */}
             {cardData.isExpired ? (
               <div className="text-center space-y-6">
                 <div className="bg-red-50 text-red-600 p-6 rounded-3xl border border-red-100">
@@ -204,7 +251,6 @@ export default function AdminCassa() {
               </div>
             ) : 
             
-            /* STATO: NON ATTIVA */
             !cardData.is_active ? (
               <div className="text-center space-y-6">
                 <div className="bg-amber-50 text-amber-600 p-6 rounded-3xl border border-amber-100">
@@ -227,7 +273,6 @@ export default function AdminCassa() {
               </div>
             ) : (
               
-              /* STATO: ATTIVA E VALIDA */
               <div className="space-y-8">
                 <div className="text-center space-y-1">
                   <div className="flex flex-col gap-2 items-center">
