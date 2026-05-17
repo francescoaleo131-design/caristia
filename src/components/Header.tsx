@@ -5,6 +5,7 @@ import { Search, ShoppingBag, User, Phone, MapPin, Menu, X, ChevronDown, LogOut,
 import { supabase } from "@/lib/supabase/supabase";
 import Link from "next/link";
 import { useCart } from "@/app/shop/useCart";
+import { Suspense } from 'react';
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);

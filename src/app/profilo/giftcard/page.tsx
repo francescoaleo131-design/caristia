@@ -126,7 +126,7 @@ export default function ProfiloGiftCardPage() {
           <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
             <Ticket className="text-[#8cc665]" size={24} />
             <h3 className="font-black uppercase text-zinc-800 tracking-tight text-sm">
-              Hai un newline codice da riscattare?
+              Hai un codice da riscattare?
             </h3>
           </div>
 

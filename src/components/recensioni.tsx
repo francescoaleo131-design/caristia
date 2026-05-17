@@ -1,37 +1,46 @@
-"use client"
-import { useEffect, useState, useRef } from 'react'
+"use client";
 
-export default function RecensioniGoogle() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
+import { useEffect } from "react";
 
+export default function ShapoWidget() {
   useEffect(() => {
-    // 1. Evitiamo caricamenti doppi
-    if (loaded) return;
-
-    // 2. Creiamo lo script manualmente
-    const script = document.createElement('script');
-    script.src = "https://cdn.trustindex.io/loader.js?ddfdea2713455963cd26aa92118";
-    script.async = true;
-    script.defer = true;
+    // Controlliamo se lo script è già stato caricato per evitare duplicati
+    const existingScript = document.getElementById("shapo-embed-js");
     
-    // 3. Lo appendiamo al contenitore invece che al body
-    if (containerRef.current) {
-      containerRef.current.appendChild(script);
-      setLoaded(true);
+    if (!existingScript) {
+      const script = document.createElement("script");
+      script.id = "shapo-embed-js";
+      script.type = "text/javascript";
+      script.src = "https://cdn.shapo.io/js/embed.js";
+      script.defer = true;
+      document.body.appendChild(script);
     }
-  }, [loaded]);
+    // Osserva il widget e cancella il watermark appena appare
+  const observer = new MutationObserver(() => {
+    const watermark = document.querySelector('[id^="shapo-widget-"] a[href*="shapo.io"]');
+    if (watermark) {
+      watermark.remove();
+    }
+  });
 
-  return (
-    <section className="py-12 bg-zinc-50 min-h-[400px]">
-      <div className="max-w-6xl mx-auto px-4 text-center">
-        
-        {/* Il contenitore dove iniettiamo lo script e dove apparirà il widget */}
-        <div ref={containerRef} className="trustindex-container">
-          {/* Questo div interno è per sicurezza */}
-          <div className="ti-widget" data-widget-id="ddfdea2713455963cd26aa92118"></div>
-        </div>
-      </div>
-    </section>
-  )
+  const target = document.getElementById("shapo-widget-75a58ab3677f54c6a473");
+  if (target) {
+    observer.observe(target, { childList: true, subtree: true });
+  }
+
+  return () => observer.disconnect();
+  }, []);
+
+return (
+
+  <div className="w-full my-6 flex justify-center">
+    {/* Contenitore fake: tagliamo gli ultimi 30px in basso dove risiede il logo Shapo */}
+    <div className="w-full max-h-[320px] overflow-hidden relative border-b border-zinc-100">
+      
+      {/* Il Widget originale di Shapo */}
+      <div id="shapo-widget-75a58ab3677f54c6a473"></div>
+      
+    </div>
+  </div>
+);
 }
