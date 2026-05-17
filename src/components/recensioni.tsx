@@ -19,7 +19,7 @@ export default function GoogleReviewsWidget() {
 
   <div className="w-full my-6 flex justify-center">
     {/* Contenitore fake: tagliamo gli ultimi 30px in basso dove risiede il logo Shapo */}
-    <div className="w-full max-h-[389px] overflow-hidden relative border-b border-zinc-100">
+    <div className="w-full max-h-[386px] md:max-h-[389px] overflow-hidden relative border-b border-zinc-100">
       
       {/* Il Widget originale di Shapo */}
    <div 
