@@ -56,7 +56,7 @@ export default function Animazione() {
 
       <div className="w-full my-6 px-4 container mx-auto"> 
         <img 
-          src="/divider_servizi.png" 
+          src="/divider_servizi.webp"
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }} 
