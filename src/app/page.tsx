@@ -55,9 +55,9 @@ export default function Home() {
         </div>
 
         {/* --- IMMAGINE PROMO --- */}
-        <div className="w-full my-12 px-4 container mx-auto">
+        <div className="w-full my-12 px-4">
           <img 
-            src="/divider_prodotti.png" 
+            src="/divider_prodotti.webp" 
             alt="Prodotti"
             className="w-full h-auto"
             style={{ maxHeight: "400px" }}
@@ -68,7 +68,7 @@ export default function Home() {
 
         <div className="w-full my-5 px-4 container mx-auto">
           <img 
-            src="/divider_newsletter.png" 
+            src="/divider_newsletter.webp" 
             alt="Newsletter"
             className="w-full h-auto "
             style={{ maxHeight: "400px" }}
@@ -122,7 +122,7 @@ export default function Home() {
 
         <div className="w-full my-12 px-4 container mx-auto">
           <img 
-            src="/divider_recensioni.png" 
+            src="/divider_recensioni.webp" 
             alt="Recensioni"
             className="w-full h-auto"
             style={{ maxHeight: "400px" }}
