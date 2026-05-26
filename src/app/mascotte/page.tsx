@@ -79,10 +79,6 @@ export default function MascottePage() {
             style={{ maxHeight: "400px" }}
           />
         </div>
-            {/* Footer Divider */}
-            <div className="w-full my-12 px-4 container mx-auto">
-                <div className="h-px bg-slate-100 w-full" />
-            </div>
         </div>
     )
 }
