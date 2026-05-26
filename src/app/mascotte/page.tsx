@@ -25,7 +25,7 @@ export default function MascottePage() {
 
     <div className="w-full mt-6 mb-12 px-4 container mx-auto">
         <img 
-          src="/divider_mascotte_1.png" 
+          src="/divider_mascotte_1.webp" 
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }}
@@ -47,7 +47,7 @@ export default function MascottePage() {
             </div>
     <div className="w-full mt-6 mb-12 px-4 container mx-auto">
         <img 
-          src="/divider_pacchetti.png" 
+          src="/divider_pacchetti.webp" 
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }}

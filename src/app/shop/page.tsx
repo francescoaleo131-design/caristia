@@ -46,7 +46,7 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
       <div className="w-full bg-white border-b"> 
         <div className="container mx-auto px-4 py-6">
           <img 
-            src="/divider_negozio.png" 
+            src="/divider_negozio.webp" 
             alt="Promozione Giocattoli"
             className="w-full h-auto rounded-xl"
             style={{ maxHeight: "300px", objectFit: "cover" }} 

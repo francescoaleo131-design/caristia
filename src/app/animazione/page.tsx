@@ -71,7 +71,7 @@ export default function Animazione() {
       {/* --- IMMAGINE SEPARATRICE 1 --- */}
       <div className="w-full my-6 px-4 container mx-auto"> 
         <img 
-          src="/divider_pacchetti.png" 
+          src="/divider_pacchetti.webp" 
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }} 
@@ -91,7 +91,7 @@ export default function Animazione() {
       {/* --- IMMAGINE SEPARATRICE 2 --- */}
       <div className="w-full mt-6 mb-12 px-4 container mx-auto">
         <img 
-          src="/divider_prenotazioni.png" 
+          src="/divider_prenotazioni.webp" 
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }}
