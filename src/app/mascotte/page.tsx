@@ -25,7 +25,7 @@ export default function MascottePage() {
 
     <div className="w-full mt-6 mb-12 px-4 container mx-auto">
         <img 
-          src="/divider_mascotte_1.webp" 
+          src="/divider_mascotte.webp" 
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }}
