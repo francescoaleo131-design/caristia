@@ -54,15 +54,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* --- IMMAGINE PROMO --- */}
-        <div className="w-full my-12 px-4">
-          <img 
-            src="/divider_prodotti.webp" 
-            alt="Prodotti"
-            className="w-full h-auto"
-            style={{ maxHeight: "400px" }}
-          />
-        </div>
+{/* --- IMMAGINE PROMO --- */}
+<div className="w-full my-12 px-0 md:px-4"> 
+  <img 
+    src="/divider_prodotti.webp" 
+    alt="Prodotti"
+    className="w-full h-[800px] md:h-[400px] object-cover"
+  />
+</div>
 
         <Carosello />
 

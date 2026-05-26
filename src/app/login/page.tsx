@@ -5,10 +5,13 @@ import { createBrowserClient } from "@supabase/ssr"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from 'sonner'
+// IMPORTA LE ICONE DA LUCIDE
+import { Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -22,7 +25,6 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
 
-    // Ora questo metodo scriverà automaticamente i COOKIE necessari al middleware
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -36,13 +38,10 @@ export default function LoginPage() {
 
     if (data.session) {
       toast.success("Bentornato!")
-      
-      // 3. IMPORTANTE: router.refresh() assicura che il middleware veda i nuovi cookie
       router.refresh() 
       
-      // Aspettiamo un micro-secondo che i cookie vengano settati prima di spostarci
       setTimeout(() => {
-        router.push("/") // O dove preferisci
+        router.push("/")
       }, 100)
     }
     
@@ -77,14 +76,33 @@ export default function LoginPage() {
                 Hai dimenticato la password?
               </Link>
             </div>
-            <input 
-              type="password" 
-              required 
-              className="w-full p-4 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-[#1e73be] text-black" 
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            
+            {/* CONTENITORE RELATIVE PER POSIZIONARE L'OCCHIO */}
+            <div className="relative flex items-center">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                required 
+                // pr-12 lascia lo spazio perfetto per l'icona da 20px
+                className="w-full p-4 pr-12 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-[#1e73be] text-black" 
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              
+              {/* PULSANTE CON ICONA */}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 text-zinc-400 hover:text-[#1e73be] transition-colors focus:outline-none"
+                title={showPassword ? "Nascondi password" : "Mostra password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <button 

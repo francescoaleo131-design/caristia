@@ -68,7 +68,8 @@ export default function Header() {
     { name: "Animazione", link: "/animazione" },
     { name: "Affitto Mascotte", link: "/mascotte" },
     { name: "Liste Regalo", link: "/liste" },
-    { name: "Gift Card", link: "/giftcard" }
+    { name: "Gift Card", link: "/giftcard" },
+    { name: "Chi siamo" , link: "/about" }
   ];
 
   return (
