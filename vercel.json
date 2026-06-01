@@ -4,5 +4,6 @@
       "path": "/api/cron/abandoned-cart?secret=OjdgObl0TDQYWYAhIHppCCOC1Y/pZNF2+IQqG3M1A/8=",
       "schedule": "0 * * * *" 
     }
+    
   ]
 }
