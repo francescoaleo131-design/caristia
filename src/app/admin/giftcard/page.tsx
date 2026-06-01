@@ -1,345 +1,161 @@
-"use client";
+"use client"
+import { useState } from "react"
+import { Gift, CheckCircle2, Smartphone, Loader2 } from "lucide-react"
 
-import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase/supabase";
-import Link from "next/link";
-import { 
-  Camera, Store, Power, Loader2, ArrowDownCircle, 
-  AlertCircle, RefreshCw, Settings, Calendar 
-} from "lucide-react";
-import { Html5Qrcode } from "html5-qrcode";
-import { toast } from "sonner";
+const TAGLI = [
+  { amount: 25, image: "/card20.jpeg" },
+  { amount: 50, image: "/card50.jpeg" },
+  { amount: 100, image: "/card100.jpeg" },
+];
 
-export default function AdminCassa() {
-  const [code, setCode] = useState("");
-  const [cardData, setCardData] = useState<any>(null);
-  const [amountToSubtract, setAmountToSubtract] = useState("");
+export default function GiftCardPage() {
+  const [selectedTaglio, setSelectedTaglio] = useState(TAGLI[1]);
   const [loading, setLoading] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
-  
-  // Utilizziamo un riferimento per l'istanza dello scanner in modo da non perderla tra i render
-  const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
 
-  // --- LOGICA SCANNER ASINCRONA BLINDATA ---
-  useEffect(() => {
-    if (showScanner) {
-      // Inizializziamo l'istanza pura agganciata all'ID del DIV
-      const scanner = new Html5Qrcode("reader");
-      html5QrcodeRef.current = scanner;
-
-      // Avviamo la telecamera posteriore in modo esplicito
-      scanner.start(
-        { facingMode: "environment" },
-        {
-          fps: 15,
-          qrbox: (viewfinderWidth, viewfinderHeight) => {
-            const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-            const qrboxSize = Math.floor(minEdgeSize * 0.70);
-            return { width: qrboxSize, height: qrboxSize };
-          },
-        },
-        (decodedText) => {
-          // Successo: Codice Rilevato!
-          const cleanedCode = decodedText.trim().toUpperCase();
-          setCode(cleanedCode);
-          toast.success(`Codice rilevato: ${cleanedCode}`);
-          
-          // Spegniamo prima la telecamera, e SOLO DOPO chiudiamo l'interfaccia
-          stopScanner();
-        },
-        (errorMessage) => {
-          // Silenziamo i tentativi di lettura falliti sui singoli frame
-        }
-      ).catch((err) => {
-        console.error("Impossibile avviare la fotocamera:", err);
-        toast.error("Errore Fotocamera", {
-          description: "Controlla i permessi della fotocamera nel browser."
-        });
-        setShowScanner(false);
-      });
-    }
-
-    // Cleanup quando il componente si smonta improvvisamente
-    return () => {
-      if (html5QrcodeRef.current && html5QrcodeRef.current.isScanning) {
-        html5QrcodeRef.current.stop().catch(err => console.error("Errore unmount:", err));
-      }
-    };
-  }, [showScanner]);
-
-  // Funzione sicura per spegnere la telecamera asincronamente prima di nascondere il DIV
-  const stopScanner = async () => {
-    if (html5QrcodeRef.current) {
-      if (html5QrcodeRef.current.isScanning) {
-        try {
-          await html5QrcodeRef.current.stop();
-        } catch (err) {
-          console.error("Errore durante lo stop dello scanner:", err);
-        }
-      }
-      html5QrcodeRef.current = null;
-    }
-    setShowScanner(false);
-  };
-
-  // --- CONTROLLO CARTA ---
-  const checkCard = async () => {
-    if (!code) return;
+  const handleAcquista = async () => {
     setLoading(true);
-    setCardData(null); 
-
-    const { data, error } = await supabase
-      .from('gift_cards')
-      .select('*')
-      .ilike('code', code.trim())
-      .single();
-
-    if (error || !data) {
-      toast.error("Gift Card non trovata", {
-        description: "Il codice inserito non esiste nel database."
+    try {
+      const response = await fetch('/api/checkout/giftcard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount: selectedTaglio.amount }),
       });
-    } else {
-      const isExpired = new Date() > new Date(data.expire_date);
-      setCardData({ ...data, isExpired });
 
-      if (isExpired) {
-        toast.error("GIFT CARD SCADUTA", {
-          description: `Il termine di validità è scaduto il ${new Date(data.expire_date).toLocaleDateString()}.`
-        });
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        // Reindirizza l'utente alla pagina di checkout sicura di Stripe
+        window.location.href = data.url;
       } else {
-        toast.success("Carta caricata con successo!");
+        console.error("Errore API:", data.error);
+        alert(data.error || "Si è verificato un errore durante l'avvio del pagamento. Riprova.");
       }
+    } catch (err) {
+      console.error("Errore di rete:", err);
+      alert("Errore di connessione. Controlla la tua rete e riprova.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
-
-  // --- ATTIVAZIONE CARTA ---
-  const activateCard = async () => {
-    if (!cardData) return;
-    setLoading(true);
-
-    const { error } = await supabase
-      .from('gift_cards')
-      .update({ 
-        is_active: true, 
-        activated_at: new Date().toISOString() 
-      })
-      .eq('id', cardData.id);
-
-    if (!error) {
-      toast.success("Gift Card Attivata!");
-      setCardData({ ...cardData, is_active: true });
-    } else {
-      toast.error("Errore durante l'attivazione");
-    }
-    setLoading(false);
-  };
-
-  // --- TRANSAZIONE ---
-  const handleTransaction = async () => {
-    if (!cardData || !amountToSubtract || cardData.isExpired) return;
-    
-    const subtractValue = parseFloat(amountToSubtract.replace(',', '.'));
-    if (isNaN(subtractValue) || subtractValue <= 0) return toast.warning("Importo non valido");
-    if (subtractValue > cardData.current_balance) return toast.error("Credito insufficiente");
-
-    setLoading(true);
-    const newBalance = parseFloat((cardData.current_balance - subtractValue).toFixed(2));
-
-    const { data, error } = await supabase
-      .from('gift_cards')
-      .update({ current_balance: newBalance })
-      .eq('id', cardData.id)
-      .select(); 
-
-    if (error) {
-      toast.error("Errore Database: " + error.message);
-    } else if (data) {
-      toast.success("Pagamento confermato!", {
-        description: `Saldo aggiornato: €${newBalance.toFixed(2)}`
-      });
-      setCardData({ ...data[0], isExpired: false });
-      setAmountToSubtract("");
-    }
-    
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 py-12 px-4 font-sans text-zinc-900">
-      <div className="max-w-xl mx-auto space-y-8">
-        
-        {/* HEADER */}
-        <div className="text-center space-y-3 relative">
-          <Link 
-            href="/admin/generate" 
-            className="absolute right-0 top-0 p-3 bg-white rounded-2xl shadow-sm border border-zinc-100 text-zinc-400 hover:text-[#1e73be] transition-colors"
-          >
-            <Settings size={20} />
-          </Link>
-
-          <div className="bg-white w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto shadow-xl shadow-blue-100 border border-zinc-100">
-            <Store className="text-[#1e73be]" size={36} />
-          </div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter">
-            Terminale <span className="text-[#1e73be]">Cassa</span>
+    <div className="min-h-screen bg-zinc-50 py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-black text-[#1e73be] uppercase italic tracking-tight">
+            Gift Card <span className="text-[#8cc665]">Caristia</span>
           </h1>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Giocattoli Caristia • Gestione Interna</p>
+          <p className="text-gray-500 mt-2 font-medium">Il regalo perfetto, pronto in un secondo.</p>
         </div>
 
-        {/* BOX DI RICERCA / SCANNER */}
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white">
-          {!showScanner ? (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-zinc-400 ml-2 tracking-widest block">
-                  Inserisci o Scansiona il Codice
-                </label>
-                
-                <div className="relative flex items-center">
-                  <input 
-                    type="text" 
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                    placeholder="CODICE GIFT CARD"
-                    className="w-full bg-zinc-50 border-2 border-zinc-100 rounded-2xl p-5 pr-16 text-xl font-mono uppercase focus:border-[#1e73be] outline-none transition-all"
-                  />
-                  
-                  <button 
-                    type="button"
-                    onClick={() => setShowScanner(true)} 
-                    className="absolute right-3 p-3 bg-[#1e73be]/10 text-[#1e73be] rounded-xl hover:bg-[#1e73be]/20 active:scale-95 transition-all z-10"
-                    title="Apri fotocamera"
-                  >
-                    <Camera size={24} />
-                  </button>
-                </div>
-              </div>
+        <div className="grid md:grid-cols-2 gap-12 items-center">
 
-              <button 
-                onClick={checkCard} 
-                disabled={loading || !code}
-                className="w-full bg-[#1e73be] text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-200 disabled:opacity-50 transition-all flex items-center justify-center"
-              >
-                {loading ? <Loader2 className="animate-spin" /> : "Verifica Carta"}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Finestra dello Scanner attiva (Senza controlli nativi della libreria) */}
-              <div className="overflow-hidden rounded-3xl bg-zinc-900 border-4 border-zinc-100 aspect-square relative">
-                <div id="reader" className="w-full h-full object-cover"></div>
-              </div>
-              <button 
-                onClick={stopScanner} 
-                className="w-full bg-red-50 text-red-500 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all"
-              >
-                Annulla Scanner
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* DETTAGLI E OPERAZIONI */}
-        {cardData && (
-          <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white animate-in zoom-in-95 duration-300">
-            {cardData.isExpired ? (
-              <div className="text-center space-y-6">
-                <div className="bg-red-50 text-red-600 p-6 rounded-3xl border border-red-100">
-                  <AlertCircle className="mx-auto mb-2" size={32} />
-                  <p className="text-sm font-black uppercase tracking-widest">Gift Card Scaduta</p>
-                  <p className="text-[10px] font-medium opacity-80 mt-1">
-                    Validità terminata il {new Date(cardData.expire_date).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="opacity-30 grayscale">
-                   <p className="text-4xl font-black text-zinc-400">€{cardData.current_balance.toFixed(2)}</p>
-                   <p className="text-[9px] font-black uppercase text-zinc-300 mt-1">Saldo Non Utilizzabile</p>
-                </div>
-                <button 
-                  onClick={() => {setCardData(null); setCode("");}}
-                  className="w-full bg-zinc-100 text-zinc-500 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest"
-                >
-                  Nuova Scansione
-                </button>
-              </div>
-            ) : 
-            
-            !cardData.is_active ? (
-              <div className="text-center space-y-6">
-                <div className="bg-amber-50 text-amber-600 p-6 rounded-3xl border border-amber-100">
-                  <AlertCircle className="mx-auto mb-2" size={32} />
-                  <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">
-                    Questa Gift Card non è ancora attiva.
-                  </p>
-                </div>
-                <div className="space-y-1">
-                   <p className="text-4xl font-black text-zinc-300">€{cardData.initial_balance.toFixed(2)}</p>
-                   <p className="text-[9px] font-black uppercase text-zinc-300">Valore Nominale</p>
-                </div>
-                <button 
-                  onClick={activateCard}
-                  disabled={loading}
-                  className="w-full bg-[#8cc665] text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-green-100 flex items-center justify-center gap-3"
-                >
-                  {loading ? <Loader2 className="animate-spin" /> : <><Power size={18} /> Attiva Ora</>}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                <div className="text-center space-y-1">
-                  <div className="flex flex-col gap-2 items-center">
-                    <span className="text-[9px] font-black uppercase bg-[#8cc665]/10 text-[#8cc665] px-4 py-1 rounded-full">Saldo Disponibile</span>
-                    <div className="flex items-center gap-1 text-zinc-400">
-                      <Calendar size={12} />
-                      <span className="text-[9px] font-bold uppercase">Scadenza: {new Date(cardData.expire_date).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-center gap-1 text-[#1e73be] mt-4">
-                    <span className="text-2xl font-black">€</span>
-                    <span className="text-6xl font-black tracking-tighter">{cardData.current_balance.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-6 border-t border-dashed border-zinc-100">
-                  <div className="relative">
-                    <ArrowDownCircle className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300" size={24} />
-                    <input 
-                      type="text" 
-                      inputMode="decimal"
-                      value={amountToSubtract}
-                      onChange={(e) => setAmountToSubtract(e.target.value)}
-                      placeholder="Importo scontrino"
-                      className="w-full bg-zinc-50 border-2 border-transparent focus:border-[#8cc665]/20 rounded-2xl py-6 pl-16 pr-6 text-3xl font-black outline-none transition-all placeholder:text-zinc-200"
-                    />
-                  </div>
-                  <button 
-                    onClick={handleTransaction}
-                    disabled={loading || !amountToSubtract}
-                    className="w-full bg-[#8cc665] text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-green-200 flex items-center justify-center"
-                  >
-                    {loading ? <Loader2 className="animate-spin" /> : "Conferma Pagamento"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* FOOTER */}
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-zinc-300 text-[9px] font-black uppercase tracking-[0.3em]">Sicurezza Crittografata Caristia</p>
-          {cardData && (
-            <button 
-              onClick={() => {setCardData(null); setCode(""); setAmountToSubtract("");}} 
-              className="flex items-center gap-2 text-[10px] font-black uppercase text-zinc-400 hover:text-zinc-600 transition-colors"
+          {/* Anteprima Carta Regalo */}
+          <div className="relative group">
+            <div
+              className="w-full aspect-[1.6/1] rounded-[2rem] p-8 text-white shadow-2xl transition-all duration-500 overflow-hidden relative"
+              style={{
+                backgroundImage: `url(${selectedTaglio.image})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
             >
-              <RefreshCw size={12} /> Nuova Operazione
+              {/* Overlay per leggibilità */}
+              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-500"></div>
+
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex justify-between items-start">
+                  <Gift size={40} className="opacity-90" />
+                  <span className="text-4xl font-black italic">€{selectedTaglio.amount}</span>
+                </div>
+
+                <div className="mt-12">
+                  <p className="text-xs uppercase tracking-[0.2em] opacity-90 font-bold">Codice Regalo</p>
+                  <p className="text-xl font-mono font-bold tracking-widest mt-1">CAR-XXXX-XXXX</p>
+                </div>
+
+                <div className="mt-auto flex justify-between items-end border-t border-white/20 pt-4">
+                  <p className="text-[10px] uppercase font-bold tracking-widest">Valida in negozio e online</p>
+                  <img src="/icon.jpg" alt="Logo" className="h-8 w-auto brightness-0 invert opacity-70" />
+                </div>
+              </div>
+            </div>
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#8cc665]/10 rounded-full blur-3xl -z-10"></div>
+          </div>
+
+          {/* Pannello di Configurazione e Acquisto */}
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100">
+            <h3 className="text-lg font-black text-gray-800 uppercase mb-6">Scegli l'importo</h3>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              {TAGLI.map((taglio) => (
+                <button
+                  key={taglio.amount}
+                  type="button"
+                  onClick={() => setSelectedTaglio(taglio)}
+                  disabled={loading}
+                  className={`py-4 rounded-2xl font-black transition-all ${
+                    selectedTaglio.amount === taglio.amount
+                      ? "bg-[#1e73be] text-white shadow-lg scale-105"
+                      : "bg-gray-50 text-gray-400 hover:bg-gray-100 disabled:opacity-50"
+                  }`}
+                >
+                  €{taglio.amount}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
+                <CheckCircle2 size={18} className="text-[#8cc665]" />
+                Consegna istantanea via Email
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
+                <Smartphone size={18} className="text-[#8cc665]" />
+                QR Code incluso per uso in negozio
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAcquista}
+              disabled={loading}
+              className="w-full bg-[#8cc665] hover:bg-[#76b054] text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} />
+                  Elaborazione...
+                </>
+              ) : (
+                "Acquista Ora"
+              )}
             </button>
-          )}
+          </div>
+
+        </div>
+
+        {/* Tre passaggi informativi legati all'acquisto */}
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div>
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-[#1e73be] font-bold">1</div>
+            <h4 className="font-bold text-gray-800 uppercase text-sm mb-2">Scegli e paga</h4>
+            <p className="text-xs text-gray-500">Seleziona l'importo e completa l'acquisto in sicurezza.</p>
+          </div>
+          <div>
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-[#1e73be] font-bold">2</div>
+            <h4 className="font-bold text-gray-800 uppercase text-sm mb-2">Ricevi il QR Code</h4>
+            <p className="text-xs text-gray-500">Ricevi subito il codice via email pronto da stampare o girare.</p>
+          </div>
+          <div>
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md text-[#1e73be] font-bold">3</div>
+            <h4 className="font-bold text-gray-800 uppercase text-sm mb-2">Usa dove vuoi</h4>
+            <p className="text-xs text-gray-500">Inserisci il codice sul sito o mostralo direttamente in negozio.</p>
+          </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
