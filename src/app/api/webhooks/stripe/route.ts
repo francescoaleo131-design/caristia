@@ -7,7 +7,7 @@ import { generateSecureGiftCode } from '@/lib/utils/giftcard-utils'; // Assicura
 // Supabase admin client
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY! // Cambiato in SERVICE_ROLE_KEY per sicurezza backend
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // Cambiato in SERVICE_ROLE_KEY per sicurezza backend
 );
 
 const LOOPS_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n';
