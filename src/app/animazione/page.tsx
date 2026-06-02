@@ -55,13 +55,17 @@ export default function Animazione() {
 </section>
 
       <div className="w-full my-6 px-4 container mx-auto"> 
+        <picture>
+          <source media="(max-width: 768px)" srcSet="/divider_servizi_mobile.webp" />
         <img 
           src="/divider_servizi.webp"
           alt="Promozione Giocattoli"
           className="w-full h-auto"
-          style={{ maxHeight: "300px" }} 
+        style={{ maxHeight: "300px" }} 
         />
+         </picture>
       </div>
+     
 
       {/* --- SEZIONE ICONE --- */}
       <section className="bg-white py-4 px-2"> 
