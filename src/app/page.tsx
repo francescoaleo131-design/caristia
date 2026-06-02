@@ -139,7 +139,7 @@ export default function Home() {
         </div>
 
         {/* RECENSIONI */}
-        <div className="mx-auto w-full max-w-5xl px-10 py-10">
+        <div className="mx-auto w-full max-w-5xl px-10 py-2 md:py-10">
         </div>
         <RecensioniGoogle />
         
