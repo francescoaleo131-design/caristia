@@ -70,7 +70,7 @@ export default function Home() {
 
         <div className="w-full my-5 px-4 container mx-auto">
           <picture> 
-            <source media="(max-width: 768px)" srcSet="/mobile_divider_prodotti.webp" />
+            <source media="(max-width: 768px)" srcSet="/mobile_divider_newsletter.webp" />
           
           <img 
             src="/divider_newsletter.webp" 

@@ -74,12 +74,15 @@ export default function Animazione() {
 
       {/* --- IMMAGINE SEPARATRICE 1 --- */}
       <div className="w-full my-6 px-4 container mx-auto"> 
+        <picture>
+          <source media="(max-width: 768px)" srcSet="/mobile_divider_animazione.webp" />
         <img 
           src="/divider_pacchetti.webp" 
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }} 
         />
+        </picture>
       </div>
 
       {/* --- SEZIONE 2: PACCHETTI E PROMO --- */}
