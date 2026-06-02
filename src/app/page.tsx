@@ -126,7 +126,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="w-full my-12 px-4 container mx-auto">
+        <div className="w-full my-5 md:my-12 px-4 container mx-auto">
           <picture> 
             <source media="(max-width: 768px)" srcSet="/mobile_divider_recensioni.webp" />
           <img 
@@ -143,7 +143,7 @@ export default function Home() {
         </div>
         <RecensioniGoogle />
         
-        <div className="w-full my-12 px-4 container mx-auto">
+        <div className="w-full my-5 md:my-12 px-4 container mx-auto">
           <img 
             src="/divider_4.png" 
             alt="Promozione Giocattoli"
