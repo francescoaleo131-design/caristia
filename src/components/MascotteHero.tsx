@@ -8,15 +8,16 @@ export default function MascotteHero() {
  <div className="absolute inset-0 z-0">
   {/* Sfondo di fallback mentre l'immagine carica */}
   <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100" />
+  <picture>
+    <source media="(max-width: 768px)" srcSet="/mobile_main_mascotte.png" />
   
   <img
     src="/main_mascotte.png"
     alt="Mascotte Caristia"
-    // object-cover riempie tutto lo spazio, object-center la tiene centrata
     className="relative w-full h-full object-cover object-center shadow-inner"
-    // Se usi Next.js "Image", aggiungi 'priority' per caricarla subito
+   
   />
-  
+   </picture>
   {/* Overlay opzionale se vuoi che il testo sopra si legga meglio */}
   <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]" />
 </div>
