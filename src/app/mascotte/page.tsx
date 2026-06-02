@@ -24,12 +24,16 @@ export default function MascottePage() {
             <MascotteHero />
 
     <div className="w-full mt-6 mb-12 px-4 container mx-auto">
+        <picture>
+            <source media="(max-width: 768px)" srcSet="/mobile_divider_mascotte.webp" />
+        
         <img 
           src="/divider_mascotte.webp" 
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }}
         />
+        </picture>
       </div>
 
             {/* Catalogo Mascotte Disponibili */}
@@ -46,12 +50,15 @@ export default function MascottePage() {
                 <div className="h-px bg-slate-100 w-full" />
             </div>
     <div className="w-full mt-6 mb-12 px-4 container mx-auto">
+        <picture>
+            <source media="(max-width: 768px)" srcSet="/mobile_divider_pacchetti.webp" />
         <img 
           src="/divider_pacchetti.webp" 
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }}
         />
+        </picture>
       </div>
             {/* Packages Section - Aggiunto ID per lo scroll */}
             <div id="pacchetti-sezione">

@@ -68,7 +68,7 @@ export default function Animazione() {
      
 
       {/* --- SEZIONE ICONE --- */}
-      <section className="bg-white py-4 px-2"> 
+      <section className="bg-white py-2 md:py-4 px-2"> 
         <ServiziIcone />
       </section>
 
@@ -94,12 +94,15 @@ export default function Animazione() {
 
       {/* --- IMMAGINE SEPARATRICE 2 --- */}
       <div className="w-full mt-6 mb-12 px-4 container mx-auto">
+        <picture> 
+          <source media="(max-width: 768px)" srcSet="/mobile_divider_prenota.webp" />
         <img 
-          src="/divider_prenotazioni.webp" 
+          src="/divider_prenota.webp" 
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "300px" }}
         />
+        </picture>
       </div>
 
       {/* --- SEZIONE CONTATTI --- */}

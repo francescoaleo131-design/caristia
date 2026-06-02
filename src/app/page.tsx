@@ -56,22 +56,29 @@ export default function Home() {
 
 {/* --- IMMAGINE PROMO --- */}
 <div className="w-full my-12 px-0 md:px-4"> 
+  <picture>
+    <source media="(max-width: 768px)" srcSet="/mobile_divider_prodotti.webp" />
   <img 
     src="/divider_prodotti.webp" 
     alt="Prodotti"
     className="w-full h-[800px] md:h-[400px] object-cover"
   />
+  </picture>
 </div>
 
         <Carosello />
 
         <div className="w-full my-5 px-4 container mx-auto">
+          <picture> 
+            <source media="(max-width: 768px)" srcSet="/mobile_divider_prodotti.webp" />
+          
           <img 
             src="/divider_newsletter.webp" 
             alt="Newsletter"
             className="w-full h-auto "
             style={{ maxHeight: "400px" }}
           />
+          </picture>
         </div>
 
         {/* --- SEZIONE NEWSLETTER --- */} 
@@ -120,12 +127,15 @@ export default function Home() {
         </div>
 
         <div className="w-full my-12 px-4 container mx-auto">
+          <picture> 
+            <source media="(max-width: 768px)" srcSet="/mobile_divider_recensioni.webp" />
           <img 
             src="/divider_recensioni.webp" 
             alt="Recensioni"
             className="w-full h-auto"
             style={{ maxHeight: "400px" }}
           />
+          </picture>
         </div>
 
         {/* RECENSIONI */}
