@@ -12,7 +12,7 @@ const servizi = [
 
 export default function ServiziIcone() {
   return (
-    <section className="py-10 bg-white">
+    <section className="py-3 md:py-10 bg-white">
       <div className="container mx-auto px-4">
         
    

@@ -17,7 +17,7 @@ export default function FormContatti() {
   const handleChange = (e: any) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
   return (
-    <section id="contatti" className="py-5 bg-white scroll-mt-20">
+    <section id="contatti" className="py-2 md:py-5 bg-white scroll-mt-20">
       <div className="container mx-auto px-4 max-w-3xl">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-8 rounded-3xl shadow-xl">
           <input required name="nome" placeholder="Nome e Cognome" className="p-3 bg-gray-50 border rounded-xl outline-none" onChange={handleChange} />

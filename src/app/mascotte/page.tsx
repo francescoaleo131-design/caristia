@@ -20,7 +20,7 @@ export default function MascottePage() {
 
     return (
         <div className="w-full flex flex-col pb-20">
-            {/* Hero Section */}
+          
             <MascotteHero />
 
     <div className="w-full mt-6 mb-12 px-4 container mx-auto">

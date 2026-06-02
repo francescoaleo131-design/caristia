@@ -42,7 +42,7 @@ interface MascottePackagesProps {
 
 export default function MascottePackages({ onSelect }: MascottePackagesProps) {
   return (
-    <section id="prenota" className="py-20 bg-white">
+    <section id="prenota" className="py-5 md:py-20 bg-white">
       <div className="container mx-auto px-4 text-center">
         <p className="text-slate-500 font-bold mb-16 max-w-2xl mx-auto">
           Scegli la soluzione più adatta alle tue esigenze. Dal semplice noleggio all'animazione completa.

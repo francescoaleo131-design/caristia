@@ -54,7 +54,7 @@ export default function Animazione() {
     </div>
 </section>
 
-      <div className="w-full my-6 px-4 container mx-auto"> 
+      <div className="w-full my-3 md:my-6 px-4 container mx-auto"> 
         <picture>
           <source media="(max-width: 768px)" srcSet="/mobile_divider_servizi.webp" />
         <img 
