@@ -56,7 +56,7 @@ export default function Animazione() {
 
       <div className="w-full my-6 px-4 container mx-auto"> 
         <picture>
-          <source media="(max-width: 768px)" srcSet="/divider_servizi_mobile.webp" />
+          <source media="(max-width: 768px)" srcSet="/mobile_divider_servizi.webp" />
         <img 
           src="/divider_servizi.webp"
           alt="Promozione Giocattoli"
