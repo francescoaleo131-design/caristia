@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     const metadata = session.metadata;
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
-    // 👇 AGGIUNGI QUESTI DUE LOG DI CONTROLLO QUI 👇
+    
     console.log("🔍 [DEBUG WEBHOOK] Metadata ricevuti da Stripe:", metadata);
     console.log("🔍 [DEBUG WEBHOOK] Valore di metadata.type:", metadata?.type);
     console.log("🔍 [DEBUG WEBHOOK] Verifica LOOPS_API_KEY presente?:", !!process.env.LOOPS_API_KEY);
@@ -54,9 +54,11 @@ export async function POST(req: Request) {
     if (metadata?.type === 'shop_order') {
       console.log('📦 Processing order for:', customerEmail);
       
+      let dbSuccess = false;
+      const userId = metadata.user_id;
+
       try {
         const items = JSON.parse(metadata.items || '[]');
-        const userId = metadata.user_id;
         
         // 1. SALVATAGGIO DELL'ORDINE
         const { error: orderError } = await supabaseAdmin
@@ -104,7 +106,7 @@ export async function POST(req: Request) {
           }
         }
 
-        // 3. SVUOTA IL CARRELLO DELL'UTENTE DA SUPABASE
+        // 3. SVUOTA IL CARRELLO DELL'UTENTE DA SUPABASE (cart_items al plurale)
         if (userId) {
           const { error: clearCartError } = await supabaseAdmin
             .from('cart_items')
@@ -118,16 +120,22 @@ export async function POST(req: Request) {
           }
         }
 
-        // 4. INVIA EVENTO ACQUISTO A LOOPS
-        console.log("🔍 Verifica LOOPS_API_KEY per acquisto... Presente?", !!process.env.LOOPS_API_KEY);
+        dbSuccess = true;
+
+      } catch (dbError: any) {
+        console.error('❌ Errore reale Database (ordini/carrello):', dbError.message);
+        return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      }
+
+      // 4. INVIA EVENTO ACQUISTO A LOOPS (Eseguito solo se le operazioni sul DB sono riuscite)
+      if (dbSuccess && process.env.LOOPS_API_KEY && customerEmail) {
+        console.log(`🚀 Invio evento '${LOOPS_PURCHASE_EVENT}' a Loops per: ${customerEmail}`);
         
-        if (process.env.LOOPS_API_KEY && customerEmail) {
-          console.log(`🚀 Invio evento '${LOOPS_PURCHASE_EVENT}' a Loops per: ${customerEmail}`);
-          
-          const loopsResponse = await fetch('https://events.loops.so/v1/events/send', {
+        try {
+          const loopsResponse = await fetch('https://api.loops.so/v1/events/send', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${process.env.LOOPS_API_KEY}`,
+              'Authorization': `Bearer ${process.env.LOOPS_API_KEY.trim()}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -135,7 +143,7 @@ export async function POST(req: Request) {
               eventName: LOOPS_PURCHASE_EVENT,
               contactProperties: {
                 firstName: customerName || '',
-                isCustomer: true, // Tagga l'utente come cliente reale
+                isCustomer: true,
               },
               eventProperties: {
                 totalAmount: session.amount_total / 100,
@@ -148,15 +156,13 @@ export async function POST(req: Request) {
             console.log(`✅ Loops ha registrato l'acquisto per ${customerEmail}`);
           } else {
             const errorText = await loopsResponse.text();
-            console.error(`❌ Loops ha rifiutato l'evento acquisto. Errore:`, errorText);
+            console.error(`❌ Loops ha rifiutato l'evento. Stato: ${loopsResponse.status}, Errore:`, errorText);
           }
-        } else {
-          console.warn('⚠️ Impossibile notificare Loops: Chiave mancante o email utente non presente.');
+        } catch (loopsFetchError: any) {
+          console.error(`❌ Errore di rete/fetch verso Loops:`, loopsFetchError.message || loopsFetchError);
         }
-
-      } catch (dbError: any) {
-        console.error('❌ Database error (shop_order):', dbError.message);
-        return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      } else if (!process.env.LOOPS_API_KEY) {
+        console.warn('⚠️ LOOPS_API_KEY non configurata su Vercel. Salto la notifica.');
       }
     }
     
@@ -166,11 +172,12 @@ export async function POST(req: Request) {
     else if (metadata?.type === 'giftcard_purchase') {
       console.log('🎁 Processing gift card purchase for:', customerEmail);
 
-      try {
-        const amount = session.amount_total / 100;
-        const giftCode = generateSecureGiftCode();
-        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(giftCode)}`;
+      let dbGiftSuccess = false;
+      const amount = session.amount_total / 100;
+      const giftCode = generateSecureGiftCode();
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(giftCode)}`;
 
+      try {
         const { error: giftCardError } = await supabaseAdmin
           .from('gift_cards')
           .insert([
@@ -188,14 +195,23 @@ export async function POST(req: Request) {
 
         if (giftCardError) throw giftCardError;
         console.log('✅ Gift card saved and activated in DB');
+        dbGiftSuccess = true;
 
-        if (process.env.LOOPS_API_KEY) {
-          const targetEmail = metadata.recipient_email || customerEmail;
-          
-          const loopsResponse = await fetch('https://events.loops.so/v1/send', {
+      } catch (dbError: any) {
+        console.error('❌ Database error (giftcard_purchase):', dbError.message);
+        return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      }
+
+      // 5. INVIO EMAIL TRANSAZIONALE GIFT CARD
+      if (dbGiftSuccess && process.env.LOOPS_API_KEY) {
+        const targetEmail = metadata.recipient_email || customerEmail;
+        console.log(`🚀 Invio email transazionale Gift Card a: ${targetEmail}`);
+        
+        try {
+          const loopsResponse = await fetch('https://api.loops.so/v1/transactional', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${process.env.LOOPS_API_KEY}`,
+              'Authorization': `Bearer ${process.env.LOOPS_API_KEY.trim()}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -213,17 +229,13 @@ export async function POST(req: Request) {
 
           if (!loopsResponse.ok) {
             const errorText = await loopsResponse.text();
-            console.error(`❌ Errore invio email Loops Gift Card: ${errorText}`);
+            console.error(`❌ Errore risposta Loops Gift Card: ${errorText}`);
           } else {
             console.log(`✉️ Email Gift Card inviata con successo a ${targetEmail}`);
           }
-        } else {
-          console.warn('⚠️ LOOPS_API_KEY non configurata. Salto.');
+        } catch (loopsGiftError: any) {
+          console.error(`❌ Errore di rete/fetch verso Loops (Gift Card):`, loopsGiftError.message || loopsGiftError);
         }
-
-      } catch (dbError: any) {
-        console.error('❌ Database error (giftcard_purchase):', dbError.message);
-        return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
     }
   }
