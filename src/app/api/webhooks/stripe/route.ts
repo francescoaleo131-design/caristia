@@ -107,7 +107,7 @@ export async function POST(req: Request) {
         // 3. SVUOTA IL CARRELLO DELL'UTENTE DA SUPABASE
         if (userId) {
           const { error: clearCartError } = await supabaseAdmin
-            .from('cart_item')
+            .from('cart_items')
             .delete()
             .eq('user_id', userId);
 
