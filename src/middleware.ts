@@ -100,5 +100,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Ho lasciato intatto il tuo matcher, esclude già api, immagini e asset statici
-  matcher: ['/((?!api|_next/static|_next/image|assets|favicon.ico|sw.js).*)'],
+matcher: [
+    '/((?!api|_next/static|_next/image|assets|favicon.ico|sw.js|.*\\.jpg$|.*\\.jpeg$|.*\\.png$|.*\\.svg$|.*\\.webp$|.*\\.ico$).*)'
+  ],
 }
