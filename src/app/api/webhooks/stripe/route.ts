@@ -127,7 +127,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
 
-      // 4. INVIA EVENTO ACQUISTO A LOOPS (Eseguito solo se le operazioni sul DB sono riuscite)
+      // 4. INVIA EVENTO ACQUISTO A LOOPS (Eseguito all'interno di shop_order, isolato dal try/catch del DB)
       if (dbSuccess && process.env.LOOPS_API_KEY && customerEmail) {
         console.log(`🚀 Invio evento '${LOOPS_PURCHASE_EVENT}' a Loops per: ${customerEmail}`);
         
