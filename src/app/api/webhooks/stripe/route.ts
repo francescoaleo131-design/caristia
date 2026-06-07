@@ -23,7 +23,7 @@ const loops = new LoopsClient(process.env.LOOPS_API_KEY?.trim() || 'placeholder-
 
 // ID Modelli Transazionali di Loops
 const LOOPS_GIFT_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n'; // ID per Gift Card
-const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; // 👈 Il tuo ID transazionale per lo Shop
+const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; // ID transazionale per lo Shop
 
 export async function POST(req: Request) {
   const body = await req.text(); 
@@ -139,13 +139,11 @@ export async function POST(req: Request) {
         try {
           const resp = await loops.sendTransactionalEmail({
             email: customerEmail,
-            transactionalId: LOOPS_SHOP_TEMPLATE_ID, // 👈 Chiamata diretta al template dello shop
+            transactionalId: LOOPS_SHOP_TEMPLATE_ID,
             dataVariables: {
               customerName: customerName || 'Cliente',
               amount: `€${(session.amount_total / 100).toFixed(2)}`,
               orderId: session.id
-              // Nota: Se dentro al template transazionale di Loops hai inserito variabili con nomi diversi 
-              // (es. "buyerName" o "price"), ricordati di renderle speculari qui dentro.
             },
           });
 
