@@ -142,8 +142,8 @@ export async function POST(req: Request) {
             transactionalId: LOOPS_SHOP_TEMPLATE_ID, // 👈 Chiamata diretta al template dello shop
             dataVariables: {
               customerName: customerName || 'Cliente',
-              totalAmount: `€${(session.amount_total / 100).toFixed(2)}`,
-              stripeSessionId: session.id
+              amount: `€${(session.amount_total / 100).toFixed(2)}`,
+              orderId: session.id
               // Nota: Se dentro al template transazionale di Loops hai inserito variabili con nomi diversi 
               // (es. "buyerName" o "price"), ricordati di renderle speculari qui dentro.
             },
