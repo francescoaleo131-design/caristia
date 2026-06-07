@@ -21,8 +21,9 @@ const supabaseAdmin = createClient(
 // Inizializzazione del client Loops con fallback per evitare blocchi in fase di build
 const loops = new LoopsClient(process.env.LOOPS_API_KEY?.trim() || 'placeholder-key');
 
-const LOOPS_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n';
-const LOOPS_PURCHASE_EVENT = 'purchase_completed'; // Nome evento per acquisto prodotti
+// ID Modelli Transazionali di Loops
+const LOOPS_GIFT_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n'; // ID per Gift Card
+const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; // 👈 Il tuo ID transazionale per lo Shop
 
 export async function POST(req: Request) {
   const body = await req.text(); 
@@ -131,31 +132,30 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
 
-      // 4. INVIA EVENTO ACQUISTO A LOOPS VIA SDK
+      // 4. INVIO EMAIL TRANSAZIONALE CONFERMA ACQUISTO SHOP VIA SDK
       if (dbSuccess && process.env.LOOPS_API_KEY && customerEmail) {
-        console.log(`🚀 Invio evento '${LOOPS_PURCHASE_EVENT}' a Loops per: ${customerEmail}`);
+        console.log(`🚀 Invio email transazionale Shop a: ${customerEmail}`);
         
         try {
-          const resp = await loops.sendEvent({
+          const resp = await loops.sendTransactionalEmail({
             email: customerEmail,
-            eventName: LOOPS_PURCHASE_EVENT,
-            contactProperties: {
-              firstName: customerName || '',
-              isCustomer: true,
-            },
-            eventProperties: {
-              totalAmount: session.amount_total / 100,
+            transactionalId: LOOPS_SHOP_TEMPLATE_ID, // 👈 Chiamata diretta al template dello shop
+            dataVariables: {
+              customerName: customerName || 'Cliente',
+              totalAmount: `€${(session.amount_total / 100).toFixed(2)}`,
               stripeSessionId: session.id
+              // Nota: Se dentro al template transazionale di Loops hai inserito variabili con nomi diversi 
+              // (es. "buyerName" o "price"), ricordati di renderle speculari qui dentro.
             },
           });
 
           if (resp.success) {
-            console.log(`✅ Loops ha registrato l'acquisto via SDK per ${customerEmail}`);
+            console.log(`✉️ Email conferma ordine inviata con successo via SDK a ${customerEmail}`);
           } else {
-            console.error(`❌ Loops ha rifiutato l'evento via SDK:`, resp);
+            console.error(`❌ Loops ha rifiutato l'invio dell'email transazionale:`, resp);
           }
         } catch (loopsFetchError: any) {
-          console.error(`❌ Errore SDK Loops (Shop):`, loopsFetchError.message || loopsFetchError);
+          console.error(`❌ Errore SDK Loops (Shop Transazionale):`, loopsFetchError.message || loopsFetchError);
         }
       } else if (!process.env.LOOPS_API_KEY) {
         console.warn('⚠️ LOOPS_API_KEY non configurata su Vercel. Salto la notifica.');
@@ -206,7 +206,7 @@ export async function POST(req: Request) {
         try {
           const resp = await loops.sendTransactionalEmail({
             email: targetEmail,
-            transactionalId: LOOPS_TEMPLATE_ID,
+            transactionalId: LOOPS_GIFT_TEMPLATE_ID,
             dataVariables: {
               giftCode: giftCode,
               amount: `€${amount.toFixed(2)}`,
