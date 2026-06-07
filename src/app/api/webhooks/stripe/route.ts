@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import { generateSecureGiftCode } from '@/lib/utils/giftcard-utils';
+import { LoopsClient } from 'loops'; // 👈 Importa l'SDK ufficiale
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
@@ -16,6 +17,9 @@ const supabaseAdmin = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co',
   supabaseServiceKey || 'placeholder-key'
 );
+
+// Inizializzazione del client Loops con fallback per evitare blocchi in fase di build
+const loops = new LoopsClient(process.env.LOOPS_API_KEY?.trim() || 'placeholder-key');
 
 const LOOPS_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n';
 const LOOPS_PURCHASE_EVENT = 'purchase_completed'; // Nome evento per acquisto prodotti
@@ -127,39 +131,31 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
 
-      // 4. INVIA EVENTO ACQUISTO A LOOPS (Eseguito all'interno di shop_order, isolato dal try/catch del DB)
+      // 4. INVIA EVENTO ACQUISTO A LOOPS VIA SDK
       if (dbSuccess && process.env.LOOPS_API_KEY && customerEmail) {
         console.log(`🚀 Invio evento '${LOOPS_PURCHASE_EVENT}' a Loops per: ${customerEmail}`);
         
         try {
-          const loopsResponse = await fetch('https://api.loops.so/v1/events/send', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${process.env.LOOPS_API_KEY.trim()}`,
-              'Content-Type': 'application/json',
+          const resp = await loops.sendEvent({
+            email: customerEmail,
+            eventName: LOOPS_PURCHASE_EVENT,
+            contactProperties: {
+              firstName: customerName || '',
+              isCustomer: true,
             },
-            body: JSON.stringify({
-              email: customerEmail,
-              eventName: LOOPS_PURCHASE_EVENT,
-              contactProperties: {
-                firstName: customerName || '',
-                isCustomer: true,
-              },
-              eventProperties: {
-                totalAmount: session.amount_total / 100,
-                stripeSessionId: session.id
-              },
-            }),
+            eventProperties: {
+              totalAmount: session.amount_total / 100,
+              stripeSessionId: session.id
+            },
           });
 
-          if (loopsResponse.ok) {
-            console.log(`✅ Loops ha registrato l'acquisto per ${customerEmail}`);
+          if (resp.success) {
+            console.log(`✅ Loops ha registrato l'acquisto via SDK per ${customerEmail}`);
           } else {
-            const errorText = await loopsResponse.text();
-            console.error(`❌ Loops ha rifiutato l'evento. Stato: ${loopsResponse.status}, Errore:`, errorText);
+            console.error(`❌ Loops ha rifiutato l'evento via SDK:`, resp);
           }
         } catch (loopsFetchError: any) {
-          console.error(`❌ Errore di rete/fetch verso Loops:`, loopsFetchError.message || loopsFetchError);
+          console.error(`❌ Errore SDK Loops (Shop):`, loopsFetchError.message || loopsFetchError);
         }
       } else if (!process.env.LOOPS_API_KEY) {
         console.warn('⚠️ LOOPS_API_KEY non configurata su Vercel. Salto la notifica.');
@@ -202,39 +198,31 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
 
-      // 5. INVIO EMAIL TRANSAZIONALE GIFT CARD
+      // 5. INVIO EMAIL TRANSAZIONALE GIFT CARD VIA SDK
       if (dbGiftSuccess && process.env.LOOPS_API_KEY) {
         const targetEmail = metadata.recipient_email || customerEmail;
         console.log(`🚀 Invio email transazionale Gift Card a: ${targetEmail}`);
         
         try {
-          const loopsResponse = await fetch('https://api.loops.so/v1/transactional', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${process.env.LOOPS_API_KEY.trim()}`,
-              'Content-Type': 'application/json',
+          const resp = await loops.sendTransactionalEmail({
+            email: targetEmail,
+            transactionalId: LOOPS_TEMPLATE_ID,
+            dataVariables: {
+              giftCode: giftCode,
+              amount: `€${amount.toFixed(2)}`,
+              qrCodeUrl: qrCodeUrl,
+              buyerName: metadata.buyer_name || 'Un amico',
+              message: metadata.gift_message || ''
             },
-            body: JSON.stringify({
-              email: targetEmail,
-              transactionalId: LOOPS_TEMPLATE_ID,
-              dataVariables: {
-                giftCode: giftCode,
-                amount: `€${amount.toFixed(2)}`,
-                qrCodeUrl: qrCodeUrl,
-                buyerName: metadata.buyer_name || 'Un amico',
-                message: metadata.gift_message || ''
-              },
-            }),
           });
 
-          if (!loopsResponse.ok) {
-            const errorText = await loopsResponse.text();
-            console.error(`❌ Errore risposta Loops Gift Card: ${errorText}`);
+          if (resp.success) {
+            console.log(`✉️ Email Gift Card inviata con successo via SDK a ${targetEmail}`);
           } else {
-            console.log(`✉️ Email Gift Card inviata con successo a ${targetEmail}`);
+            console.error(`❌ Errore risposta SDK Loops Gift Card:`, resp);
           }
         } catch (loopsGiftError: any) {
-          console.error(`❌ Errore di rete/fetch verso Loops (Gift Card):`, loopsGiftError.message || loopsGiftError);
+          console.error(`❌ Errore SDK Loops (Gift Card):`, loopsGiftError.message || loopsGiftError);
         }
       }
     }
