@@ -9,7 +9,7 @@ import {
 import Link from 'next/link';
 import Papa from "papaparse";
 import { toast } from "sonner";
-import EditProductModal from "@/components/editProductModal";
+import EditProductModal from "@/components/admin/editProductModal";
 
 export default function MagazzinoPage() {
   const [prodotti, setProdotti] = useState<any[]>([]);
@@ -22,6 +22,7 @@ export default function MagazzinoPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [productToEdit, setProductToEdit] = useState<any>(null);
 
+  // Recupera i prodotti dal database
   const fetchProdotti = async () => {
     setIsLoading(true);
     const { data, error } = await supabase
@@ -41,38 +42,78 @@ export default function MagazzinoPage() {
     fetchProdotti();
   }, []);
 
-  const handleUpdateProduct = async (updatedProduct: any) => {
-    const { error } = await supabase
-      .from('prodotti')
-      .update({
-        name: updatedProduct.name,
-        price: updatedProduct.price,
-        stock_quantity: updatedProduct.stock_quantity,
-        specs: updatedProduct.specs,
-        brand: updatedProduct.brand // Assicurati che il modal gestisca anche la marca se vuoieditarla a mano
-      })
-      .eq('id', updatedProduct.id);
+  // Gestisce l'aggiornamento dei dati testuali e l'eventuale upload dell'immagine su Supabase Storage
+  const handleUpdateProduct = async (updatedProduct: any, imageFile?: File) => {
+    setIsLoading(true);
+    
+    try {
+      let imageUrl = updatedProduct.image_url;
 
-    if (error) {
-      toast.error("Errore aggiornamento: " + error.message);
-    } else {
+      // Se l'utente ha selezionato un nuovo file dal modale, eseguiamo l'upload
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        // Generiamo un nome file univoco basato su SKU/ID e timestamp
+        const fileName = `${updatedProduct.sku || updatedProduct.id}-${Date.now()}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        // Caricamento nel bucket 'product-images'
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, imageFile, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (uploadError) {
+          throw new Error("Errore caricamento immagine: " + uploadError.message);
+        }
+
+        // Recuperiamo l'URL pubblico dell'immagine appena salvata
+        const { data: publicUrlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrlData.publicUrl;
+      }
+
+      // Eseguiamo l'update definitivo del record nella tabella 'prodotti'
+      const { error: dbError } = await supabase
+        .from('prodotti')
+        .update({
+          name: updatedProduct.name,
+          price: updatedProduct.price,
+          stock_quantity: updatedProduct.stock_quantity,
+          specs: updatedProduct.specs,
+          brand: updatedProduct.brand,
+          image_url: imageUrl // Aggiornato con il nuovo URL (o null se è stata rimossa)
+        })
+        .eq('id', updatedProduct.id);
+
+      if (dbError) throw dbError;
+
       toast.success("Prodotto aggiornato!");
       setIsEditModalOpen(false);
       fetchProdotti();
+    } catch (error: any) {
+      toast.error(error.message || "Errore durante il salvataggio");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Elimina un prodotto dal database
   const handleDelete = async (id: string) => {
     if (!confirm("Vuoi eliminare definitivamente questo prodotto?")) return;
     const { error } = await supabase.from('prodotti').delete().eq('id', id);
-    if (error) toast.error(error.message);
-    else {
+    if (error) {
+      toast.error(error.message);
+    } else {
       toast.success("Eliminato");
       fetchProdotti();
     }
   };
 
-  // LOGICA DI IMPORTAZIONE DANEA AGGIORNATA
+  // Logica di importazione file CSV da Danea
   const handleDaneaImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -84,26 +125,18 @@ export default function MagazzinoPage() {
       complete: async (results) => {
         try {
           const formattedData = results.data.map((row: any) => {
-            // Creiamo l'oggetto specifiche dinamico basato sui tuoi 11 punti
             const dynamicSpecs: any = {};
 
-            // 1. Dati da Campi Liberi (Configurali così su Danea)
+            // Mappatura Campi Liberi Danea
             if (row['Libero 1']) dynamicSpecs["Età consigliata"] = row['Libero 1'];
             if (row['Libero 2']) dynamicSpecs["Materiale"] = row['Libero 2'];
             if (row['Libero 3']) dynamicSpecs["Colore"] = row['Libero 3'];
             if (row['Libero 4']) dynamicSpecs["Lingua"] = row['Libero 4'];
 
-            // 2. Dati da Campi Standard Danea
+            // Mappatura Campi Standard Danea
             if (row['Codice']) dynamicSpecs["Modello"] = row['Codice'];
             if (row['Peso lordo'] && row['Peso lordo'] !== '0') dynamicSpecs["Peso"] = row['Peso lordo'];
             if (row['Dimensioni']) dynamicSpecs["Dimensioni"] = row['Dimensioni'];
-
-            // 3. Esempio gestione Note per dati extra (Assemblaggio, Batterie ecc.)
-            // Se nelle note scrivi "Pezzi: 50", questa logica è opzionale
-            if (row['Note']) {
-                // Esempio: se vuoi mostrare le note come caratteristiche extra
-                // dynamicSpecs["Info Extra"] = row['Note'];
-            }
 
             return {
               sku: row['Codice'],
@@ -132,6 +165,7 @@ export default function MagazzinoPage() {
     });
   };
 
+  // Filtro di ricerca locale
   const prodottiFiltrati = prodotti.filter(p => 
     p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     p.sku?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -175,7 +209,7 @@ export default function MagazzinoPage() {
         </div>
       </div>
 
-      {/* TABELLA */}
+      {/* TABELLA PRODOTTI */}
       <div className="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -188,14 +222,29 @@ export default function MagazzinoPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {isLoading ? (
-              <tr><td colSpan={5} className="p-12 text-center"><Loader2 className="animate-spin mx-auto text-indigo-600" /></td></tr>
+            {isLoading && prodotti.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="p-12 text-center">
+                  <Loader2 className="animate-spin mx-auto text-indigo-600" />
+                </td>
+              </tr>
             ) : prodottiFiltrati.map((prodotto) => (
               <tr key={prodotto.id} className="hover:bg-slate-50/30 transition-colors group">
                 <td className="p-4 text-xs font-mono text-slate-400">{prodotto.sku}</td>
                 <td className="p-4">
-                  <p className="text-sm font-bold text-slate-700">{prodotto.name}</p>
-                  <p className="text-[10px] text-slate-400 uppercase">{prodotto.category}</p>
+                  <div className="flex items-center gap-3">
+                    {prodotto.image_url && (
+                      <img 
+                        src={prodotto.image_url} 
+                        alt="" 
+                        className="w-8 h-8 rounded-lg object-contain bg-slate-50 border border-slate-100 p-0.5" 
+                      />
+                    )}
+                    <div>
+                      <p className="text-sm font-bold text-slate-700">{prodotto.name}</p>
+                      <p className="text-[10px] text-slate-400 uppercase">{prodotto.category}</p>
+                    </div>
+                  </div>
                 </td>
                 <td className="p-4 text-sm font-black text-indigo-600">€ {prodotto.price?.toFixed(2)}</td>
                 <td className="p-4">
@@ -220,7 +269,7 @@ export default function MagazzinoPage() {
         )}
       </div>
 
-      {/* MODALE IMPORTAZIONE */}
+      {/* MODALE IMPORTAZIONE DANEA */}
       {isModalImportOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => !isImporting && setIsModalImportOpen(false)} />
@@ -258,7 +307,7 @@ export default function MagazzinoPage() {
         </div>
       )}
 
-      {/* MODALE EDIT PRODOTTO */}
+      {/* MODALE EDIT PRODOTTO (IMMAGINI COMPRESE) */}
       {productToEdit && (
         <EditProductModal
           prodotto={productToEdit}

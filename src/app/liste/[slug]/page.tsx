@@ -94,14 +94,14 @@ export default function WishlistDetailPage({ params }: PageProps) {
   const handleRegalaOra = (product: any) => {
     addItem({
       id: product.id,
-      name: product.name, // 👈 Corretto da product.nome a product.name
-      price: product.price, // 👈 Corretto da prezzo a price
-      image_url: product.image_url // 👈 Corretto da immagine_url a image_url
+      name: product.name,
+      price: product.price,
+      image_url: product.image_url
     });
     toast.success(`${product.name} aggiunto al carrello!`);
   };
 
-  const handleInviaQuota = (e: React.FormEvent) => {
+  const handleInviaQuota = async (e: React.FormEvent) => {
     e.preventDefault();
     const importo = parseFloat(customAmount);
     const minimo = wishlist?.min_contribution || 10;
@@ -111,8 +111,35 @@ export default function WishlistDetailPage({ params }: PageProps) {
       return;
     }
 
-    // 🚀 QUI IN FUTURO REINDIREZZERAI AL CHECKOUT DI STRIPE PASSANDO L'IMPORTO
-    toast.success(`Reindirizzamento al pagamento sicuro di €${importo.toFixed(2)}...`);
+    const toastId = toast.loading("Preparazione del pagamento sicuro...");
+
+    try {
+      const response = await fetch('/api/checkout/wishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: importo,
+          wishlistId: wishlist.id,
+          wishlistSlug: wishlist.slug,
+          childName: wishlist.child_name,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Impossibile generare il link di pagamento.");
+      }
+
+      toast.success("Reindirizzamento su Stripe...", { id: toastId });
+      window.location.href = data.url;
+
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Si è verificato un errore, riprova.", { id: toastId });
+    }
   };
 
   if (loading) return (
@@ -231,8 +258,7 @@ export default function WishlistDetailPage({ params }: PageProps) {
                           >
                             <Trash2 size={12} /> Elimina
                           </button>
-                        )
-                      }
+                        )}
                       </div>
                     </div>
                   </div>
@@ -262,7 +288,7 @@ export default function WishlistDetailPage({ params }: PageProps) {
             </div>
             <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Il Salvadanaio di {wishlist.child_name}</h2>
             <p className="text-slate-500 text-sm mt-3 leading-relaxed">
-              I genitori hanno attivato una raccolta fondi per permettere a {wishlist.child_name} di scegliere un super regalo collettivo direttamente da Giocattoli Caristia! Lecca la tua quota e scrivi un pensiero speciale.
+              I genitori hanno attivato una raccolta fondi per permettere a {wishlist.child_name} di scegliere un super regalo collettivo direttamente da Giocattoli Caristia! Scegli la tua quota e partecipa al regalo.
             </p>
 
             <form onSubmit={handleInviaQuota} className="mt-10 text-left space-y-6">
