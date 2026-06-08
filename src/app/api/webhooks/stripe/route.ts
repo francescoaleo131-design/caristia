@@ -62,16 +62,28 @@ export async function POST(req: Request) {
       let dbSuccess = false;
       const userId = metadata.user_id;
 
+      // ESTRATTO DA STRIPE: Recupero e formattazione dell'indirizzo di spedizione
+      const shippingDetails = session.shipping_details;
+      let formattedAddress = null;
+
+      if (shippingDetails && shippingDetails.address) {
+        const { line1, line2, city, postal_code, state, country } = shippingDetails.address;
+        const streetInfo = line2 ? `${line1} - ${line2}` : line1;
+        formattedAddress = `${streetInfo}, ${postal_code} ${city} (${state || country})`;
+      }
+
       try {
         const items = JSON.parse(metadata.items || '[]');
         
-        // 1. SALVATAGGIO DELL'ORDINE
+        // 1. SALVATAGGIO DELL'ORDINE CON INDIRIZZO E NOME CLIENTE
         const { error: orderError } = await supabaseAdmin
           .from('orders')
           .insert([
             {
               stripe_session_id: session.id,
               customer_email: customerEmail,
+              customer_name: customerName || null, // Aggiunto per popolare il nome nella dashboard
+              shipping_address: formattedAddress,  // Salvataggio dell'indirizzo estratto da Stripe
               items: items,
               total_amount: session.amount_total / 100, 
               status: 'paid',
@@ -79,7 +91,7 @@ export async function POST(req: Request) {
           ]);
           
         if (orderError) throw orderError;
-        console.log('✅ Order saved successfully');
+        console.log('✅ Order saved successfully with shipping address:', formattedAddress);
 
         // 2. GESTIONE SCALO SALDO PORTAFOGLIO UTENTE
         const creditoDaScalare = parseFloat(metadata.credito_portafoglio_usato || '0');
@@ -111,7 +123,7 @@ export async function POST(req: Request) {
           }
         }
 
-        // 3. SVUOTA IL CARRELLO DELL'UTENTE DA SUPABASE (cart_items al plurale)
+        // 3. SVUOTA IL CARRELLO DELL'UTENTE DA SUPABASE
         if (userId) {
           const { error: clearCartError } = await supabaseAdmin
             .from('cart_items')
@@ -150,7 +162,7 @@ export async function POST(req: Request) {
           if (resp.success) {
             console.log(`✉️ Email conferma ordine inviata con successo via SDK a ${customerEmail}`);
           } else {
-            console.error(`❌ Loops ha rifiutato l'invio dell'email transazionale:`, resp);
+            console.error(`❌ Loops ha ricevuto l'errore nell'invio dell'email transazionale:`, resp);
           }
         } catch (loopsFetchError: any) {
           console.error(`❌ Errore SDK Loops (Shop Transazionale):`, loopsFetchError.message || loopsFetchError);
