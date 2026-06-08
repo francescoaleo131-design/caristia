@@ -86,7 +86,7 @@ export async function POST(req: Request) {
               customer_name: customerName || null, 
               shipping_address: formattedAddress,  
               items: items,
-              total_price: session.amount_total / 100, // 💡 Sincronizzato con la colonna letta dalla Dashboard
+              total_amount: session.amount_total / 100, // 💡 Sincronizzato con la colonna letta dalla Dashboard
               status: 'paid',
             },
           ]);
