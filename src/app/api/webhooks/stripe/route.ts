@@ -3,12 +3,11 @@ import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import { generateSecureGiftCode } from '@/lib/utils/giftcard-utils';
-import { LoopsClient } from 'loops'; // 👈 Importa l'SDK ufficiale
+import { LoopsClient } from 'loops'; 
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
-// Protezione di sicurezza per evitare crash durante il comando "npm run build" su Vercel
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn("⚠️ Attenzione: Variabili d'ambiente Supabase mancanti durante la build.");
 }
@@ -18,12 +17,10 @@ const supabaseAdmin = createClient(
   supabaseServiceKey || 'placeholder-key'
 );
 
-// Inizializzazione del client Loops con fallback per evitare blocchi in fase di build
 const loops = new LoopsClient(process.env.LOOPS_API_KEY?.trim() || 'placeholder-key');
 
-// ID Modelli Transazionali di Loops
-const LOOPS_GIFT_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n'; // ID per Gift Card
-const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; // ID transazionale per lo Shop
+const LOOPS_GIFT_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n'; 
+const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; 
 
 export async function POST(req: Request) {
   const body = await req.text(); 
@@ -49,10 +46,6 @@ export async function POST(req: Request) {
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
     
-    console.log("🔍 [DEBUG WEBHOOK] Metadata ricevuti da Stripe:", metadata);
-    console.log("🔍 [DEBUG WEBHOOK] Valore di metadata.type:", metadata?.type);
-    console.log("🔍 [DEBUG WEBHOOK] Verifica LOOPS_API_KEY presente?:", !!process.env.LOOPS_API_KEY);
-    
     // ----------------------------------------------------
     // CASO A: ACQUISTO PRODOTTI SHOP (shop_order)
     // ----------------------------------------------------
@@ -62,30 +55,38 @@ export async function POST(req: Request) {
       let dbSuccess = false;
       const userId = metadata.user_id;
 
-      // ESTRATTO DA STRIPE: Recupero e formattazione dell'indirizzo di spedizione
+      // RECUPERO INDIRIZZO: Controllo rigoroso sia su shipping_details che su billing_details come fallback
       const shippingDetails = session.shipping_details;
+      const billingDetails = session.customer_details;
       let formattedAddress = null;
 
-      if (shippingDetails && shippingDetails.address) {
+      if (shippingDetails && shippingDetails.address?.line1) {
         const { line1, line2, city, postal_code, state, country } = shippingDetails.address;
         const streetInfo = line2 ? `${line1} - ${line2}` : line1;
-        formattedAddress = `${streetInfo}, ${postal_code} ${city} (${state || country})`;
+        formattedAddress = `${streetInfo}, ${postal_code || ''} ${city || ''} (${state || country || ''})`;
+      } else if (billingDetails && billingDetails.address?.line1) {
+        // Se non c'è l'indirizzo di spedizione, recupera almeno quello di fatturazione inserito sulla carta
+        const { line1, line2, city, postal_code, state, country } = billingDetails.address;
+        const streetInfo = line2 ? `${line1} - ${line2}` : line1;
+        formattedAddress = `${streetInfo}, ${postal_code || ''} ${city || ''} (${state || country || ''}) [Fatturazione]`;
+      } else {
+        formattedAddress = "Ritiro in negozio / Indirizzo non fornito";
       }
 
       try {
         const items = JSON.parse(metadata.items || '[]');
         
-        // 1. SALVATAGGIO DELL'ORDINE CON INDIRIZZO E NOME CLIENTE
+        // CORREZIONE COLONNE: Cambiato total_amount in total_price per allinearsi con la Dashboard
         const { error: orderError } = await supabaseAdmin
           .from('orders')
           .insert([
             {
               stripe_session_id: session.id,
               customer_email: customerEmail,
-              customer_name: customerName || null, // Aggiunto per popolare il nome nella dashboard
-              shipping_address: formattedAddress,  // Salvataggio dell'indirizzo estratto da Stripe
+              customer_name: customerName || null, 
+              shipping_address: formattedAddress,  
               items: items,
-              total_amount: session.amount_total / 100, 
+              total_price: session.amount_total / 100, // 💡 Sincronizzato con la colonna letta dalla Dashboard
               status: 'paid',
             },
           ]);
@@ -97,44 +98,27 @@ export async function POST(req: Request) {
         const creditoDaScalare = parseFloat(metadata.credito_portafoglio_usato || '0');
 
         if (userId && creditoDaScalare > 0) {
-          console.log(`👤 Rilevato uso portafoglio per utente: ${userId}, importo da scalare: €${creditoDaScalare}`);
-
           const { data: profile, error: profileFetchError } = await supabaseAdmin
             .from('profiles')
             .select('gift_card_balance')
             .eq('id', userId)
             .single();
 
-          if (profileFetchError || !profile) {
-            console.error(`❌ Impossibile trovare il profilo dell'utente ${userId}:`, profileFetchError?.message);
-          } else {
+          if (!profileFetchError && profile) {
             const nuovoSaldo = Math.max(0, profile.gift_card_balance - creditoDaScalare);
-
-            const { error: profileUpdateError } = await supabaseAdmin
+            await supabaseAdmin
               .from('profiles')
               .update({ gift_card_balance: nuovoSaldo })
               .eq('id', userId);
-
-            if (profileUpdateError) {
-              console.error(`❌ Errore aggiornamento saldo portafoglio:`, profileUpdateError.message);
-            } else {
-              console.log(`✅ Portafoglio utente aggiornato. Nuovo saldo: €${nuovoSaldo}`);
-            }
           }
         }
 
         // 3. SVUOTA IL CARRELLO DELL'UTENTE DA SUPABASE
         if (userId) {
-          const { error: clearCartError } = await supabaseAdmin
+          await supabaseAdmin
             .from('cart_items')
             .delete()
             .eq('user_id', userId);
-
-          if (clearCartError) {
-            console.error(`❌ Errore svuotamento carrello per utente ${userId}:`, clearCartError.message);
-          } else {
-            console.log(`🗑️ Carrello svuotato con successo dal DB per l'utente ${userId}`);
-          }
         }
 
         dbSuccess = true;
@@ -146,10 +130,8 @@ export async function POST(req: Request) {
 
       // 4. INVIO EMAIL TRANSAZIONALE CONFERMA ACQUISTO SHOP VIA SDK
       if (dbSuccess && process.env.LOOPS_API_KEY && customerEmail) {
-        console.log(`🚀 Invio email transazionale Shop a: ${customerEmail}`);
-        
         try {
-          const resp = await loops.sendTransactionalEmail({
+          await loops.sendTransactionalEmail({
             email: customerEmail,
             transactionalId: LOOPS_SHOP_TEMPLATE_ID,
             dataVariables: {
@@ -158,17 +140,9 @@ export async function POST(req: Request) {
               orderId: session.id
             },
           });
-
-          if (resp.success) {
-            console.log(`✉️ Email conferma ordine inviata con successo via SDK a ${customerEmail}`);
-          } else {
-            console.error(`❌ Loops ha ricevuto l'errore nell'invio dell'email transazionale:`, resp);
-          }
         } catch (loopsFetchError: any) {
           console.error(`❌ Errore SDK Loops (Shop Transazionale):`, loopsFetchError.message || loopsFetchError);
         }
-      } else if (!process.env.LOOPS_API_KEY) {
-        console.warn('⚠️ LOOPS_API_KEY non configurata su Vercel. Salto la notifica.');
       }
     }
     
@@ -176,8 +150,6 @@ export async function POST(req: Request) {
     // CASO B: ACQUISTO GIFT CARD (giftcard_purchase)
     // ----------------------------------------------------
     else if (metadata?.type === 'giftcard_purchase') {
-      console.log('🎁 Processing gift card purchase for:', customerEmail);
-
       let dbGiftSuccess = false;
       const amount = session.amount_total / 100;
       const giftCode = generateSecureGiftCode();
@@ -200,7 +172,6 @@ export async function POST(req: Request) {
           ]);
 
         if (giftCardError) throw giftCardError;
-        console.log('✅ Gift card saved and activated in DB');
         dbGiftSuccess = true;
 
       } catch (dbError: any) {
@@ -208,13 +179,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
 
-      // 5. INVIO EMAIL TRANSAZIONALE GIFT CARD VIA SDK
       if (dbGiftSuccess && process.env.LOOPS_API_KEY) {
         const targetEmail = metadata.recipient_email || customerEmail;
-        console.log(`🚀 Invio email transazionale Gift Card a: ${targetEmail}`);
-        
         try {
-          const resp = await loops.sendTransactionalEmail({
+          await loops.sendTransactionalEmail({
             email: targetEmail,
             transactionalId: LOOPS_GIFT_TEMPLATE_ID,
             dataVariables: {
@@ -225,12 +193,6 @@ export async function POST(req: Request) {
               message: metadata.gift_message || ''
             },
           });
-
-          if (resp.success) {
-            console.log(`✉️ Email Gift Card inviata con successo via SDK a ${targetEmail}`);
-          } else {
-            console.error(`❌ Errore risposta SDK Loops Gift Card:`, resp);
-          }
         } catch (loopsGiftError: any) {
           console.error(`❌ Errore SDK Loops (Gift Card):`, loopsGiftError.message || loopsGiftError);
         }
