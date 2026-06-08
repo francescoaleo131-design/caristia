@@ -1,15 +1,16 @@
 import { createClient } from '@/lib/supabase/server'; 
-import { ShoppingBag, Users, Euro, MapPin, Calendar, Clock } from "lucide-react";
+import { ShoppingBag, Users, Euro, MapPin, Calendar } from "lucide-react";
 import StatCard from "@/components/admin/StatCard";
+import StatusSelect from "@/components/admin/StatusSelect"; // 👈 Importiamo il selettore interattivo
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
 
-  // Eseguiamo tutte le query contemporaneamente pescando total_amount
+  // Recuperiamo i dati
   const [salesResponse, pendingResponse, listsResponse, latestOrdersResponse] = await Promise.all([
     supabase
       .from('orders')
-      .select('total_amount') // 💡 Corretto: prima era total_price
+      .select('total_amount') 
       .eq('status', 'paid'),
     supabase
       .from('orders')
@@ -23,10 +24,9 @@ export default async function AdminDashboard() {
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(10) 
+      .limit(20) // Alzato a 20 per una gestione più ampia
   ]);
 
-  // Calcolo sicuro usando total_amount
   const totalSales = salesResponse.data?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0;
   const pendingCount = pendingResponse.count || 0;
   const activeListsCount = listsResponse.count || 0;
@@ -68,8 +68,8 @@ export default async function AdminDashboard() {
       {/* Tabella Ordini */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-800 tracking-tight">Ultimi Ordini Ricevuti</h3>
-          <p className="text-xs text-slate-400">Monitoraggio dei flussi di vendita e logistica delle spedizioni.</p>
+          <h3 className="text-lg font-semibold text-slate-800 tracking-tight">Gestione Flusso Ordini</h3>
+          <p className="text-xs text-slate-400">Modifica lo stato per aggiornare la logica di preparazione e spedizione.</p>
         </div>
 
         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
@@ -80,7 +80,7 @@ export default async function AdminDashboard() {
                 <th className="p-4">Cliente</th>
                 <th className="p-4">Indirizzo di Spedizione</th>
                 <th className="p-4">Totale</th>
-                <th className="p-4 text-right">Stato</th>
+                <th className="p-4 text-right">Stato Operativo</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -99,6 +99,7 @@ export default async function AdminDashboard() {
                     </td>
                     <td className="p-4">
                       <p className="text-sm font-semibold text-slate-700">{ordine.customer_name || ordine.customer_email || "Cliente"}</p>
+                      <p className="text-[10px] text-slate-400">{ordine.customer_email}</p>
                     </td>
                     <td className="p-4 max-w-xs">
                       <div className="flex items-start gap-1.5 text-slate-600">
@@ -107,14 +108,11 @@ export default async function AdminDashboard() {
                       </div>
                     </td>
                     <td className="p-4 text-sm font-bold text-slate-800">
-                      € {(ordine.total_amount || 0).toFixed(2)} {/* 💡 Corretto anche qui */}
+                      € {(ordine.total_amount || 0).toFixed(2)}
                     </td>
+                    {/* STATO OPERATIVO INTERATTIVO */}
                     <td className="p-4 text-right">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
-                        ordine.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                      }`}>
-                        {ordine.status === 'paid' ? 'Pagato' : ordine.status}
-                      </span>
+                      <StatusSelect orderId={ordine.id} currentStatus={ordine.status} />
                     </td>
                   </tr>
                 ))
