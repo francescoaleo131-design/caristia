@@ -158,10 +158,11 @@ export async function POST(req: Request) {
           .insert([
             {
               code: giftCode,
-              initial_amount: amount,
-              current_amount: amount,
+              initial_balance: amount,
+              current_balance: amount,
               is_active: true,
               buyer_email: customerEmail,
+              activated_at: new Date().toISOString(),
               recipient_email: metadata.recipient_email || customerEmail,
               stripe_session_id: session.id,
               qr_code_url: qrCodeUrl
