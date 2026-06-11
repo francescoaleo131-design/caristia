@@ -23,7 +23,8 @@ const supabaseAdmin = createClient(
 const loops = new LoopsClient(process.env.LOOPS_API_KEY?.trim() || 'placeholder-key');
 const LOOPS_GIFT_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n'; 
 const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; 
-const LOOPS_FAILED_TEMPLATE_ID = 'cmpviptqb00mc0j2nmvav7vt1'; // 🚀 ID reale del template Loops per pagamenti falliti
+const LOOPS_FAILED_TEMPLATE_ID = 'cmpviptqb00mc0j2nmvav7vt1'; 
+const LOOPS_WISHLIST_TEMPLATE_ID = 'cmw_placeholder_wishlist_id'; // 🚀 Sostituisci questo ID con il tuo reale template Loops se vuoi inviare mail per le liste
 
 export async function POST(req: Request) {
   const headersList = await headers();
@@ -196,6 +197,51 @@ export async function POST(req: Request) {
         }
       }
     }
+
+    // 🚀 CASO C: NUOVO! INSERIMENTO CONTRIBUTO SALVADANAIO WISHLIST (wishlist_contribution)
+    else if (metadata?.type === 'wishlist_contribution') {
+      console.log('💰 Elaborazione Quota Salvadanaio per Wishlist ID:', metadata.wishlist_id);
+      let dbWishlistSuccess = false;
+      const amount = parseFloat(metadata.amount_contributed || '0');
+
+      try {
+        const { error: wishlistInsertError } = await supabaseAdmin
+          .from('wishlist_contributions')
+          .insert([
+            {
+              wishlist_id: metadata.wishlist_id,
+              amount: amount,
+              customer_name: metadata.customer_name,
+              customer_message: metadata.customer_message || null,
+            }
+          ]);
+
+        if (wishlistInsertError) throw wishlistInsertError;
+        dbWishlistSuccess = true;
+        console.log(`✅ Quota di €${amount} salvata nel DB per l'invitato: ${metadata.customer_name}`);
+
+      } catch (dbError: any) {
+        console.error('❌ Errore salvataggio quota su Supabase:', dbError.message);
+        return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      }
+
+      // Invio email transazionale facoltativa all'invitato tramite Loops
+      if (dbWishlistSuccess && process.env.LOOPS_API_KEY && customerEmail && LOOPS_WISHLIST_TEMPLATE_ID !== 'cmw_placeholder_wishlist_id') {
+        try {
+          await loops.sendTransactionalEmail({
+            email: customerEmail,
+            transactionalId: LOOPS_WISHLIST_TEMPLATE_ID,
+            dataVariables: {
+              customerName: metadata.customer_name || 'Invitato',
+              amount: `€${amount.toFixed(2)}`,
+              message: metadata.customer_message || 'Auguri!'
+            },
+          });
+        } catch (loopsWishlistError: any) {
+          console.error(`❌ Errore SDK Loops (Wishlist Transazionale):`, loopsWishlistError.message || loopsWishlistError);
+        }
+      }
+    }
   }
 
   // ----------------------------------------------------
@@ -222,7 +268,7 @@ export async function POST(req: Request) {
       } else if (failureCode === 'incorrect_number') {
         motivoItaliano = "Il numero di carta inserito non è corretto.";
       } else if (failureCode === 'card_declined') {
-        motivoItaliano = "La transazione è stata rifiutata direttamente dalla tua banca. Controlla i limiti della carta.";
+        motivoItaliano = "La transazione è stata rifiutata direttamente dalla tua banca. Controlla i limites della carta.";
       } else if (failureMessage) {
         motivoItaliano = failureMessage; 
       }
@@ -237,7 +283,7 @@ export async function POST(req: Request) {
             customerName: customerName,
             amount: amountFormatted,
             orderId: orderId,
-            motivoErrore: motivoItaliano // Mappato all'interno del tuo template Loops ({{motivoErrore}})
+            motivoErrore: motivoItaliano 
           },
         });
         

@@ -14,7 +14,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
 
   const [wishlist, setWishlist] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
-  const [contributions, setContributions] = useState<any[]>([]); // Registro di chi ha partecipato
+  const [contributions, setContributions] = useState<any[]>([]); 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
 
       setWishlist(wishlistData);
 
-      // 2. Recupera lo storico di chi ha pagato o regalato qualcosa in questa lista
+      // 2. Recupera lo storico dei contributi (quote o regali fisici)
       const { data: contribData } = await supabase
         .from('wishlist_contributions')
         .select('*')
@@ -44,7 +44,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
       
       setContributions(contribData || []);
 
-      // 3. Recupera i prodotti fisici inseriti (se non è solo un salvadanaio)
+      // 3. Recupera i prodotti fisici SOLO se non è un salvadanaio
       if (wishlistData.list_type !== 'money') {
         const { data: itemsData, error: iError } = await supabase
           .from('wishlist_items')
@@ -54,9 +54,9 @@ export default function WishlistOwnerPage({ params }: PageProps) {
             quantity_purchased,
             prodotti (
               id,
-              name,
-              price,
-              image_url
+              nome,
+              prezzo,
+              immagine_url
             )
           `)
           .eq('wishlist_id', wishlistData.id);
@@ -83,8 +83,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
   };
 
   const copyLink = () => {
-    // Questo è il link pubblico (la vista /regala) che il genitore invierà agli amici
-    const guestUrl = `${window.location.origin}/liste/${slug}/regala`; 
+    const guestUrl = `https://giocattolicaristia.it/regala/${slug}`; 
     navigator.clipboard.writeText(guestUrl);
     toast.success("Link copiato! Invialo a parenti e amici su WhatsApp.");
   };
@@ -104,6 +103,9 @@ export default function WishlistOwnerPage({ params }: PageProps) {
       <Link href="/liste" className="text-blue-600 font-bold underline">Torna alle tue liste</Link>
     </div>
   );
+
+  // Calcolo del totale raccolto in caso di salvadanaio
+  const totalRaised = contributions.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -138,18 +140,17 @@ export default function WishlistOwnerPage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Pulsante fondamentale per far copiare il link al genitore */}
             <button
               onClick={copyLink}
               className="w-full md:w-auto bg-[#8cc665] text-white px-8 py-5 rounded-[2rem] font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-[#7ab554] transition-all shadow-xl shadow-green-100 active:scale-95"
             >
-              <Share2 size={20} /> Copia e Condividi
+              <Share2 size={20} /> Copia e Condividi Link
             </button>
           </div>
         </div>
       </div>
 
-      {/* REGISTRO INVITATI PRIVATO: Chi ha messo i soldi o comprato i regali */}
+      {/* REGISTRO INVITATI PRIVATO (Valido sia per regali che per salvadanaio) */}
       <div className="max-w-5xl mx-auto px-6 mt-12">
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
@@ -169,8 +170,11 @@ export default function WishlistOwnerPage({ params }: PageProps) {
                     {contrib.gift_name && (
                       <p className="text-xs text-zinc-500 font-medium mt-1">Regalo: <span className="font-bold text-[#1e73be]">{contrib.gift_name}</span></p>
                     )}
+                    {contrib.customer_message && (
+                      <p className="text-xs italic text-slate-500 bg-white p-2 rounded-lg mt-2 border border-slate-100">"{contrib.customer_message}"</p>
+                    )}
                   </div>
-                  <span className="bg-green-50 text-green-600 px-3 py-1.5 rounded-xl text-xs font-black">
+                  <span className="bg-green-50 text-green-600 px-3 py-1.5 rounded-xl text-xs font-black self-start">
                     + €{contrib.amount.toFixed(2)}
                   </span>
                 </div>
@@ -180,7 +184,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* CONTENUTO DI GESTIONE DEI ARTICOLI */}
+      {/* BLOCCO CONTENUTO IN BASE AL TIPO DI LISTA */}
       <div className="max-w-5xl mx-auto px-6 mt-12">
         
         {/* CASO A: LISTA ARTICOLI FISICI */}
@@ -193,11 +197,10 @@ export default function WishlistOwnerPage({ params }: PageProps) {
 
               return (
                 <div key={item.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm relative group">
-                  
                   <div className="aspect-square bg-white p-6 border-b border-slate-50 flex items-center justify-center relative">
                     <img
-                      src={product.image_url || '/placeholder.png'}
-                      alt={product.name}
+                      src={product.immagine_url || '/placeholder.png'}
+                      alt={product.nome}
                       className="w-full h-full object-contain"
                     />
                     {isPurchased && (
@@ -211,13 +214,12 @@ export default function WishlistOwnerPage({ params }: PageProps) {
 
                   <div className="p-8 text-center">
                     <h3 className="font-black text-slate-800 text-lg leading-tight mb-3 line-clamp-2 uppercase tracking-tight">
-                      {product.name}
+                      {product.nome}
                     </h3>
                     <p className="text-3xl font-black text-[#1e73be] mb-6">
-                      {product.price.toFixed(2)}€
+                      {product.prezzo.toFixed(2)}€
                     </p>
 
-                    {/* Il genitore può solo monitorare lo stato o eliminare l'articolo per fare spazio */}
                     <button
                       onClick={() => removeItem(item.id)}
                       className="w-full text-red-400 hover:bg-red-50 font-black text-xs uppercase tracking-widest py-4 rounded-2xl border border-dashed border-red-200 hover:border-red-400 transition-all flex items-center justify-center gap-2 active:scale-95"
@@ -231,17 +233,22 @@ export default function WishlistOwnerPage({ params }: PageProps) {
           </div>
         ) : (
           
-          /* CASO B: IL SALVADANAIO QUOTE DEL GENITORE */
+          /* CASO B: IL SALVADANAIO QUOTE IN VISIONE GENITORE */
           <div className="max-w-xl mx-auto bg-white p-8 sm:p-12 rounded-[3rem] border border-slate-100 shadow-xl text-center">
             <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center text-amber-500 mx-auto mb-6">
               <Coins size={36} />
             </div>
             <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Salvadanaio di {wishlist.child_name}</h2>
             
-            <div className="mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-left">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Stato della Raccolta</p>
-              <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                Gli invitati che useranno il tuo link di condivisione troveranno un modulo sicuro per versare direttamente le loro quote regalo. Potrai visualizzare l'elenco completo dei loro nomi e messaggi nel pannello superiore "Chi ha partecipato".
+            {/* Contatore cumulativo del denaro ricevuto */}
+            <div className="my-6 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+              <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-1">Totale Accumulato</p>
+              <p className="text-4xl font-black text-green-600">€{totalRaised.toFixed(2)}</p>
+            </div>
+
+            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 text-left">
+              <p className="text-xs text-blue-700 font-medium leading-relaxed text-center">
+                Gli invitati che usano il tuo link trovano un modulo sicuro per versare quote libere e scriverti un messaggio d'auguri. Trovi i singoli dettagli nel pannello sopra.
               </p>
             </div>
           </div>
