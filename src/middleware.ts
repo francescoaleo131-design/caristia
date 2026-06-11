@@ -5,7 +5,12 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const { searchParams } = request.nextUrl
 
-  // 1. Escludiamo subito la pagina di coming-soon per evitare loop infiniti di reindirizzamento
+  // 0. SE È IL WEBHOOK DI STRIPE, PASSA OLTRE SENZA TOCCARE NULLA 🚀
+  if (path.startsWith('/api/webhooks/stripe')) {
+    return NextResponse.next()
+  }
+
+  // 1. Escludiamo subito la pagina di coming-soon per evitare loop infiniti
   if (path === '/coming-soon') {
     return NextResponse.next()
   }
@@ -44,15 +49,14 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // 3. LOGICA DI ACCESSO "PORTA SUL RETRO" (Cookie Bypass)
-  const adminSecret = 'caristia_admin' // Puoi personalizzare questa parola chiave
+  const adminSecret = 'caristia_admin'
   const hasAdminQuery = searchParams.get('access') === adminSecret
   const hasAdminCookie = request.cookies.has('admin_bypass')
 
-  // Se viene usato il link speciale ?access=caristia_admin, salviamo il cookie e sblocchiamo il sito
   if (hasAdminQuery) {
     const redirectResponse = NextResponse.redirect(new URL('/', request.url))
     redirectResponse.cookies.set('admin_bypass', 'true', {
-      maxAge: 60 * 60 * 24 * 30, // Valido per 30 giorni
+      maxAge: 60 * 60 * 24 * 30, // 30 giorni
       path: '/',
     })
     return redirectResponse
@@ -72,13 +76,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 5. BLOCCO COMING SOON: Se NON sei admin sul DB e NON hai il cookie di bypass, vai su /coming-soon
-  // Consentiamo comunque l'accesso alla pagina di /login per permetterti di loggarti come admin
+  // 5. BLOCCO COMING SOON
   if (!isDbAdmin && !hasAdminCookie && path !== '/login') {
     return NextResponse.redirect(new URL('/coming-soon', request.url))
   }
-
-  // --- LOGICA DI REINDIRIZZAMENTO STANDARD (La tua logica precedente) ---
 
   // Se non loggato e prova ad andare in zone protette
   if (!user && (path.startsWith('/profilo') || path.startsWith('/admin'))) {
@@ -90,7 +91,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/profilo', request.url))
   }
 
-  // Se prova ad andare su /admin ma non è admin nel DB, rifiuta (ulteriore livello di sicurezza)
+  // Se prova ad andare su /admin ma non è admin nel DB
   if (path.startsWith('/admin') && !isDbAdmin) {
     return NextResponse.redirect(new URL('/profilo', request.url))
   }
@@ -99,8 +100,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Ho lasciato intatto il tuo matcher, esclude già api, immagini e asset statici
-matcher: [
+  matcher: [
     '/((?!api|_next/static|_next/image|assets|favicon.ico|sw.js|.*\\.jpg$|.*\\.jpeg$|.*\\.png$|.*\\.svg$|.*\\.webp$|.*\\.ico$).*)'
   ],
 }
