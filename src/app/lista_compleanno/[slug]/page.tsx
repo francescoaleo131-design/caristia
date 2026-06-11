@@ -1,30 +1,27 @@
 "use client";
-import { useState, useEffect, use } from 'react'; // Aggiunto use
+import { useState, useEffect, use } from 'react';
 import { supabase } from '@/lib/supabase/supabase';
-import { Gift, Calendar, Share2, Trash2, ShoppingBag, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Gift, Calendar, Share2, Trash2, CheckCircle, ArrowLeft, Coins, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
-// Definiamo correttamente il tipo dei props per Next.js 15+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export default function WishlistDetailPage({ params }: PageProps) {
-  // Sblocchiamo lo slug dalla Promise dei params
+export default function WishlistOwnerPage({ params }: PageProps) {
   const { slug } = use(params);
 
   const [wishlist, setWishlist] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
+  const [contributions, setContributions] = useState<any[]>([]); 
   const [loading, setLoading] = useState(true);
-  const [isOwner, setIsOwner] = useState(false);
 
-  // Caricamento dati
   useEffect(() => {
     async function fetchWishlistData() {
       setLoading(true);
 
-      // 1. Recupera la testata della wishlist tramite lo slug
+      // 1. Recupera la testata della lista tramite lo slug
       const { data: wishlistData, error: wError } = await supabase
         .from('wishlists')
         .select('*')
@@ -38,58 +35,64 @@ export default function WishlistDetailPage({ params }: PageProps) {
 
       setWishlist(wishlistData);
 
-      // 2. Controlla se l'utente loggato è il proprietario
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && user.id === wishlistData.owner_id) {
-        setIsOwner(true);
-      }
+      // 2. Recupera lo storico dei contributi (quote o regali fisici)
+      const { data: contribData } = await supabase
+        .from('wishlist_contributions')
+        .select('*')
+        .eq('wishlist_id', wishlistData.id)
+        .order('created_at', { ascending: false });
+      
+      setContributions(contribData || []);
 
-      // 3. Recupera i prodotti (con join sulla tabella prodotti)
-      const { data: itemsData, error: iError } = await supabase
-        .from('wishlist_items')
-        .select(`
-          id,
-          quantity_requested,
-          quantity_purchased,
-          prodotti (
+      // 3. Recupera i prodotti fisici SOLO se non è un salvadanaio
+      if (wishlistData.list_type !== 'money') {
+        const { data: itemsData, error: iError } = await supabase
+          .from('wishlist_items')
+          .select(`
             id,
-            nome,
-            prezzo,
-            immagine_url,
-            slug
-          )
-        `)
-        .eq('wishlist_id', wishlistData.id);
+            quantity_requested,
+            quantity_purchased,
+            prodotti (
+              id,
+              nome,
+              prezzo,
+              immagine_url
+            )
+          `)
+          .eq('wishlist_id', wishlistData.id);
 
-      if (!iError) {
-        setItems(itemsData || []);
+        if (!iError) {
+          setItems(itemsData || []);
+        }
       }
 
       setLoading(false);
     }
 
     fetchWishlistData();
-  }, [slug]); // Ora lo slug è stabile
+  }, [slug]);
 
   const removeItem = async (itemId: string) => {
     const { error } = await supabase.from('wishlist_items').delete().eq('id', itemId);
-    if (error) toast.error("Errore durante la rimozione");
-    else {
-      toast.success("Prodotto rimosso");
+    if (error) {
+      toast.error("Errore durante la rimozione");
+    } else {
+      toast.success("Prodotto rimosso con successo");
       setItems(items.filter(item => item.id !== itemId));
     }
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success("Link copiato! Invialo su WhatsApp.");
+    const guestUrl = `${window.location.origin}/liste/${slug}/regala`; 
+    navigator.clipboard.writeText(guestUrl);
+    toast.success("Link copiato! Invialo a parenti e amici su WhatsApp.");
   };
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Caricamento Lista...</p>
+        <div className="w-12 h-12 border-4 border-[#1e73be] border-t-transparent rounded-full animate-spin"></div>
+        <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Caricamento la tua lista...</p>
       </div>
     </div>
   );
@@ -97,37 +100,43 @@ export default function WishlistDetailPage({ params }: PageProps) {
   if (!wishlist) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
       <h2 className="text-2xl font-black text-slate-900 mb-4 uppercase">Lista non trovata</h2>
-      <Link href="/shop" className="text-blue-600 font-bold underline">Torna allo shop</Link>
+      <Link href="/liste" className="text-blue-600 font-bold underline">Torna alle tue liste</Link>
     </div>
   );
 
+  // Calcolo del totale raccolto in caso di salvadanaio
+  const totalRaised = contributions.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
+      
       {/* HEADER DELLA LISTA */}
       <div className="bg-white border-b border-slate-100 pt-12 pb-8 px-6">
         <div className="max-w-5xl mx-auto">
           <Link href="/liste" className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold mb-6 transition-colors group">
             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-            Torna alle mie liste
+            Torna al tuo pannello liste
           </Link>
 
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div>
-              <span className="bg-[#1e73be]/10 text-[#1e73be] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-                Lista Compleanno Speciale
+              <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${wishlist.list_type === 'money' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                {wishlist.list_type === 'money' ? 'Il tuo salvadanaio quote' : 'La tua lista regali fisici'}
               </span>
               <h1 className="text-5xl md:text-6xl font-black text-slate-900 mt-4 leading-tight uppercase tracking-tighter">
-                I Desideri di <span className="text-[#1e73be]">{wishlist.child_name}</span>
+                Lista di <span className="text-[#1e73be]">{wishlist.child_name}</span>
               </h1>
               <div className="flex items-center gap-6 mt-6 text-slate-500 font-bold">
                 <div className="flex items-center gap-2">
                   <Calendar size={20} className="text-[#8cc665]" />
                   <span>{new Date(wishlist.event_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Gift size={20} className="text-pink-500" />
-                  <span>{items.length} Regali scelti</span>
-                </div>
+                {wishlist.list_type !== 'money' && (
+                  <div className="flex items-center gap-2">
+                    <Gift size={20} className="text-pink-500" />
+                    <span>{items.length} Articoli inseriti</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -135,82 +144,113 @@ export default function WishlistDetailPage({ params }: PageProps) {
               onClick={copyLink}
               className="w-full md:w-auto bg-[#8cc665] text-white px-8 py-5 rounded-[2rem] font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-[#7ab554] transition-all shadow-xl shadow-green-100 active:scale-95"
             >
-              <Share2 size={20} /> Condividi Lista
+              <Share2 size={20} /> Copia e Condividi Link
             </button>
           </div>
         </div>
       </div>
 
-      {/* GRIGLIA PRODOTTI */}
+      {/* REGISTRO INVITATI PRIVATO (Valido sia per regali che per salvadanaio) */}
       <div className="max-w-5xl mx-auto px-6 mt-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {items.map((item) => {
-            const product = item.prodotti;
-            const isPurchased = item.quantity_purchased >= item.quantity_requested;
-
-            return (
-              <div key={item.id} className={`bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm transition-all group ${isPurchased ? 'opacity-75 grayscale-[0.5]' : 'hover:shadow-2xl hover:-translate-y-2'}`}>
-                {/* Immagine Prodotto */}
-                <div className="aspect-square bg-white p-6 relative overflow-hidden border-b border-slate-50">
-                  <img
-                    src={product.immagine_url || '/placeholder.png'}
-                    alt={product.nome}
-                    className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700"
-                  />
-                  {isPurchased && (
-                    <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] flex items-center justify-center p-6 text-center">
-                      <div className="bg-green-500 text-white px-5 py-2 rounded-full font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg">
-                        <CheckCircle size={14} /> Già Regalato!
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Info Prodotto */}
-                <div className="p-8 text-center">
-                  <h3 className="font-black text-slate-800 text-lg leading-tight mb-3 line-clamp-2 uppercase tracking-tight">
-                    {product.nome}
-                  </h3>
-                  <p className="text-3xl font-black text-[#1e73be] mb-8">
-                    {product.prezzo.toFixed(2)}€
-                  </p>
-
-                  <div className="space-y-3">
-                    {!isPurchased ? (
-                      <button className="w-full bg-slate-900 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-lg active:scale-95">
-                        <ShoppingBag size={18} /> Regala ora
-                      </button>
-                    ) : (
-                      <div className="w-full bg-slate-100 text-slate-400 font-black uppercase tracking-widest text-xs py-5 rounded-2xl flex items-center justify-center gap-2 cursor-not-allowed">
-                        Completato
-                      </div>
+        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
+            <Users className="text-[#1e73be]" size={24} />
+            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Chi ha partecipato (Privato)</h2>
+          </div>
+          
+          {contributions.length === 0 ? (
+            <p className="text-sm text-slate-400 font-medium py-2">Nessun invitato ha ancora inviato quote o regali. Condividi il link per iniziare!</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {contributions.map((contrib, i) => (
+                <div key={i} className="bg-slate-50 p-4 rounded-2xl flex justify-between items-center border border-slate-100">
+                  <div>
+                    <p className="font-bold text-slate-800">{contrib.customer_name || 'Invitato Anonimo'}</p>
+                    <p className="text-xs text-slate-400 font-semibold">{contrib.customer_email}</p>
+                    {contrib.gift_name && (
+                      <p className="text-xs text-zinc-500 font-medium mt-1">Regalo: <span className="font-bold text-[#1e73be]">{contrib.gift_name}</span></p>
                     )}
-
-                    {isOwner && (
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="w-full text-red-400 font-bold text-[10px] uppercase tracking-[0.2em] py-2 hover:text-red-600 transition-colors flex items-center justify-center gap-1 mt-2"
-                      >
-                        <Trash2 size={12} /> Elimina
-                      </button>
+                    {contrib.customer_message && (
+                      <p className="text-xs italic text-slate-500 bg-white p-2 rounded-lg mt-2 border border-slate-100">"{contrib.customer_message}"</p>
                     )}
                   </div>
+                  <span className="bg-green-50 text-green-600 px-3 py-1.5 rounded-xl text-xs font-black self-start">
+                    + €{contrib.amount.toFixed(2)}
+                  </span>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {items.length === 0 && (
-          <div className="text-center py-32 bg-white rounded-[3rem] border-4 border-dashed border-slate-100">
-            <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Gift className="text-slate-200" size={48} />
+              ))}
             </div>
-            <h3 className="text-slate-900 font-black uppercase text-2xl">La lista è vuota</h3>
-            <p className="text-slate-400 font-medium mt-2 max-w-xs mx-auto">Non ci sono ancora regali in questa lista. Inizia subito a scegliere!</p>
-            <Link href="/shop" className="inline-block mt-10 bg-[#1e73be] text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl shadow-blue-100">
-              Sfoglia i giocattoli
-            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* BLOCCO CONTENUTO IN BASE AL TIPO DI LISTA */}
+      <div className="max-w-5xl mx-auto px-6 mt-12">
+        
+        {/* CASO A: LISTA ARTICOLI FISICI */}
+        {wishlist.list_type !== 'money' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {items.map((item) => {
+              const product = item.prodotti;
+              if (!product) return null;
+              const isPurchased = item.quantity_purchased >= item.quantity_requested;
+
+              return (
+                <div key={item.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm relative group">
+                  <div className="aspect-square bg-white p-6 border-b border-slate-50 flex items-center justify-center relative">
+                    <img
+                      src={product.immagine_url || '/placeholder.png'}
+                      alt={product.nome}
+                      className="w-full h-full object-contain"
+                    />
+                    {isPurchased && (
+                      <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center p-6">
+                        <div className="bg-green-500 text-white px-5 py-2 rounded-full font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg">
+                          <CheckCircle size={14} /> Ricevuto!
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-8 text-center">
+                    <h3 className="font-black text-slate-800 text-lg leading-tight mb-3 line-clamp-2 uppercase tracking-tight">
+                      {product.nome}
+                    </h3>
+                    <p className="text-3xl font-black text-[#1e73be] mb-6">
+                      {product.prezzo.toFixed(2)}€
+                    </p>
+
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="w-full text-red-400 hover:bg-red-50 font-black text-xs uppercase tracking-widest py-4 rounded-2xl border border-dashed border-red-200 hover:border-red-400 transition-all flex items-center justify-center gap-2 active:scale-95"
+                    >
+                      <Trash2 size={14} /> Rimuovi Regalo
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          
+          /* CASO B: IL SALVADANAIO QUOTE IN VISIONE GENITORE */
+          <div className="max-w-xl mx-auto bg-white p-8 sm:p-12 rounded-[3rem] border border-slate-100 shadow-xl text-center">
+            <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center text-amber-500 mx-auto mb-6">
+              <Coins size={36} />
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Salvadanaio di {wishlist.child_name}</h2>
+            
+            {/* Contatore cumulativo del denaro ricevuto */}
+            <div className="my-6 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+              <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-1">Totale Accumulato</p>
+              <p className="text-4xl font-black text-green-600">€{totalRaised.toFixed(2)}</p>
+            </div>
+
+            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 text-left">
+              <p className="text-xs text-blue-700 font-medium leading-relaxed text-center">
+                Gli invitati che usano il tuo link trovano un modulo sicuro per versare quote libere e scriverti un messaggio d'auguri. Trovi i singoli dettagli nel pannello sopra.
+              </p>
+            </div>
           </div>
         )}
       </div>

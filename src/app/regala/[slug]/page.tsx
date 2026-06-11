@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, use } from 'react';
 import { supabase } from '@/lib/supabase/supabase';
-import { Gift, Calendar, ShoppingBag, CheckCircle, Heart, Star } from 'lucide-react';
+import { Gift, Calendar, ShoppingBag, CheckCircle, Heart, Star, Coins, User, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useCart } from '@/app/shop/useCart';
@@ -15,13 +15,18 @@ export default function GuestWishlistPage({ params }: PageProps) {
   const [wishlist, setWishlist] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Stati per il modulo Salvadanaio / Quota Libera
+  const [quotaAmount, setQuotaAmount] = useState<string>('');
+  const [guestName, setGuestName] = useState<string>('');
+  const [guestMessage, setGuestMessage] = useState<string>('');
+  
   const addItem = useCart((state) => state.addItem);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       
-      // 1. Recupera la testata della wishlist pubblica
       const { data: wishlistData } = await supabase
         .from('wishlists')
         .select('*')
@@ -34,31 +39,34 @@ export default function GuestWishlistPage({ params }: PageProps) {
       }
       setWishlist(wishlistData);
 
-      // 2. Recupera gli articoli agganciati usando i campi corretti del DB (nome, prezzo, immagine_url)
-      const { data: itemsData } = await supabase
-        .from('wishlist_items')
-        .select(`
-          id,
-          quantity_requested,
-          quantity_purchased,
-          prodotti (
+      // Carica i prodotti fisici solo se NON è un salvadanaio
+      if (wishlistData.list_type !== 'money') {
+        const { data: itemsData } = await supabase
+          .from('wishlist_items')
+          .select(`
             id,
-            nome,
-            prezzo,
-            immagine_url,
-            slug
-          )
-        `)
-        .eq('wishlist_id', wishlistData.id);
+            quantity_requested,
+            quantity_purchased,
+            prodotti (
+              id,
+              nome,
+              prezzo,
+              immagine_url,
+              slug
+            )
+          `)
+          .eq('wishlist_id', wishlistData.id);
 
-      setItems(itemsData || []);
+        setItems(itemsData || []);
+      }
+      
       setLoading(false);
     }
     fetchData();
   }, [slug]);
 
+  // Gestione regalo fisico
   const handleRegalaOra = (product: any) => {
-    // Passiamo le info al carrello globale includendo il wishlist_id per tracciare l'acquisto
     addItem({
       id: product.id,
       wishlist_id: wishlist.id,
@@ -67,6 +75,42 @@ export default function GuestWishlistPage({ params }: PageProps) {
       image_url: product.immagine_url
     });
     toast.success(`${product.nome} aggiunto al carrello!`);
+  };
+
+  // Gestione invio quota Salvadanaio
+  const handleInviaQuota = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const parsedAmount = parseFloat(quotaAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error("Inserisci un importo valido per il regalo");
+      return;
+    }
+
+    if (!guestName.trim()) {
+      toast.error("Inserisci il tuo nome per farti riconoscere");
+      return;
+    }
+
+    // Aggiungiamo la quota al carrello come prodotto "virtuale" speciale
+    addItem({
+      id: `quota-${wishlist.id}`, // ID univoco per la quota di questa lista
+      wishlist_id: wishlist.id,
+      name: `Quota Regalo - Lista di ${wishlist.child_name}`,
+      price: parsedAmount,
+      image_url: '/images/salvadanaio-placeholder.png', // Un'immagine o icona per il carrello
+      meta: {
+        guest_name: guestName,
+        guest_message: guestMessage,
+        is_quota: true
+      }
+    });
+
+    toast.success("Quota regalo aggiunta al carrello!");
+    // Reset dei campi
+    setQuotaAmount('');
+    setGuestName('');
+    setGuestMessage('');
   };
 
   if (loading) return (
@@ -90,7 +134,9 @@ export default function GuestWishlistPage({ params }: PageProps) {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-blue-50 text-[#1e73be] px-4 py-2 rounded-full mb-6 animate-bounce">
             <Star size={16} className="fill-current" />
-            <span className="font-black text-[10px] uppercase tracking-widest">Scegli un regalo speciale</span>
+            <span className="font-black text-[10px] uppercase tracking-widest">
+              {wishlist.list_type === 'money' ? 'Partecipa alla raccolta' : 'Scegli un regalo speciale'}
+            </span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black text-slate-900 leading-tight uppercase tracking-tighter mb-4">
@@ -104,75 +150,161 @@ export default function GuestWishlistPage({ params }: PageProps) {
             </div>
             <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>
             <div className="flex items-center gap-2 text-[#8cc665]">
-              <Gift size={18} />
-              <span>{items.length} desideri</span>
+              {wishlist.list_type === 'money' ? (
+                <>
+                  <Coins size={18} className="text-amber-500" />
+                  <span className="text-amber-600">Salvadanaio quote</span>
+                </>
+              ) : (
+                <>
+                  <Gift size={18} />
+                  <span>{items.length} desideri</span>
+                </>
+              )}
             </div>
           </div>
         </div>
       </header>
 
-      {/* LISTA PRODOTTI (Layout a Lista Pulito) */}
+      {/* CONTENUTO PAGINA */}
       <main className="max-w-3xl mx-auto px-6 py-12">
-        <div className="space-y-6">
-          {items.map((item) => {
-            const product = item.prodotti;
-            if (!product) return null;
-            
-            const isPurchased = item.quantity_purchased >= item.quantity_requested;
+        
+        {/* CASO A: LA LISTA È UN SALVADANAIO PER APRIRE LA RACCOLTA FONDI */}
+        {wishlist.list_type === 'money' ? (
+          <div className="bg-white rounded-[3rem] p-8 sm:p-12 border border-slate-100 shadow-xl shadow-slate-100/70">
+            <div className="text-center max-w-md mx-auto mb-10">
+              <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 mx-auto mb-4">
+                <Coins size={32} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Lascia il tuo Pensiero</h2>
+              <p className="text-slate-400 text-sm mt-2 font-medium">
+                I genitori hanno attivato una raccolta quote. Scegli quanto donare e lascia un messaggio speciale per il piccolo!
+              </p>
+            </div>
 
-            return (
-              <div
-                key={item.id}
-                className={`bg-white rounded-[2rem] p-6 border border-slate-100 flex flex-col sm:flex-row items-center gap-8 transition-all hover:shadow-xl hover:shadow-slate-100/50 ${isPurchased ? 'opacity-60 grayscale' : ''}`}
-              >
-                {/* Immagine */}
-                <div className="w-32 h-32 flex-shrink-0 bg-slate-50 rounded-2xl p-4 flex items-center justify-center">
-                  <img 
-                    src={product.immagine_url || '/placeholder.png'} 
-                    alt={product.nome} 
-                    className="max-w-full max-h-full object-contain" 
+            <form onSubmit={handleInviaQuota} className="space-y-6 max-w-md mx-auto">
+              
+              {/* Input Importo */}
+              <div>
+                <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Quanto vuoi regalare? (€)</label>
+                <div className="relative">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-400">€</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    required
+                    value={quotaAmount}
+                    onChange={(e) => setQuotaAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-5 pl-12 pr-6 text-2xl font-black text-slate-800 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-[#1e73be] transition-all outline-none"
                   />
                 </div>
+              </div>
 
-                {/* Info Prodotto */}
-                <div className="flex-grow text-center sm:text-left">
-                  <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-1">{product.nome}</h3>
-                  <p className="text-2xl font-black text-[#1e73be] mb-4">{product.prezzo.toFixed(2)}€</p>
+              {/* Input Nome Invitato */}
+              <div>
+                <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Il tuo Nome e Cognome</label>
+                <div className="relative">
+                  <User size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder="Es. Nonna Maria o Famiglia Rossi"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-6 font-bold text-slate-800 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-[#1e73be] transition-all outline-none"
+                  />
+                </div>
+              </div>
 
-                  {isPurchased ? (
-                    <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 px-4 py-2 rounded-full text-xs font-black uppercase">
-                      <CheckCircle size={14} /> Già regalato
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Ancora disponibile</p>
+              {/* Messaggio di Auguri */}
+              <div>
+                <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Messaggio d'Auguri (Facoltativo)</label>
+                <div className="relative">
+                  <MessageSquare size={18} className="absolute left-5 top-5 text-slate-400" />
+                  <textarea
+                    rows={4}
+                    value={guestMessage}
+                    onChange={(e) => setGuestMessage(e.target.value)}
+                    placeholder="Scrivi un pensiero dolce per il festeggiato..."
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-6 font-medium text-slate-800 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-[#1e73be] transition-all outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Bottone di Conferma */}
+              <button
+                type="submit"
+                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-xl active:scale-95 pt-5"
+              >
+                <ShoppingBag size={18} /> Conferma e Regala
+              </button>
+            </form>
+          </div>
+        ) : (
+          
+          /* CASO B: LA LISTA CONTIENE I ARTICOLI FISICI SELEZIONATI */
+          <div className="space-y-6">
+            {items.map((item) => {
+              const product = item.prodotti;
+              if (!product) return null;
+              
+              const isPurchased = item.quantity_purchased >= item.quantity_requested;
+
+              return (
+                <div
+                  key={item.id}
+                  className={`bg-white rounded-[2rem] p-6 border border-slate-100 flex flex-col sm:flex-row items-center gap-8 transition-all hover:shadow-xl hover:shadow-slate-100/50 ${isPurchased ? 'opacity-60 grayscale' : ''}`}
+                >
+                  <div className="w-32 h-32 flex-shrink-0 bg-slate-50 rounded-2xl p-4 flex items-center justify-center">
+                    <img 
+                      src={product.immagine_url || '/placeholder.png'} 
+                      alt={product.nome} 
+                      className="max-w-full max-h-full object-contain" 
+                    />
+                  </div>
+
+                  <div className="flex-grow text-center sm:text-left">
+                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-1">{product.nome}</h3>
+                    <p className="text-2xl font-black text-[#1e73be] mb-4">{product.prezzo.toFixed(2)}€</p>
+
+                    {isPurchased ? (
+                      <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 px-4 py-2 rounded-full text-xs font-black uppercase">
+                        <CheckCircle size={14} /> Già regalato
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Ancora disponibile</p>
+                    )}
+                  </div>
+
+                  {!isPurchased && (
+                    <button
+                      onClick={() => handleRegalaOra(product)}
+                      className="w-full sm:w-auto bg-slate-900 text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-lg active:scale-95 whitespace-nowrap"
+                    >
+                      <ShoppingBag size={18} /> Regala ora
+                    </button>
                   )}
                 </div>
+              );
+            })}
 
-                {/* Azione di inserimento nel carrello dello shop */}
-                {!isPurchased && (
-                  <button
-                    onClick={() => handleRegalaOra(product)}
-                    className="w-full sm:w-auto bg-slate-900 text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-lg active:scale-95 whitespace-nowrap"
-                  >
-                    <ShoppingBag size={18} /> Regala ora
-                  </button>
-                )}
+            {items.length === 0 && (
+              <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
+                <p className="text-slate-400 font-bold uppercase tracking-widest">Nessun prodotto in lista al momento.</p>
               </div>
-            );
-          })}
-        </div>
-
-        {items.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
-            <p className="text-slate-400 font-bold uppercase tracking-widest">Nessun prodotto in lista al momento.</p>
+            )}
           </div>
         )}
 
-        {/* Banner di ringraziamento emotivo */}
+        {/* Banner di Ringraziamento Emotivo */}
         <div className="mt-20 p-8 bg-[#1e73be] rounded-[2.5rem] text-white text-center shadow-2xl relative overflow-hidden">
           <Heart className="absolute -top-10 -left-10 w-40 h-40 text-white/10" />
           <h4 className="text-2xl font-black mb-4 uppercase">Grazie per il tuo pensiero!</h4>
-          <p className="text-blue-100 font-medium">Scegliendo un regalo da questa lista, aiuterai i genitori a ricevere esattamente ciò che serve, evitando doppioni e completando il set perfetto per {wishlist.child_name}.</p>
+          <p className="text-blue-100 font-medium">
+            Scegliendo un regalo da questa lista, aiuterai i genitori a ricevere esattamente ciò che serve, evitando doppioni e completando il set perfetto per {wishlist.child_name}.
+          </p>
         </div>
       </main>
 
