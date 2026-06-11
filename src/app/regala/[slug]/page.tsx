@@ -51,9 +51,9 @@ export default function GuestWishlistPage({ params }: PageProps) {
             quantity_purchased,
             prodotti (
               id,
-              nome,
-              prezzo,
-              immagine_url,
+              name,
+              price,
+              image_url,
               slug
             )
           `)

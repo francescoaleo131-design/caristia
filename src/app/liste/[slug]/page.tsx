@@ -54,9 +54,9 @@ export default function WishlistOwnerPage({ params }: PageProps) {
             quantity_purchased,
             prodotti:product_id (
               id,
-              nome,
-              prezzo,
-              immagine_url
+              name,
+              price,
+              image_url
             )
           `)
           .eq('wishlist_id', wishlistData.id);
