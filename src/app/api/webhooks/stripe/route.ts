@@ -23,9 +23,9 @@ const supabaseAdmin = createClient(
 const loops = new LoopsClient(process.env.LOOPS_API_KEY?.trim() || 'placeholder-key');
 const LOOPS_GIFT_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n'; 
 const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; 
+const LOOPS_FAILED_TEMPLATE_ID = 'cmpviptqb00mc0j2nmvav7vt1'; // 🚀 ID reale del template Loops per pagamenti falliti
 
 export async function POST(req: Request) {
-  // 🚀 Utilizzo corretto dell'asincronia nativa degli header Next.js
   const headersList = await headers();
   const signature = headersList.get('stripe-signature') || headersList.get('Stripe-Signature');
 
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret!);
-    console.log("✅ Webhook verificato con successo!");
+    console.log(`✅ Webhook verificato con successo! Evento: ${event.type}`);
   } catch (err: any) {
     console.error(`❌ Errore firma Webhook: ${err.message}`);
     return NextResponse.json({ error: err.message }, { status: 400 });
@@ -49,14 +49,15 @@ export async function POST(req: Request) {
 
   const session = (event.data.object || {}) as any;
 
+  // ----------------------------------------------------
+  // GESTIONE PAGAMENTO RIUSCITO (checkout.session.completed)
+  // ----------------------------------------------------
   if (event.type === 'checkout.session.completed') {
     const metadata = session.metadata;
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
 
-    // ----------------------------------------------------
     // CASO A: ACQUISTO PRODOTTI SHOP (shop_order)
-    // ----------------------------------------------------
     if (metadata?.type === 'shop_order') {
       console.log('📦 Processing order for:', customerEmail);
       let dbSuccess = false;
@@ -143,9 +144,7 @@ export async function POST(req: Request) {
       }
     }
     
-    // ----------------------------------------------------
     // CASO B: ACQUISTO GIFT CARD (giftcard_purchase)
-    // ----------------------------------------------------
     else if (metadata?.type === 'giftcard_purchase') {
       let dbGiftSuccess = false;
       const amount = session.amount_total / 100;
@@ -195,6 +194,56 @@ export async function POST(req: Request) {
         } catch (loopsGiftError: any) {
           console.error(`❌ Errore SDK Loops (Gift Card):`, loopsGiftError.message || loopsGiftError);
         }
+      }
+    }
+  }
+
+  // ----------------------------------------------------
+  // GESTIONE PAGAMENTO FALLITO (charge.failed)
+  // ----------------------------------------------------
+  else if (event.type === 'charge.failed') {
+    const customerEmail = session.billing_details?.email || session.customer;
+    const customerName = session.billing_details?.name || 'Cliente';
+    const amountFormatted = `€${(session.amount / 100).toFixed(2)}`;
+    const orderId = session.payment_intent || session.id;
+
+    if (customerEmail && process.env.LOOPS_API_KEY) {
+      let motivoItaliano = "Errore generico o transazione rifiutata dal circuito bancario.";
+      
+      const failureCode = session.failure_code;
+      const failureMessage = session.failure_message;
+
+      if (failureCode === 'insufficient_funds') {
+        motivoItaliano = "Fondi insufficienti sulla carta utilizzata.";
+      } else if (failureCode === 'expired_card') {
+        motivoItaliano = "La carta di credito o debito inserita risulta scaduta.";
+      } else if (failureCode === 'incorrect_cvc') {
+        motivoItaliano = "Il codice di sicurezza a 3 cifre (CVC/CVV) sul retro della carta non è corretto.";
+      } else if (failureCode === 'incorrect_number') {
+        motivoItaliano = "Il numero di carta inserito non è corretto.";
+      } else if (failureCode === 'card_declined') {
+        motivoItaliano = "La transazione è stata rifiutata direttamente dalla tua banca. Controlla i limiti della carta.";
+      } else if (failureMessage) {
+        motivoItaliano = failureMessage; 
+      }
+
+      try {
+        console.log(`⚠️ Rilevato pagamento fallito per ${customerEmail}. Motivo: ${motivoItaliano}`);
+        
+        await loops.sendTransactionalEmail({
+          email: customerEmail,
+          transactionalId: LOOPS_FAILED_TEMPLATE_ID,
+          dataVariables: {
+            customerName: customerName,
+            amount: amountFormatted,
+            orderId: orderId,
+            motivoErrore: motivoItaliano // Mappato all'interno del tuo template Loops ({{motivoErrore}})
+          },
+        });
+        
+        console.log(`✉️ Email di notifica pagamento fallito inviata con successo a ${customerEmail}`);
+      } catch (loopsFailedError: any) {
+        console.error(`❌ Errore SDK Loops durante l'invio del pagamento fallito:`, loopsFailedError.message || loopsFailedError);
       }
     }
   }
