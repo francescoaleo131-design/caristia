@@ -4,9 +4,9 @@ import { Gift, CheckCircle2, Smartphone, Loader2 } from "lucide-react"
 
 // Configurazione dei tagli disponibili con le rispettive immagini locali
 const CARDS_DISPONIBILI = [
-  { id: 1, amount: 25, image: "/public/card25.jpeg", label: "Gift Card Bronze" },
-  { id: 2, amount: 50, image: "/public/card50.jpeg", label: "Gift Card Silver" },
-  { id: 3, amount: 100, image: "/public/card100.jpeg", label: "Gift Card Gold" },
+  { id: 1, amount: 25, image: "/card25.jpeg", label: "Gift Card Bronze" },
+  { id: 2, amount: 50, image: "/card50.jpeg", label: "Gift Card Silver" },
+  { id: 3, amount: 100, image: "/card100.jpeg", label: "Gift Card Gold" },
 ];
 
 export default function GiftCardPage() {
