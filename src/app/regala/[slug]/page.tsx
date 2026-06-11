@@ -98,7 +98,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
       setStripeLoading(true);
 
       // Chiamata alla tua API con tutti i dati necessari per i metadata di Stripe
-      const response = await fetch('/api/checkout-quota', {
+      const response = await fetch('/api/checkout/wishlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
