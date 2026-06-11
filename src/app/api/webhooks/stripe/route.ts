@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import { generateSecureGiftCode } from '@/lib/utils/giftcard-utils';
-import { LoopsClient } from 'loops'; 
+import { LoopsClient } from 'loops';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -21,11 +21,11 @@ const supabaseAdmin = createClient(
 );
 
 const loops = new LoopsClient(process.env.LOOPS_API_KEY?.trim() || 'placeholder-key');
-
 const LOOPS_GIFT_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n'; 
 const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; 
 
 export async function POST(req: Request) {
+  // 🚀 Utilizzo corretto dell'asincronia nativa degli header Next.js
   const headersList = await headers();
   const signature = headersList.get('stripe-signature') || headersList.get('Stripe-Signature');
 
@@ -35,9 +35,7 @@ export async function POST(req: Request) {
   }
 
   let event;
-
   try {
-    // 💡 SOLUZIONE DEFINITIVA VERCEL: Estrazione dei byte grezzi (Buffer) invece di req.text()
     const arrayBuffer = await req.arrayBuffer();
     const rawBody = Buffer.from(arrayBuffer);
     
@@ -55,13 +53,12 @@ export async function POST(req: Request) {
     const metadata = session.metadata;
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
-    
+
     // ----------------------------------------------------
     // CASO A: ACQUISTO PRODOTTI SHOP (shop_order)
     // ----------------------------------------------------
     if (metadata?.type === 'shop_order') {
       console.log('📦 Processing order for:', customerEmail);
-      
       let dbSuccess = false;
       const userId = metadata.user_id;
 
@@ -83,7 +80,6 @@ export async function POST(req: Request) {
 
       try {
         const items = JSON.parse(metadata.items || '[]');
-        
         const { error: orderError } = await supabaseAdmin
           .from('orders')
           .insert([
@@ -97,12 +93,10 @@ export async function POST(req: Request) {
               status: 'paid',
             },
           ]);
-          
+
         if (orderError) throw orderError;
-        console.log('✅ Order saved successfully with shipping address:', formattedAddress);
 
         const creditoDaScalare = parseFloat(metadata.credito_portafoglio_usato || '0');
-
         if (userId && creditoDaScalare > 0) {
           const { data: profile, error: profileFetchError } = await supabaseAdmin
             .from('profiles')
@@ -127,7 +121,6 @@ export async function POST(req: Request) {
         }
 
         dbSuccess = true;
-
       } catch (dbError: any) {
         console.error('❌ Errore reale Database (ordini/carrello):', dbError.message);
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
@@ -194,7 +187,7 @@ export async function POST(req: Request) {
               amount: `€${amount.toFixed(2)}`,
               qrCodeUrl: qrCodeUrl,
               buyerName: metadata.buyer_name || 'Un amico',
-              giftMessage: metadata.gift_message || '' // Allineato al campo del template Loops
+              giftMessage: metadata.gift_message || 'Ecco un regalo per te!' 
             },
           });
           console.log(`✅ Gift Card ${giftCode} creata e mail inviata a ${targetEmail}`);

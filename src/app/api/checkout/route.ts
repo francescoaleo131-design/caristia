@@ -10,13 +10,16 @@ interface CartItem {
   quantity: number;
 }
 
-// Tipi attesi nel body della richiesta
 interface CheckoutRequestBody {
   items?: CartItem[];
   email?: string;
   useBalance?: boolean;
-  isGiftCard?: boolean; // Flag per riconoscere l'acquisto di una Gift Card
-  giftCardAmount?: number; // Importo della Gift Card scelta
+  isGiftCard?: boolean; 
+  giftCardAmount?: number;
+  // 🚀 Nuovi campi per i dettagli del regalo passati dal frontend
+  buyerName?: string;
+  recipientEmail?: string;
+  giftMessage?: string;
 }
 
 const LOOPS_ID_RIUSCITO = process.env.LOOPS_ID_PAGAMENTO_RIUSCITO!;
@@ -24,12 +27,11 @@ const LOOPS_ID_RIUSCITO = process.env.LOOPS_ID_PAGAMENTO_RIUSCITO!;
 export async function POST(req: Request) {
   try {
     const body = await req.json() as CheckoutRequestBody;
-    const { items, email, useBalance, isGiftCard, giftCardAmount } = body;
+    const { items, email, useBalance, isGiftCard, giftCardAmount, buyerName, recipientEmail, giftMessage } = body;
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const supabase = await createClient();
 
-    // Recupera l'utente corrente per motivi di sicurezza
     const { data: { user } } = await supabase.auth.getUser();
 
     // =========================================================
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
               name: `Gift Card Caristia - Valore €${giftCardAmount}`,
               description: "Buono regalo digitale spedito via email con QR Code",
             },
-            unit_amount: Math.round(giftCardAmount * 100), // Stripe vuole i centesimi
+            unit_amount: Math.round(giftCardAmount * 100), 
           },
           quantity: 1,
         }],
@@ -59,10 +61,14 @@ export async function POST(req: Request) {
         success_url: `${baseUrl}/success?type=giftcard&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/giftcard`,
         customer_email: user?.email || email || undefined,
+        // 🚀 Ora passiamo tutti i metadati che il webhook leggerà in background
         metadata: {
           type: 'giftcard_purchase',
           amount: giftCardAmount.toString(),
           buyer_id: user?.id || 'anon',
+          buyer_name: buyerName ? String(buyerName).trim() : 'Un amico',
+          recipient_email: recipientEmail ? String(recipientEmail).trim().toLowerCase() : '',
+          gift_message: giftMessage ? String(giftMessage).trim() : 'Ecco un regalo per te!'
         }
       });
 
@@ -78,13 +84,10 @@ export async function POST(req: Request) {
 
     console.log("🛒 Richiesta checkout ricevuta per Giocattoli Caristia. Uso saldo:", useBalance);
 
-    // Calcola il totale del carrello
     const orderTotal = items.reduce((acc: number, item: CartItem) => acc + (item.price * item.quantity), 0);
-    
     let discount = 0;
     let walletBalance = 0;
 
-    // Se l'utente vuole usare il suo saldo ed è loggato su Supabase
     if (useBalance && user) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -98,13 +101,9 @@ export async function POST(req: Request) {
       }
     }
 
-    // =========================================================
-    // CASO A: IL SALDO COPRE TUTTO (Stripe viene bypassato completamente)
-    // =========================================================
     if (discount >= orderTotal && user) {
       const nuovoSaldoPortafoglio = walletBalance - orderTotal;
 
-      // 1. Scala il saldo direttamente dal profilo Supabase
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ gift_card_balance: nuovoSaldoPortafoglio })
@@ -112,13 +111,8 @@ export async function POST(req: Request) {
 
       if (profileError) throw new Error(`Errore aggiornamento saldo: ${profileError.message}`);
 
-      // 2. Crea l'ordine direttamente nel database come 'PAGATO'
       const fakeOrderId = `ORD-WAL-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
-      // TODO: Inserisci effettivamente l'ordine nella tua tabella 'orders' su Supabase
-      // await supabase.from('orders').insert({ id: fakeOrderId, user_id: user.id, total: orderTotal, status: 'paid', items: items });
 
-      // 3. MANDIAMO L'EMAIL CON LOOPS ADESSO! Il webhook di Stripe qui non scatterà mai.
       const customerEmail = user.email || email;
       if (customerEmail) {
         await loops.sendTransactionalEmail({
@@ -138,15 +132,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: `${baseUrl}/success?type=wallet` });
     }
 
-    // =========================================================
-    // CASO B: COPERTURA PARZIALE O NESSUN CREDITO (Interviene Stripe)
-    // =========================================================
     let stripeDiscounts: any[] = [];
-
     if (discount > 0) {
-      // Crea un coupon Stripe istantaneo pari al credito prelevato
       const coupon = await stripe.coupons.create({
-        amount_off: Math.round(discount * 100), // Stripe ragiona in centesimi
+        amount_off: Math.round(discount * 100),
         currency: 'eur',
         duration: 'once',
         name: 'Credito Portafoglio Virtuale',
@@ -168,13 +157,13 @@ export async function POST(req: Request) {
       mode: 'payment',
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cart`,
-      customer_email: user?.email || email || undefined, // Prevale l'email dell'autenticato se c'è
+      customer_email: user?.email || email || undefined,
       phone_number_collection: { enabled: true },
       shipping_address_collection: { allowed_countries: ['IT'] },
       metadata: {
         type: 'shop_order',
         user_id: user?.id || '', 
-        credito_portafoglio_usato: discount.toString(), // FONDAMENTALE: Lo leggerai nel Webhook per scalare il saldo su Supabase solo a transazione Stripe riuscita!
+        credito_portafoglio_usato: discount.toString(),
         items: JSON.stringify(items.map((i: CartItem) => ({
           id: i.id,
           name: i.name,

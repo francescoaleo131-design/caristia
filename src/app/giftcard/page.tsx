@@ -19,24 +19,34 @@ export default function GiftCardPage() {
   const [giftMessage, setGiftMessage] = useState("");
 
   const handleAcquista = async () => {
+    // Validazione base se viene inserita l'email
+    if (recipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+      alert("Inserisci un indirizzo email valido per il destinatario.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch('/api/checkout/giftcard', {
+      // 🚀 Modificato l'endpoint per puntare alla rotta di checkout principale ed unificata
+      const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        // 🚀 Inviamo i parametri corretti mappati su quelli che si aspetta il backend in checkout.txt
         body: JSON.stringify({ 
-          amount: selectedCard.amount, // Passa l'importo della carta selezionata
-          buyerName,
-          recipientEmail,
-          giftMessage
+          isGiftCard: true,
+          giftCardAmount: selectedCard.amount,
+          buyerName: buyerName.trim(),
+          recipientEmail: recipientEmail.trim(),
+          giftMessage: giftMessage.trim()
         }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.url) {
+        // Rimanda l'utente alla pagina di pagamento sicuro di Stripe
         window.location.href = data.url;
       } else {
         console.error("Errore API:", data.error);
