@@ -1,22 +1,26 @@
 "use client";
-import { useState } from "react"
-import { supabase } from "@/lib/supabase/supabase"
-import { generateSecureGiftCode } from "@/lib/utils/giftcard-utils"
-import { Ticket, ArrowLeft, Plus, Check, Loader2 } from "lucide-react"
-import { toast } from "sonner"
-import Link from "next/link"
+
+import { useState } from "react";
+import { supabase } from "@/lib/supabase/supabase";
+import { generateSecureGiftCode } from "@/lib/utils/giftcard-utils";
+import { Ticket, ArrowLeft, Plus, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
 export default function GenerateCardsForm() {
-  const [quantity, setQuantity] = useState(10)
-  const [amount, setAmount] = useState(20) 
-  const [loading, setLoading] = useState(false)
-  const [generatedCards, setGeneratedCards] = useState<any[]>([])
-
-  const standardAmounts = [25, 50, 100];
+  const [quantity, setQuantity] = useState(10);
+  const [amount, setAmount] = useState(20); // Ora rappresenta il valore libero inserito
+  const [loading, setLoading] = useState(false);
+  const [generatedCards, setGeneratedCards] = useState<any[]>([]);
 
   const handleGenerate = async () => {
+    if (!amount || amount <= 0) {
+      toast.error("Inserisci un importo valido per le Gift Card");
+      return;
+    }
+
     setLoading(true);
     const newCards = [];
     const timestamp = new Date().toLocaleString('it-IT').replace(/\//g, '-').replace(/:/g, '.');
@@ -81,28 +85,27 @@ export default function GenerateCardsForm() {
 
         <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-zinc-200/50 border border-white">
           <div className="space-y-8">
+            
+            {/* SEZIONE IMPORTO LIBERO (MODIFICATA) */}
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase text-zinc-400 ml-2 tracking-widest text-center block">
-                Seleziona il valore della card
+                Valore della singola card (€)
               </label>
-              <div className="grid grid-cols-3 gap-3">
-                {standardAmounts.map((val) => (
-                  <button
-                    key={val}
-                    onClick={() => setAmount(val)}
-                    className={`relative py-6 rounded-2xl font-black text-xl transition-all border-2 ${
-                      amount === val 
-                      ? "border-[#1e73be] bg-[#1e73be] text-white shadow-lg shadow-blue-200 scale-[1.05] z-10" 
-                      : "border-zinc-100 bg-zinc-50 text-zinc-400 hover:border-zinc-200"
-                    }`}
-                  >
-                    €{val}
-                    {amount === val && <Check size={16} className="absolute top-2 right-2" />}
-                  </button>
-                ))}
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-xl text-zinc-300">€</span>
+                <input 
+                  type="number" 
+                  min="1"
+                  step="0.01"
+                  placeholder="Es: 25.00"
+                  value={amount || ""} 
+                  onChange={e => setAmount(Math.max(0, Number(e.target.value)))} 
+                  className="w-full bg-zinc-50 pl-12 pr-5 py-5 rounded-2xl outline-none border-2 border-zinc-100 focus:border-blue-100 font-bold text-xl text-center" 
+                />
               </div>
             </div>
 
+            {/* SEZIONE QUANTITÀ */}
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase text-zinc-400 ml-2 tracking-widest text-center block">
                 Quantità da generare
@@ -117,18 +120,20 @@ export default function GenerateCardsForm() {
               />
             </div>
 
+            {/* BOTTONE GENERA */}
             <button 
               onClick={handleGenerate} 
               disabled={loading} 
               className="w-full bg-[#1e73be] text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-100 disabled:opacity-50 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
             >
               {loading ? <Loader2 className="animate-spin" /> : (
-                <><Plus size={20} /> Genera {quantity} Card da {amount}€</>
+                <><Plus size={20} /> Genera {quantity} Card da {amount || 0}€</>
               )}
             </button>
           </div>
         </div>
 
+        {/* ANTEPRIMA CARD GENERATE */}
         {generatedCards.length > 0 && (
           <div className="bg-white p-8 rounded-[2.5rem] shadow-xl animate-in zoom-in-95 border border-white">
             <h2 className="font-bold uppercase text-[10px] tracking-[0.2em] text-zinc-400 mb-6 text-center">
