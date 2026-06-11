@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from "react"
-import { Calendar, Package, User, Plus, Search, Filter, CheckCircle, Clock, Truck, RotateCcw } from "lucide-react"
+import { Calendar, Package, User, Plus, Search, Filter, CheckCircle, Clock, Truck, RotateCcw, AlertTriangle, X } from "lucide-react"
 import AddBookingModal from "@/components/admin/AddBookingModal"
 
 const statusStyles: any = {
@@ -17,6 +17,7 @@ export default function MascotteAdminPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [filter, setFilter] = useState("all")
+  const [showBanner, setShowBanner] = useState(true) // Stato per la visibilità del banner
 
   const fetchBookings = async () => {
     setLoading(true)
@@ -45,6 +46,34 @@ export default function MascotteAdminPage() {
 
   return (
     <div className="space-y-8">
+      
+      {/* --- BANNER DI AVVISO TERRITORIALE --- */}
+      {showBanner && (
+        <div className="w-full bg-amber-50 border border-amber-200 py-3 px-4 rounded-xl relative transition-all duration-300">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex flex-1 items-center gap-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-800 shrink-0">
+                <AlertTriangle size={18} className="animate-pulse" />
+              </span>
+              <p className="text-sm font-semibold text-amber-900">
+                <span className="font-black uppercase tracking-wide mr-1 text-amber-700">Attenzione:</span> 
+                Questo servizio è limitato esclusivamente al territorio di Caltagirone e dintorni!
+              </p>
+            </div>
+            <div className="shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowBanner(false)}
+                className="flex rounded-md p-1 hover:bg-amber-100 text-amber-800 transition-colors outline-none focus:ring-2 focus:ring-amber-500"
+                aria-label="Chiudi avviso"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-6">
         <div>
@@ -92,7 +121,7 @@ export default function MascotteAdminPage() {
             {loading ? (
               <tr><td colSpan={5} className="p-20 text-center text-slate-400 font-bold animate-pulse">Caricamento...</td></tr>
             ) : filteredBookings.length === 0 ? (
-              <tr><td colSpan={5} className="p-20 text-center text-slate-400">Nessuna prenotazione trovata.</td></tr>
+              <tr><td colSpan={5} className="p-20 text-center text-slate-400">Nessuna prenotazione trouvata.</td></tr>
             ) : (
               filteredBookings.map((b) => (
                 <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
