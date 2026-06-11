@@ -29,13 +29,14 @@ export default function WishlistOwnerPage({ params }: PageProps) {
         .single();
 
       if (wError || !wishlistData) {
+        console.error("❌ Errore recupero testata lista:", wError?.message);
         setLoading(false);
         return;
       }
 
       setWishlist(wishlistData);
 
-      // 2. Recupera lo storico dei contributi dal database (Salvadanaio/Quote)
+      // 2. Recupera lo storico dei contributi dal database
       const { data: contribData } = await supabase
         .from('wishlist_contributions')
         .select('*')
@@ -44,7 +45,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
       
       setContributions(contribData || []);
 
-      // 3. Mappatura precisa basata su product_id per estrarre i prodotti fisici
+      // 3. Recupera i prodotti fisici (Modificato con i nomi delle tabelle/chiavi in inglese)
       if (wishlistData.list_type !== 'money') {
         const { data: itemsData, error: iError } = await supabase
           .from('wishlist_items')
@@ -52,7 +53,8 @@ export default function WishlistOwnerPage({ params }: PageProps) {
             id,
             quantity_requested,
             quantity_purchased,
-            prodotti:product_id (
+            product_id,
+            products:product_id (
               id,
               name,
               price,
@@ -62,9 +64,25 @@ export default function WishlistOwnerPage({ params }: PageProps) {
           .eq('wishlist_id', wishlistData.id);
 
         if (iError) {
-          console.error("❌ Errore caricamento articoli con product_id:", iError.message);
+          console.error("❌ Errore query wishlist_items:", iError.message);
         } else {
-          setItems(itemsData || []);
+          // Normalizziamo l'array estraendo la relazione "products" in modo sicuro
+          const normalizedItems = (itemsData || []).map((item: any) => {
+            let productData = null;
+
+            if (item.products) {
+              productData = Array.isArray(item.products) ? item.products[0] : item.products;
+            }
+
+            return {
+              id: item.id,
+              quantity_requested: item.quantity_requested,
+              quantity_purchased: item.quantity_purchased,
+              prodotto: productData
+            };
+          });
+
+          setItems(normalizedItems);
         }
       }
 
@@ -104,11 +122,10 @@ export default function WishlistOwnerPage({ params }: PageProps) {
   if (!wishlist) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
       <h2 className="text-2xl font-black text-slate-900 mb-4 uppercase">Lista non trovata</h2>
-      <Link href="/liste" className="text-blue-600 font-bold underline">Torna alle tue liste</Link>
+      <Link href="/liste" className="text-blue-600 font-bold underline">Torna alle tue lists</Link>
     </div>
   );
 
-  // Somma matematica delle quote versate dagli amici
   const totalRaised = contributions.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   return (
@@ -154,7 +171,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* REGISTRO INVITATI (Storico transazioni, nomi e dediche) */}
+      {/* REGISTRO INVITATI */}
       <div className="max-w-5xl mx-auto px-6 mt-12">
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
@@ -188,7 +205,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* CONTENUTO IN BASE ALLA TIPOLOGIA DI LISTA SELEZIONATA */}
+      {/* CONTENUTO IN BASE ALLA TIPOLOGIA DI LISTA */}
       <div className="max-w-5xl mx-auto px-6 mt-12">
         
         {/* CASO A: LISTA ARTICOLI FISICI */}
@@ -202,9 +219,9 @@ export default function WishlistOwnerPage({ params }: PageProps) {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {items.map((item) => {
-                  // Prevenzione errori: gestisce sia ritorni ad oggetto singolo che array nidificati
-                  const product = Array.isArray(item.prodotti) ? item.prodotti[0] : item.prodotti;
+                  const product = item.prodotto;
                   
+                  // Se la relazione fallisce, evitiamo il crash ritornando null
                   if (!product) return null;
                   const isPurchased = item.quantity_purchased >= item.quantity_requested;
 
@@ -212,8 +229,8 @@ export default function WishlistOwnerPage({ params }: PageProps) {
                     <div key={item.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm relative group">
                       <div className="aspect-square bg-white p-6 border-b border-slate-50 flex items-center justify-center relative">
                         <img
-                          src={product.immagine_url || '/placeholder.png'}
-                          alt={product.nome}
+                          src={product.image_url || product.immagine_url || '/placeholder.png'}
+                          alt={product.name || product.nome || 'Prodotto'}
                           className="w-full h-full object-contain"
                         />
                         {isPurchased && (
@@ -227,10 +244,10 @@ export default function WishlistOwnerPage({ params }: PageProps) {
 
                       <div className="p-8 text-center">
                         <h3 className="font-black text-slate-800 text-lg leading-tight mb-3 line-clamp-2 uppercase tracking-tight">
-                          {product.nome}
+                          {product.name || product.nome}
                         </h3>
                         <p className="text-3xl font-black text-[#1e73be] mb-6">
-                          {product.prezzo.toFixed(2)}€
+                          {Number(product.price || product.prezzo || 0).toFixed(2)}€
                         </p>
 
                         <button
