@@ -14,9 +14,8 @@ export default function GuestWishlistPage({ params }: PageProps) {
   const [wishlist, setWishlist] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stripeLoading, setStripeLoading] = useState<string | null>(null); // Salva l'ID dell'item o 'money' per mostrare il loader sul tasto giusto
+  const [stripeLoading, setStripeLoading] = useState<string | null>(null);
   
-  // Stati per il form del Salvadanaio o dei dati dell'Invitato per regalo fisico
   const [quotaAmount, setQuotaAmount] = useState<string>('');
   const [guestName, setGuestName] = useState<string>('');
   const [guestMessage, setGuestMessage] = useState<string>('');
@@ -25,20 +24,21 @@ export default function GuestWishlistPage({ params }: PageProps) {
     async function fetchData() {
       setLoading(true);
       
-      // 1. Recupera la testata della wishlist pubblica
-      const { data: wishlistData } = await supabase
+      // 1. Recupera la testata della wishlist
+      const { data: wishlistData, error: wError } = await supabase
         .from('wishlists')
         .select('*')
         .eq('slug', slug)
         .single();
 
-      if (!wishlistData) {
+      if (wError || !wishlistData) {
+        console.error("❌ Errore testata lista:", wError?.message);
         setLoading(false);
         return;
       }
       setWishlist(wishlistData);
 
-      // 2. Se è una lista di regali fisici, recupera gli articoli usando la relazione corretta in inglese
+      // 2. Recupera gli articoli SENZA chiedere lo slug del prodotto che non esiste nel DB
       if (wishlistData.list_type !== 'money') {
         const { data: itemsData, error: iError } = await supabase
           .from('wishlist_items')
@@ -47,20 +47,23 @@ export default function GuestWishlistPage({ params }: PageProps) {
             quantity_requested,
             quantity_purchased,
             product_id,
-            products:product_id ( id, name, price, image_url, slug ),
-            prodotti:product_id ( id, name, price, image_url, slug )
+            products:product_id ( id, name, price, image_url ),
+            prodotti:product_id ( id, name, price, image_url )
           `)
           .eq('wishlist_id', wishlistData.id);
 
         if (iError) {
           console.error("❌ Errore caricamento articoli:", iError.message);
+          toast.error("Errore nel caricamento dei prodotti");
         } else {
-          // Normalizzazione per estrarre l'oggetto relazionato "products" in modo pulito
           const normalizedItems = (itemsData || []).map((item: any) => {
+            let rawProduct = item.products || item.prodotti;
             let productData = null;
-            if (item.products) {
-              productData = Array.isArray(item.products) ? item.products[0] : item.products;
+
+            if (rawProduct) {
+              productData = Array.isArray(rawProduct) ? rawProduct[0] : rawProduct;
             }
+
             return {
               id: item.id,
               quantity_requested: item.quantity_requested,
@@ -68,6 +71,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
               prodotto: productData
             };
           });
+
           setItems(normalizedItems);
         }
       }
@@ -77,7 +81,6 @@ export default function GuestWishlistPage({ params }: PageProps) {
     fetchData();
   }, [slug]);
 
-  // CHIAMATA UNIFICATA A STRIPE: Gestisce sia la quota libera sia l'acquisto diretto del regalo fisico
   const handleStripeCheckout = async (type: 'money' | 'physical_product', productDetails?: any, itemId?: string) => {
     if (!guestName.trim()) {
       toast.error("Inserisci il tuo nome per farti riconoscere dal festeggiato");
@@ -95,16 +98,13 @@ export default function GuestWishlistPage({ params }: PageProps) {
       }
       giftName = 'Quota Salvadanaio';
     } else {
-      // Regalo Fisico: Prende il prezzo e il nome del prodotto selezionato
-      finalAmount = productDetails.price || productDetails.prezzo || 0;
-      giftName = productDetails.name || productDetails.nome || 'Regalo Fisico';
+      finalAmount = productDetails?.price || 0;
+      giftName = productDetails?.name || 'Regalo Fisico';
     }
 
     try {
-      // Attiva il loader sul pulsante specifico (o 'money' o l'ID dell'articolo della lista)
       setStripeLoading(itemId || 'money');
 
-      // Chiamata all'API per generare la sessione di checkout sicura di Stripe
       const response = await fetch('/api/checkout/wishlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,15 +115,14 @@ export default function GuestWishlistPage({ params }: PageProps) {
           childName: wishlist.child_name,
           guestName: guestName,
           guestMessage: guestMessage,
-          giftName: giftName, // Passiamo il nome del gioco acquistato per tracciarlo nei contributi
-          wishlistItemId: itemId || null // Identifica quale record di wishlist_items incrementare al webhook
+          giftName: giftName,
+          wishlistItemId: itemId || null
         }),
       });
 
       const data = await response.json();
 
       if (data.url) {
-        // Reindirizzamento diretto a Stripe Checkout
         window.location.href = data.url;
       } else {
         throw new Error(data.error || "Impossibile avviare il pagamento con Stripe");
@@ -149,8 +148,6 @@ export default function GuestWishlistPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-[#fcfcfd]">
-
-      {/* Header Premium per l'Invitato */}
       <header className="bg-white border-b border-slate-100 pt-16 pb-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-blue-50 text-[#1e73be] px-4 py-2 rounded-full mb-6 animate-bounce">
@@ -187,10 +184,8 @@ export default function GuestWishlistPage({ params }: PageProps) {
         </div>
       </header>
 
-      {/* CONTENUTO PRINCIPALE */}
       <main className="max-w-3xl mx-auto px-6 py-12">
-        
-        {/* BLOCCO FIRMA E AUGURI (Sempre visibile all'inizio così compila i dati prima di scegliere/pagare) */}
+        {/* Form Dati Invitato */}
         <div className="bg-white rounded-[3rem] p-8 border border-slate-100 shadow-xl mb-12">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
             <User className="text-[#1e73be]" size={20} />
@@ -223,11 +218,9 @@ export default function GuestWishlistPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* 2. AREA DI ACQUISTO EFFETTIVO IN BASE AL TIPO DI LISTA */}
         {wishlist.list_type === 'money' ? (
-          
-          /* CASO A: MODALITÀ SALVADANAIO QUOTA LIBERA */
-          <div className="bg-white rounded-[3rem] p-8 sm:p-12 border border-slate-100 shadow-xl shadow-slate-100/70">
+          /* Salvadanaio */
+          <div className="bg-white rounded-[3rem] p-8 sm:p-12 border border-slate-100 shadow-xl">
             <div className="text-center max-w-md mx-auto mb-10">
               <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 mx-auto mb-4">
                 <Coins size={32} />
@@ -257,11 +250,11 @@ export default function GuestWishlistPage({ params }: PageProps) {
               <button
                 onClick={() => handleStripeCheckout('money')}
                 disabled={stripeLoading !== null}
-                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-xl active:scale-95 disabled:opacity-60"
+                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-xl active:scale-95"
               >
                 {stripeLoading === 'money' ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" /> Connessione a Stripe sicuro...
+                    <Loader2 size={18} className="animate-spin" /> Connessione a Stripe...
                   </>
                 ) : (
                   <>
@@ -272,14 +265,20 @@ export default function GuestWishlistPage({ params }: PageProps) {
             </div>
           </div>
         ) : (
-          
-          /* CASO B: MODALITÀ LISTA DI REGALI FISICI (ACQUISTO DIRETTO DI UN ARTICOLO CON REINDIRIZZAMENTO STRIPE) */
+          /* Regali Fisici */
           <div className="space-y-6">
             <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest px-2 mb-2">2. Seleziona il gioco che desideri regalare:</h3>
             
             {items.map((item) => {
               const product = item.prodotto;
-              if (!product) return null;
+              
+              if (!product) {
+                return (
+                  <div key={item.id} className="bg-amber-50 p-4 rounded-xl border border-amber-200 text-xs text-amber-700 font-bold">
+                    ⚠️ Errore Relazione: Record presente in lista, ma il prodotto (ID: {item.product_id}) non è stato trovato nella tabella prodotti.
+                  </div>
+                );
+              }
               
               const isPurchased = item.quantity_purchased >= item.quantity_requested;
               const isCurrentLoading = stripeLoading === item.id;
@@ -289,22 +288,20 @@ export default function GuestWishlistPage({ params }: PageProps) {
                   key={item.id}
                   className={`bg-white rounded-[2rem] p-6 border border-slate-100 flex flex-col sm:flex-row items-center gap-8 transition-all hover:shadow-xl hover:shadow-slate-100/50 ${isPurchased ? 'opacity-50 grayscale' : ''}`}
                 >
-                  {/* Immagine Giocattolo */}
                   <div className="w-32 h-32 flex-shrink-0 bg-slate-50 rounded-2xl p-4 flex items-center justify-center">
                     <img 
-                      src={product.image_url || product.immagine_url || '/placeholder.png'} 
-                      alt={product.name || product.nome} 
+                      src={product.image_url || '/placeholder.png'} 
+                      alt={product.name || 'Prodotto'} 
                       className="max-w-full max-h-full object-contain" 
                     />
                   </div>
 
-                  {/* Informazioni Articolo */}
                   <div className="flex-grow text-center sm:text-left">
                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-1">
-                      {product.name || product.nome}
+                      {product.name}
                     </h3>
                     <p className="text-2xl font-black text-[#1e73be] mb-4">
-                      {Number(product.price || product.prezzo || 0).toFixed(2)}€
+                      {Number(product.price || 0).toFixed(2)}€
                     </p>
 
                     {isPurchased ? (
@@ -318,12 +315,11 @@ export default function GuestWishlistPage({ params }: PageProps) {
                     )}
                   </div>
 
-                  {/* Bottone per pagare l'articolo istantaneamente su Stripe */}
                   {!isPurchased && (
                     <button
                       onClick={() => handleStripeCheckout('physical_product', product, item.id)}
                       disabled={stripeLoading !== null}
-                      className="w-full sm:w-auto bg-slate-900 text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-[#8cc665] transition-all shadow-lg active:scale-95 whitespace-nowrap disabled:opacity-60"
+                      className="w-full sm:w-auto bg-slate-900 text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-[#8cc665] transition-all shadow-lg active:scale-95 whitespace-nowrap"
                     >
                       {isCurrentLoading ? (
                         <>
@@ -348,17 +344,15 @@ export default function GuestWishlistPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Banner di Chiusura */}
         <div className="mt-20 p-8 bg-[#1e73be] rounded-[2.5rem] text-white text-center shadow-2xl relative overflow-hidden">
           <Heart className="absolute -top-10 -left-10 w-40 h-40 text-white/10" />
           <h4 className="text-2xl font-black mb-4 uppercase">Grazie per la tua partecipazione!</h4>
           <p className="text-blue-100 font-medium">
-            Acquistando direttamente da questa pagina, i regali verranno registrati ed associati istantaneamente alla festa di {wishlist.child_name}, salvaguardando la sorpresa ed evitando doppioni!
+            Acquistando direttamente da questa pagina, i regali verranno registrati ed associati istantaneamente alla festa di {wishlist?.child_name}, salvaguardando la sorpresa ed evitando doppioni!
           </p>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="py-12 text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.3em]">
         Giocattoli Caristia
       </footer>
