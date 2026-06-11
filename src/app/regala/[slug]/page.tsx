@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, use } from 'react';
 import { supabase } from '@/lib/supabase/supabase';
-import { Gift, Calendar, ShoppingBag, CheckCircle, ArrowLeft, Heart, Star } from 'lucide-react';
+import { Gift, Calendar, ShoppingBag, CheckCircle, Heart, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useCart } from '@/app/shop/useCart';
@@ -20,6 +20,8 @@ export default function GuestWishlistPage({ params }: PageProps) {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
+      
+      // 1. Recupera la testata della wishlist pubblica
       const { data: wishlistData } = await supabase
         .from('wishlists')
         .select('*')
@@ -32,6 +34,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
       }
       setWishlist(wishlistData);
 
+      // 2. Recupera gli articoli agganciati usando i campi corretti del DB (nome, prezzo, immagine_url)
       const { data: itemsData } = await supabase
         .from('wishlist_items')
         .select(`
@@ -40,9 +43,10 @@ export default function GuestWishlistPage({ params }: PageProps) {
           quantity_purchased,
           prodotti (
             id,
-            name,
-            price,
-            image_url
+            nome,
+            prezzo,
+            immagine_url,
+            slug
           )
         `)
         .eq('wishlist_id', wishlistData.id);
@@ -54,14 +58,15 @@ export default function GuestWishlistPage({ params }: PageProps) {
   }, [slug]);
 
   const handleRegalaOra = (product: any) => {
+    // Passiamo le info al carrello globale includendo il wishlist_id per tracciare l'acquisto
     addItem({
       id: product.id,
       wishlist_id: wishlist.id,
-      name: product.name,
-      price: product.price,
-      image_url: product.image_url
+      name: product.nome,
+      price: product.prezzo,
+      image_url: product.immagine_url
     });
-    toast.success(`${product.name} aggiunto al carrello!`);
+    toast.success(`${product.nome} aggiunto al carrello!`);
   };
 
   if (loading) return (
@@ -106,11 +111,13 @@ export default function GuestWishlistPage({ params }: PageProps) {
         </div>
       </header>
 
-      {/* LISTA PRODOTTI (Layout a Lista come richiesto) */}
+      {/* LISTA PRODOTTI (Layout a Lista Pulito) */}
       <main className="max-w-3xl mx-auto px-6 py-12">
         <div className="space-y-6">
           {items.map((item) => {
             const product = item.prodotti;
+            if (!product) return null;
+            
             const isPurchased = item.quantity_purchased >= item.quantity_requested;
 
             return (
@@ -120,13 +127,17 @@ export default function GuestWishlistPage({ params }: PageProps) {
               >
                 {/* Immagine */}
                 <div className="w-32 h-32 flex-shrink-0 bg-slate-50 rounded-2xl p-4 flex items-center justify-center">
-                  <img src={product.image_url} alt={product.name} className="max-w-full max-h-full object-contain" />
+                  <img 
+                    src={product.immagine_url || '/placeholder.png'} 
+                    alt={product.nome} 
+                    className="max-w-full max-h-full object-contain" 
+                  />
                 </div>
 
-                {/* Info */}
+                {/* Info Prodotto */}
                 <div className="flex-grow text-center sm:text-left">
-                  <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-1">{product.name}</h3>
-                  <p className="text-2xl font-black text-[#1e73be] mb-4">{product.price.toFixed(2)}€</p>
+                  <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-1">{product.nome}</h3>
+                  <p className="text-2xl font-black text-[#1e73be] mb-4">{product.prezzo.toFixed(2)}€</p>
 
                   {isPurchased ? (
                     <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 px-4 py-2 rounded-full text-xs font-black uppercase">
@@ -137,11 +148,11 @@ export default function GuestWishlistPage({ params }: PageProps) {
                   )}
                 </div>
 
-                {/* Azione */}
+                {/* Azione di inserimento nel carrello dello shop */}
                 {!isPurchased && (
                   <button
                     onClick={() => handleRegalaOra(product)}
-                    className="w-full sm:w-auto bg-slate-900 text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-lg active:scale-95"
+                    className="w-full sm:w-auto bg-slate-900 text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-lg active:scale-95 whitespace-nowrap"
                   >
                     <ShoppingBag size={18} /> Regala ora
                   </button>
@@ -153,18 +164,19 @@ export default function GuestWishlistPage({ params }: PageProps) {
 
         {items.length === 0 && (
           <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
-            <p className="text-slate-400 font-bold uppercase tracking-widest">Nessun prodotto in lista.</p>
+            <p className="text-slate-400 font-bold uppercase tracking-widest">Nessun prodotto in lista al momento.</p>
           </div>
         )}
 
+        {/* Banner di ringraziamento emotivo */}
         <div className="mt-20 p-8 bg-[#1e73be] rounded-[2.5rem] text-white text-center shadow-2xl relative overflow-hidden">
           <Heart className="absolute -top-10 -left-10 w-40 h-40 text-white/10" />
           <h4 className="text-2xl font-black mb-4 uppercase">Grazie per il tuo pensiero!</h4>
-          <p className="text-blue-100 font-medium">Scegliendo un regalo da questa lista, aiuti i genitori a non ricevere doppioni e a completare il set perfetto per {wishlist.child_name}.</p>
+          <p className="text-blue-100 font-medium">Scegliendo un regalo da questa lista, aiuterai i genitori a ricevere esattamente ciò che serve, evitando doppioni e completando il set perfetto per {wishlist.child_name}.</p>
         </div>
       </main>
 
-      {/* Footer Minimal */}
+      {/* Footer Brand */}
       <footer className="py-12 text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.3em]">
         Giocattoli Caristia
       </footer>
