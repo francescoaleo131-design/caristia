@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, use } from 'react';
 import { supabase } from '@/lib/supabase/supabase';
-import { Gift, Calendar, ShoppingBag, CheckCircle, Heart, Star, Coins, User, MessageSquare } from 'lucide-react';
+import { Gift, Calendar, ShoppingBag, CheckCircle, Heart, Star, Coins, User, MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useCart } from '@/app/shop/useCart';
@@ -15,8 +15,9 @@ export default function GuestWishlistPage({ params }: PageProps) {
   const [wishlist, setWishlist] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stripeLoading, setStripeLoading] = useState(false);
   
-  // Stati per il modulo Salvadanaio / Quota Libera
+  // Stati per il form del Salvadanaio / Quota Libera
   const [quotaAmount, setQuotaAmount] = useState<string>('');
   const [guestName, setGuestName] = useState<string>('');
   const [guestMessage, setGuestMessage] = useState<string>('');
@@ -27,6 +28,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
     async function fetchData() {
       setLoading(true);
       
+      // 1. Recupera la testata della wishlist pubblica
       const { data: wishlistData } = await supabase
         .from('wishlists')
         .select('*')
@@ -39,7 +41,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
       }
       setWishlist(wishlistData);
 
-      // Carica i prodotti fisici solo se NON è un salvadanaio
+      // 2. Se è una lista di regali fisici, recupera gli articoli
       if (wishlistData.list_type !== 'money') {
         const { data: itemsData } = await supabase
           .from('wishlist_items')
@@ -65,7 +67,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
     fetchData();
   }, [slug]);
 
-  // Gestione regalo fisico
+  // Gestione Regalo Fisico: Aggiunge l'articolo al carrello globale dello shop
   const handleRegalaOra = (product: any) => {
     addItem({
       id: product.id,
@@ -74,11 +76,11 @@ export default function GuestWishlistPage({ params }: PageProps) {
       price: product.prezzo,
       image_url: product.immagine_url
     });
-    toast.success(`${product.nome} aggiunto al carrello!`);
+    toast.success(`${product.nome} aggiunto al carrello! Completa l'ordine per regalarlo.`);
   };
 
-  // Gestione invio quota Salvadanaio
-  const handleInviaQuota = (e: React.FormEvent) => {
+  // Gestione Salvadanaio: Reindirizza istantaneamente a Stripe Checkout
+  const handleInviaQuotaDirectlyToStripe = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const parsedAmount = parseFloat(quotaAmount);
@@ -92,25 +94,38 @@ export default function GuestWishlistPage({ params }: PageProps) {
       return;
     }
 
-    // Aggiungiamo la quota al carrello come prodotto "virtuale" speciale
-    addItem({
-      id: `quota-${wishlist.id}`, // ID univoco per la quota di questa lista
-      wishlist_id: wishlist.id,
-      name: `Quota Regalo - Lista di ${wishlist.child_name}`,
-      price: parsedAmount,
-      image_url: '/images/salvadanaio-placeholder.png', // Un'immagine o icona per il carrello
-      meta: {
-        guest_name: guestName,
-        guest_message: guestMessage,
-        is_quota: true
-      }
-    });
+    try {
+      setStripeLoading(true);
 
-    toast.success("Quota regalo aggiunta al carrello!");
-    // Reset dei campi
-    setQuotaAmount('');
-    setGuestName('');
-    setGuestMessage('');
+      // Chiamata alla tua API con tutti i dati necessari per i metadata di Stripe
+      const response = await fetch('/api/checkout-quota', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: parsedAmount,
+          wishlistId: wishlist.id,
+          wishlistSlug: slug,
+          childName: wishlist.child_name,
+          guestName: guestName,
+          guestMessage: guestMessage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        // Redirezione immediata al Checkout sicuro di Stripe
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || "Impossibile generare il pagamento");
+      }
+
+    } catch (err: any) {
+      toast.error(err.message || "Errore durante il collegamento a Stripe");
+      setStripeLoading(false);
+    }
   };
 
   if (loading) return (
@@ -153,7 +168,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
               {wishlist.list_type === 'money' ? (
                 <>
                   <Coins size={18} className="text-amber-500" />
-                  <span className="text-amber-600">Salvadanaio quote</span>
+                  <span className="text-amber-600 font-black uppercase text-xs tracking-wider">Salvadanaio quote</span>
                 </>
               ) : (
                 <>
@@ -166,10 +181,10 @@ export default function GuestWishlistPage({ params }: PageProps) {
         </div>
       </header>
 
-      {/* CONTENUTO PAGINA */}
+      {/* CONTENUTO PRINCIPALE */}
       <main className="max-w-3xl mx-auto px-6 py-12">
         
-        {/* CASO A: LA LISTA È UN SALVADANAIO PER APRIRE LA RACCOLTA FONDI */}
+        {/* CASO A: MODALITÀ SALVADANAIO (QUOTA LIBERA DIRETTA SU STRIPE) */}
         {wishlist.list_type === 'money' ? (
           <div className="bg-white rounded-[3rem] p-8 sm:p-12 border border-slate-100 shadow-xl shadow-slate-100/70">
             <div className="text-center max-w-md mx-auto mb-10">
@@ -182,9 +197,9 @@ export default function GuestWishlistPage({ params }: PageProps) {
               </p>
             </div>
 
-            <form onSubmit={handleInviaQuota} className="space-y-6 max-w-md mx-auto">
+            <form onSubmit={handleInviaQuotaDirectlyToStripe} className="space-y-6 max-w-md mx-auto">
               
-              {/* Input Importo */}
+              {/* Campo Importo */}
               <div>
                 <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Quanto vuoi regalare? (€)</label>
                 <div className="relative">
@@ -194,6 +209,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
                     min="1"
                     step="0.01"
                     required
+                    disabled={stripeLoading}
                     value={quotaAmount}
                     onChange={(e) => setQuotaAmount(e.target.value)}
                     placeholder="0.00"
@@ -202,7 +218,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Input Nome Invitato */}
+              {/* Campo Nome */}
               <div>
                 <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Il tuo Nome e Cognome</label>
                 <div className="relative">
@@ -210,6 +226,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
                   <input
                     type="text"
                     required
+                    disabled={stripeLoading}
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="Es. Nonna Maria o Famiglia Rossi"
@@ -218,13 +235,14 @@ export default function GuestWishlistPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Messaggio di Auguri */}
+              {/* Campo Messaggio */}
               <div>
                 <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Messaggio d'Auguri (Facoltativo)</label>
                 <div className="relative">
                   <MessageSquare size={18} className="absolute left-5 top-5 text-slate-400" />
                   <textarea
                     rows={4}
+                    disabled={stripeLoading}
                     value={guestMessage}
                     onChange={(e) => setGuestMessage(e.target.value)}
                     placeholder="Scrivi un pensiero dolce per il festeggiato..."
@@ -233,18 +251,27 @@ export default function GuestWishlistPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Bottone di Conferma */}
+              {/* Bottone di Conferma con Loader integrato */}
               <button
                 type="submit"
-                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-xl active:scale-95 pt-5"
+                disabled={stripeLoading}
+                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-[#1e73be] transition-all shadow-xl active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <ShoppingBag size={18} /> Conferma e Regala
+                {stripeLoading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" /> Connessione a Stripe sicuro...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag size={18} /> Procedi al pagamento
+                  </>
+                )}
               </button>
             </form>
           </div>
         ) : (
           
-          /* CASO B: LA LISTA CONTIENE I ARTICOLI FISICI SELEZIONATI */
+          /* CASO B: MODALITÀ LISTA DI REGALI FISICI SELEZIONATI */
           <div className="space-y-6">
             {items.map((item) => {
               const product = item.prodotti;
@@ -257,6 +284,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
                   key={item.id}
                   className={`bg-white rounded-[2rem] p-6 border border-slate-100 flex flex-col sm:flex-row items-center gap-8 transition-all hover:shadow-xl hover:shadow-slate-100/50 ${isPurchased ? 'opacity-60 grayscale' : ''}`}
                 >
+                  {/* Immagine Giocattolo */}
                   <div className="w-32 h-32 flex-shrink-0 bg-slate-50 rounded-2xl p-4 flex items-center justify-center">
                     <img 
                       src={product.immagine_url || '/placeholder.png'} 
@@ -265,6 +293,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
                     />
                   </div>
 
+                  {/* Informazioni Articolo */}
                   <div className="flex-grow text-center sm:text-left">
                     <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-1">{product.nome}</h3>
                     <p className="text-2xl font-black text-[#1e73be] mb-4">{product.prezzo.toFixed(2)}€</p>
@@ -278,6 +307,7 @@ export default function GuestWishlistPage({ params }: PageProps) {
                     )}
                   </div>
 
+                  {/* Inserimento nel carrello */}
                   {!isPurchased && (
                     <button
                       onClick={() => handleRegalaOra(product)}
@@ -292,23 +322,23 @@ export default function GuestWishlistPage({ params }: PageProps) {
 
             {items.length === 0 && (
               <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
-                <p className="text-slate-400 font-bold uppercase tracking-widest">Nessun prodotto in lista al momento.</p>
+                <p className="text-slate-400 font-bold uppercase tracking-widest">La lista è attualmente vuota.</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Banner di Ringraziamento Emotivo */}
+        {/* Banner Emozionale Unificato di Chiusura */}
         <div className="mt-20 p-8 bg-[#1e73be] rounded-[2.5rem] text-white text-center shadow-2xl relative overflow-hidden">
           <Heart className="absolute -top-10 -left-10 w-40 h-40 text-white/10" />
           <h4 className="text-2xl font-black mb-4 uppercase">Grazie per il tuo pensiero!</h4>
           <p className="text-blue-100 font-medium">
-            Scegliendo un regalo da questa lista, aiuterai i genitori a ricevere esattamente ciò che serve, evitando doppioni e completando il set perfetto per {wishlist.child_name}.
+            Scegliendo un regalo da questa lista, aiuterai i genitori a ricevere esattamente ciò che serve, evitando doppioni e completando il set perfetto per il divertimento di {wishlist.child_name}.
           </p>
         </div>
       </main>
 
-      {/* Footer Brand */}
+      {/* Footer Istituzionale */}
       <footer className="py-12 text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.3em]">
         Giocattoli Caristia
       </footer>
