@@ -54,7 +54,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
             quantity_requested,
             quantity_purchased,
             product_id,
-            products:product_id (
+            prodotti:product_id (
               id,
               name,
               price,

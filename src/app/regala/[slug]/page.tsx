@@ -47,13 +47,8 @@ export default function GuestWishlistPage({ params }: PageProps) {
             quantity_requested,
             quantity_purchased,
             product_id,
-            products:product_id (
-              id,
-              name,
-              price,
-              image_url,
-              slug
-            )
+            products:product_id ( id, name, price, image_url, slug ),
+            prodotti:product_id ( id, name, price, image_url, slug )
           `)
           .eq('wishlist_id', wishlistData.id);
 
