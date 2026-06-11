@@ -1,11 +1,16 @@
 "use client"
 import { useState } from "react"
-import { Gift, CheckCircle2, Smartphone, Loader2, Euro } from "lucide-react"
+import { Gift, CheckCircle2, Smartphone, Loader2 } from "lucide-react"
 
-const TAGLI_PRESET = [25, 50, 100];
+// Configurazione dei tagli disponibili con le rispettive immagini locali
+const CARDS_DISPONIBILI = [
+  { id: 1, amount: 25, image: "/public/card25.jpg", label: "Gift Card Bronze" },
+  { id: 2, amount: 50, image: "/public/card50.jpg", label: "Gift Card Silver" },
+  { id: 3, amount: 100, image: "/public/card100.jpg", label: "Gift Card Gold" },
+];
 
 export default function GiftCardPage() {
-  const [amount, setAmount] = useState<number>(50); // Default a 50€
+  const [selectedCard, setSelectedCard] = useState(CARDS_DISPONIBILI[1]); // Default a 50€
   const [loading, setLoading] = useState(false);
   
   // Dati opzionali per la dedica della card
@@ -14,11 +19,6 @@ export default function GiftCardPage() {
   const [giftMessage, setGiftMessage] = useState("");
 
   const handleAcquista = async () => {
-    if (!amount || amount <= 0) {
-      alert("Inserisci un importo valido");
-      return;
-    }
-
     setLoading(true);
     try {
       const response = await fetch('/api/checkout/giftcard', {
@@ -27,7 +27,7 @@ export default function GiftCardPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          amount,
+          amount: selectedCard.amount, // Passa l'importo della carta selezionata
           buyerName,
           recipientEmail,
           giftMessage
@@ -37,7 +37,6 @@ export default function GiftCardPage() {
       const data = await response.json();
 
       if (response.ok && data.url) {
-        // Voliamo sul checkout sicuro di Stripe
         window.location.href = data.url;
       } else {
         console.error("Errore API:", data.error);
@@ -65,15 +64,19 @@ export default function GiftCardPage() {
 
           {/* Anteprima Dinamica Carta Regalo */}
           <div className="sticky top-6 space-y-4">
-            <div
-              className="w-full aspect-[1.6/1] rounded-[2rem] p-8 text-white shadow-2xl overflow-hidden relative transition-all bg-gradient-to-br from-indigo-900 to-slate-900"
-            >
-              <div className="absolute inset-0 bg-black/20"></div>
+            <div className="w-full aspect-[1.6/1] rounded-[2rem] p-8 text-white shadow-2xl overflow-hidden relative transition-all bg-gradient-to-br from-indigo-900 to-slate-900">
+              
+              {/* Sfondo dinamico basato sull'immagine del taglio selezionato */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center transition-all duration-300"
+                style={{ backgroundImage: `url(${selectedCard.image})` }}
+              />
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
 
               <div className="relative z-10 flex flex-col h-full">
                 <div className="flex justify-between items-start">
                   <Gift size={40} className="opacity-90" />
-                  <span className="text-4xl font-black italic">€{amount || 0}</span>
+                  <span className="text-4xl font-black italic">€{selectedCard.amount}</span>
                 </div>
 
                 <div className="mt-6">
@@ -91,43 +94,38 @@ export default function GiftCardPage() {
                 </div>
               </div>
             </div>
+            <p className="text-center text-xs text-gray-400 italic">Anteprima della Gift Card da €{selectedCard.amount}</p>
           </div>
 
-          {/* Pannello Configurazione Importo Libero e Dedica */}
+          {/* Pannello Configurazione con Selettore Immagini e Dedica */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100 space-y-6">
             
-            {/* Scelta Importo */}
+            {/* Scelta Taglio Tramite Miniature */}
             <div className="space-y-3">
-              <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider">Scegli l'importo della card</h3>
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider">Seleziona la Gift Card</h3>
               
-              {/* Preset Veloci */}
               <div className="grid grid-cols-3 gap-3">
-                {TAGLI_PRESET.map((p) => (
+                {CARDS_DISPONIBILI.map((card) => (
                   <button
-                    key={p}
+                    key={card.id}
                     type="button"
-                    onClick={() => setAmount(p)}
-                    className={`py-3 rounded-xl font-bold text-sm transition-all ${
-                      amount === p ? "bg-[#1e73be] text-white shadow-md" : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                    onClick={() => setSelectedCard(card)}
+                    className={`group relative flex flex-col items-center p-2 rounded-2xl border-2 transition-all overflow-hidden ${
+                      selectedCard.id === card.id 
+                        ? "border-[#1e73be] bg-blue-50/50 shadow-sm" 
+                        : "border-gray-100 bg-gray-50 hover:border-gray-200"
                     }`}
                   >
-                    €{p}
+                    {/* Mini-anteprima immagine */}
+                    <div 
+                      className="w-full aspect-[1.6/1] bg-cover bg-center rounded-lg shadow-sm mb-2"
+                      style={{ backgroundImage: `url(${card.image})` }}
+                    />
+                    <span className={`text-sm font-black ${selectedCard.id === card.id ? "text-[#1e73be]" : "text-gray-700"}`}>
+                      €{card.amount}
+                    </span>
                   </button>
                 ))}
-              </div>
-
-              {/* Input Libero */}
-              <div className="relative mt-2">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">€</span>
-                <input
-                  type="number"
-                  min="5"
-                  step="1"
-                  placeholder="Inserisci un importo personalizzato"
-                  value={amount || ""}
-                  onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
-                  className="w-full bg-gray-50 pl-8 pr-4 py-4 rounded-xl outline-none border-2 border-transparent focus:border-indigo-100 font-bold text-base text-left"
-                />
               </div>
             </div>
 
@@ -139,21 +137,21 @@ export default function GiftCardPage() {
                 placeholder="Il tuo nome"
                 value={buyerName}
                 onChange={(e) => setBuyerName(e.target.value)}
-                className="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border-2 border-transparent outline-none focus:border-indigo-500/10"
+                className="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border-2 border-transparent outline-none focus:border-[#1e73be]/20"
               />
               <input
                 type="email"
                 placeholder="Email del destinatario (se vuoi spedirla direttamente)"
                 value={recipientEmail}
                 onChange={(e) => setRecipientEmail(e.target.value)}
-                className="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border-2 border-transparent outline-none focus:border-indigo-500/10"
+                className="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border-2 border-transparent outline-none focus:border-[#1e73be]/20"
               />
               <textarea
                 placeholder="Messaggio d'auguri..."
                 value={giftMessage}
                 onChange={(e) => setGiftMessage(e.target.value)}
                 rows={3}
-                className="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border-2 border-transparent outline-none focus:border-indigo-500/10 resize-none"
+                className="w-full bg-gray-50 px-4 py-3 rounded-xl text-sm border-2 border-transparent outline-none focus:border-[#1e73be]/20 resize-none"
               />
             </div>
 
@@ -173,10 +171,10 @@ export default function GiftCardPage() {
             <button
               type="button"
               onClick={handleAcquista}
-              disabled={loading || !amount || amount <= 0}
+              disabled={loading}
               className="w-full bg-[#8cc665] hover:bg-[#76b054] text-white font-black py-4 rounded-xl uppercase tracking-widest transition-all shadow-lg disabled:bg-gray-200 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
             >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : "Procedi al Pagamento"}
+              {loading ? <Loader2 className="animate-spin" size={18} /> : `Acquista Card da €${selectedCard.amount}`}
             </button>
           </div>
 

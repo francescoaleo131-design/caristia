@@ -5,6 +5,9 @@ import { createClient } from '@supabase/supabase-js';
 import { generateSecureGiftCode } from '@/lib/utils/giftcard-utils';
 import { LoopsClient } from 'loops'; 
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
@@ -23,19 +26,26 @@ const LOOPS_GIFT_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n';
 const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; 
 
 export async function POST(req: Request) {
-  const body = await req.text(); 
-  
   const headersList = await headers();
-  const signature = headersList.get('stripe-signature') as string;
+  const signature = headersList.get('stripe-signature') || headersList.get('Stripe-Signature');
+
+  if (!signature) {
+    console.error("❌ Errore Webhook: Manca l'header stripe-signature.");
+    return NextResponse.json({ error: 'Firma mancante' }, { status: 400 });
+  }
 
   let event;
 
   try {
+    // 💡 SOLUZIONE DEFINITIVA VERCEL: Estrazione dei byte grezzi (Buffer) invece di req.text()
+    const arrayBuffer = await req.arrayBuffer();
+    const rawBody = Buffer.from(arrayBuffer);
+    
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret!);
+    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret!);
     console.log("✅ Webhook verificato con successo!");
   } catch (err: any) {
-    console.error(`❌ Errore firma: ${err.message}`);
+    console.error(`❌ Errore firma Webhook: ${err.message}`);
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
@@ -55,7 +65,6 @@ export async function POST(req: Request) {
       let dbSuccess = false;
       const userId = metadata.user_id;
 
-      // RECUPERO INDIRIZZO: Controllo rigoroso sia su shipping_details che su billing_details come fallback
       const shippingDetails = session.shipping_details;
       const billingDetails = session.customer_details;
       let formattedAddress = null;
@@ -65,7 +74,6 @@ export async function POST(req: Request) {
         const streetInfo = line2 ? `${line1} - ${line2}` : line1;
         formattedAddress = `${streetInfo}, ${postal_code || ''} ${city || ''} (${state || country || ''})`;
       } else if (billingDetails && billingDetails.address?.line1) {
-        // Se non c'è l'indirizzo di spedizione, recupera almeno quello di fatturazione inserito sulla carta
         const { line1, line2, city, postal_code, state, country } = billingDetails.address;
         const streetInfo = line2 ? `${line1} - ${line2}` : line1;
         formattedAddress = `${streetInfo}, ${postal_code || ''} ${city || ''} (${state || country || ''}) [Fatturazione]`;
@@ -76,7 +84,6 @@ export async function POST(req: Request) {
       try {
         const items = JSON.parse(metadata.items || '[]');
         
-        // CORREZIONE COLONNE: Cambiato total_amount in total_price per allinearsi con la Dashboard
         const { error: orderError } = await supabaseAdmin
           .from('orders')
           .insert([
@@ -86,7 +93,7 @@ export async function POST(req: Request) {
               customer_name: customerName || null, 
               shipping_address: formattedAddress,  
               items: items,
-              total_amount: session.amount_total / 100, // 💡 Sincronizzato con la colonna letta dalla Dashboard
+              total_amount: session.amount_total / 100, 
               status: 'paid',
             },
           ]);
@@ -94,7 +101,6 @@ export async function POST(req: Request) {
         if (orderError) throw orderError;
         console.log('✅ Order saved successfully with shipping address:', formattedAddress);
 
-        // 2. GESTIONE SCALO SALDO PORTAFOGLIO UTENTE
         const creditoDaScalare = parseFloat(metadata.credito_portafoglio_usato || '0');
 
         if (userId && creditoDaScalare > 0) {
@@ -113,7 +119,6 @@ export async function POST(req: Request) {
           }
         }
 
-        // 3. SVUOTA IL CARRELLO DELL'UTENTE DA SUPABASE
         if (userId) {
           await supabaseAdmin
             .from('cart_items')
@@ -128,7 +133,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
 
-      // 4. INVIO EMAIL TRANSAZIONALE CONFERMA ACQUISTO SHOP VIA SDK
       if (dbSuccess && process.env.LOOPS_API_KEY && customerEmail) {
         try {
           await loops.sendTransactionalEmail({
@@ -190,9 +194,10 @@ export async function POST(req: Request) {
               amount: `€${amount.toFixed(2)}`,
               qrCodeUrl: qrCodeUrl,
               buyerName: metadata.buyer_name || 'Un amico',
-              message: metadata.gift_message || ''
+              giftMessage: metadata.gift_message || '' // Allineato al campo del template Loops
             },
           });
+          console.log(`✅ Gift Card ${giftCode} creata e mail inviata a ${targetEmail}`);
         } catch (loopsGiftError: any) {
           console.error(`❌ Errore SDK Loops (Gift Card):`, loopsGiftError.message || loopsGiftError);
         }
