@@ -35,7 +35,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
 
       setWishlist(wishlistData);
 
-      // 2. Recupera lo storico dei contributi (quote o regali fisici)
+      // 2. Recupera lo storico dei contributi dal database (Salvadanaio/Quote)
       const { data: contribData } = await supabase
         .from('wishlist_contributions')
         .select('*')
@@ -44,7 +44,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
       
       setContributions(contribData || []);
 
-      // 3. Recupera i prodotti fisici SOLO se non è un salvadanaio
+      // 3. Mappatura precisa basata su product_id per estrarre i prodotti fisici
       if (wishlistData.list_type !== 'money') {
         const { data: itemsData, error: iError } = await supabase
           .from('wishlist_items')
@@ -52,7 +52,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
             id,
             quantity_requested,
             quantity_purchased,
-            prodotti (
+            prodotti:product_id (
               id,
               nome,
               prezzo,
@@ -61,7 +61,9 @@ export default function WishlistOwnerPage({ params }: PageProps) {
           `)
           .eq('wishlist_id', wishlistData.id);
 
-        if (!iError) {
+        if (iError) {
+          console.error("❌ Errore caricamento articoli con product_id:", iError.message);
+        } else {
           setItems(itemsData || []);
         }
       }
@@ -72,6 +74,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
     fetchWishlistData();
   }, [slug]);
 
+  // Rimozione di un regalo fisico dalla lista
   const removeItem = async (itemId: string) => {
     const { error } = await supabase.from('wishlist_items').delete().eq('id', itemId);
     if (error) {
@@ -82,6 +85,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
     }
   };
 
+  // Generazione automatica del link pubblico da condividere con gli invitati
   const copyLink = () => {
     const guestUrl = `https://giocattolicaristia.it/regala/${slug}`; 
     navigator.clipboard.writeText(guestUrl);
@@ -104,13 +108,13 @@ export default function WishlistOwnerPage({ params }: PageProps) {
     </div>
   );
 
-  // Calcolo del totale raccolto in caso di salvadanaio
+  // Somma matematica delle quote versate dagli amici
   const totalRaised = contributions.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       
-      {/* HEADER DELLA LISTA */}
+      {/* HEADER PRINCIPALE DEL PANNELLO */}
       <div className="bg-white border-b border-slate-100 pt-12 pb-8 px-6">
         <div className="max-w-5xl mx-auto">
           <Link href="/liste" className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold mb-6 transition-colors group">
@@ -150,7 +154,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* REGISTRO INVITATI PRIVATO (Valido sia per regali che per salvadanaio) */}
+      {/* REGISTRO INVITATI (Storico transazioni, nomi e dediche) */}
       <div className="max-w-5xl mx-auto px-6 mt-12">
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
@@ -184,53 +188,64 @@ export default function WishlistOwnerPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* BLOCCO CONTENUTO IN BASE AL TIPO DI LISTA */}
+      {/* CONTENUTO IN BASE ALLA TIPOLOGIA DI LISTA SELEZIONATA */}
       <div className="max-w-5xl mx-auto px-6 mt-12">
         
         {/* CASO A: LISTA ARTICOLI FISICI */}
         {wishlist.list_type !== 'money' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {items.map((item) => {
-              const product = item.prodotti;
-              if (!product) return null;
-              const isPurchased = item.quantity_purchased >= item.quantity_requested;
+          <>
+            {items.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <Gift className="mx-auto text-slate-300 mb-4" size={40} />
+                <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">Nessun prodotto presente in questa lista.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {items.map((item) => {
+                  // Prevenzione errori: gestisce sia ritorni ad oggetto singolo che array nidificati
+                  const product = Array.isArray(item.prodotti) ? item.prodotti[0] : item.prodotti;
+                  
+                  if (!product) return null;
+                  const isPurchased = item.quantity_purchased >= item.quantity_requested;
 
-              return (
-                <div key={item.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm relative group">
-                  <div className="aspect-square bg-white p-6 border-b border-slate-50 flex items-center justify-center relative">
-                    <img
-                      src={product.immagine_url || '/placeholder.png'}
-                      alt={product.nome}
-                      className="w-full h-full object-contain"
-                    />
-                    {isPurchased && (
-                      <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center p-6">
-                        <div className="bg-green-500 text-white px-5 py-2 rounded-full font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg">
-                          <CheckCircle size={14} /> Ricevuto!
-                        </div>
+                  return (
+                    <div key={item.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm relative group">
+                      <div className="aspect-square bg-white p-6 border-b border-slate-50 flex items-center justify-center relative">
+                        <img
+                          src={product.immagine_url || '/placeholder.png'}
+                          alt={product.nome}
+                          className="w-full h-full object-contain"
+                        />
+                        {isPurchased && (
+                          <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center p-6">
+                            <div className="bg-green-500 text-white px-5 py-2 rounded-full font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg">
+                              <CheckCircle size={14} /> Ricevuto!
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  <div className="p-8 text-center">
-                    <h3 className="font-black text-slate-800 text-lg leading-tight mb-3 line-clamp-2 uppercase tracking-tight">
-                      {product.nome}
-                    </h3>
-                    <p className="text-3xl font-black text-[#1e73be] mb-6">
-                      {product.prezzo.toFixed(2)}€
-                    </p>
+                      <div className="p-8 text-center">
+                        <h3 className="font-black text-slate-800 text-lg leading-tight mb-3 line-clamp-2 uppercase tracking-tight">
+                          {product.nome}
+                        </h3>
+                        <p className="text-3xl font-black text-[#1e73be] mb-6">
+                          {product.prezzo.toFixed(2)}€
+                        </p>
 
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="w-full text-red-400 hover:bg-red-50 font-black text-xs uppercase tracking-widest py-4 rounded-2xl border border-dashed border-red-200 hover:border-red-400 transition-all flex items-center justify-center gap-2 active:scale-95"
-                    >
-                      <Trash2 size={14} /> Rimuovi Regalo
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="w-full text-red-400 hover:bg-red-50 font-black text-xs uppercase tracking-widest py-4 rounded-2xl border border-dashed border-red-200 hover:border-red-400 transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <Trash2 size={14} /> Rimuovi Regalo
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         ) : (
           
           /* CASO B: IL SALVADANAIO QUOTE IN VISIONE GENITORE */
@@ -240,7 +255,6 @@ export default function WishlistOwnerPage({ params }: PageProps) {
             </div>
             <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Salvadanaio di {wishlist.child_name}</h2>
             
-            {/* Contatore cumulativo del denaro ricevuto */}
             <div className="my-6 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center">
               <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-1">Totale Accumulato</p>
               <p className="text-4xl font-black text-green-600">€{totalRaised.toFixed(2)}</p>
