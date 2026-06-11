@@ -83,7 +83,7 @@ export default function WishlistOwnerPage({ params }: PageProps) {
   };
 
   const copyLink = () => {
-    const guestUrl = `${window.location.origin}/regala/${slug}`; 
+    const guestUrl = `https://giocattolicaristia.it/regala/${slug}`; 
     navigator.clipboard.writeText(guestUrl);
     toast.success("Link copiato! Invialo a parenti e amici su WhatsApp.");
   };
