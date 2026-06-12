@@ -18,23 +18,22 @@ export async function POST(req: Request) {
 
     if (!email) return NextResponse.json({ error: "Email mancante" }, { status: 400 });
 
-    // Controllo di sicurezza: se il client non è partito (chiavi mancanti)
     if (!supabaseAdmin) {
-      console.error("Client Supabase non inizializzato - Verificare variabili d'ambiente");
       return NextResponse.json({ error: "Configurazione server errata" }, { status: 500 });
     }
 
-    // PASSAGGIO 1: Salva nel tuo Database (Supabase)
+    // 1. Salva nel DB (Supabase)
     const { error: dbError } = await supabaseAdmin
       .from('newsletter_subscribers')
       .insert([{ email, source }]);
 
-    // Nota: Ignoriamo l'errore se l'email esiste già (duplicate key), procedendo con Loops
+    // Ignoriamo l'errore se è un duplicato (codice 23505)
     if (dbError && dbError.code !== '23505') { 
         console.error("Errore DB:", dbError);
+        return NextResponse.json({ error: "Errore nel salvataggio locale" }, { status: 500 });
     }
 
-    // PASSAGGIO 2: Invia a Loops
+    // 2. Invia a Loops
     const loopsResponse = await fetch("https://app.loops.so/api/v1/contacts/create", {
       method: "POST",
       headers: {
@@ -44,13 +43,16 @@ export async function POST(req: Request) {
       body: JSON.stringify({ email, source }),
     });
 
-    if (loopsResponse.ok) {
-      return NextResponse.json({ success: true });
-    } else {
-      const loopsData = await loopsResponse.json();
-      console.error("Errore Loops:", loopsData);
-      return NextResponse.json({ error: "Errore Loops" }, { status: 500 });
+    // 3. LOGICA TOLERANTE:
+    // Se Loops restituisce un errore (es: 409 Conflict se l'utente esiste già),
+    // non blocchiamo l'utente, logghiamo solo l'errore.
+    if (!loopsResponse.ok) {
+      const loopsData = await loopsResponse.json().catch(() => ({}));
+      console.warn("Avviso da Loops (potrebbe essere già iscritto):", loopsData);
+      // NON ritorniamo errore 500, perché il dato è già stato salvato nel DB locale!
     }
+
+    return NextResponse.json({ success: true });
 
   } catch (err) {
     console.error("Errore Generale:", err);
