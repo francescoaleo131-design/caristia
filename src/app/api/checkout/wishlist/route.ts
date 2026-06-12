@@ -12,7 +12,8 @@ export async function POST(req: Request) {
       guestName, 
       guestMessage, 
       giftName, 
-      wishlistItemId 
+      wishlistItemId,
+      productId
     } = await req.json();
 
     if (!amount || !wishlistId || !wishlistSlug || !guestName) {
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
         amount_contributed: amount.toString(),
         customer_name: guestName,
         customer_message: guestMessage || '',
+        product_id: productId || '',
         gift_name: giftName || '',
         wishlist_item_id: wishlistItemId || '', // Fondamentale per aggiornare quantity_purchased
         contribution_type: contributionType     // Il nuovo campo che abbiamo creato
