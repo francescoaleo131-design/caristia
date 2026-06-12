@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Mail, Loader2, CheckCircle2 } from "lucide-react";
+import { Mail, Loader2, CheckCircle2, User } from "lucide-react";
 import { toast } from 'sonner';
 
 // Importa i tuoi componenti esistenti
@@ -12,12 +12,12 @@ import RecensioniGoogle from "@/components/recensioni";
 
 export default function Home() {
   const [email, setEmail] = useState("");
-  const [name, setName] = useState(""); // Stato aggiunto per il nome
+  const [name, setName] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   useEffect(() => {
     if (status === "success") {
-      toast.success("Benvenuto nella famiglia caristia! Controlla la tua email, è appena iniziata la magia!");
+      toast.success("Benvenuto nella famiglia Caristia! Controlla la tua email, è appena iniziata la magia!");
     } else if (status === "error") {
       toast.error("Ops! Qualcosa è andato storto. Riprova tra un attimo.");
     }
@@ -35,7 +35,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           email,
-          name, // Inviamo anche il nome
+          name,
           source: "homepage_newsletter" 
         }),
       });
@@ -57,7 +57,6 @@ export default function Home() {
       <main className="min-h-screen bg-white">
         <HeadOne />
 
-        {/* GRIGLIA CARD */}
         <div className="container mx-auto px-4 py-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             <div><Card1 /></div>
@@ -66,9 +65,31 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ... [Sezioni divider e Carosello invariate] ... */}
+        <div className="w-full my-12 px-0 md:px-4"> 
+          <picture>
+            <source media="(max-width: 768px)" srcSet="/mobile_divider_prodotti.webp" />
+            <img 
+              src="/divider_prodotti.webp" 
+              alt="Prodotti"
+              className="w-full h-[800px] md:h-[400px] object-cover"
+            />
+          </picture>
+        </div>
 
-        {/* SEZIONE NEWSLETTER */} 
+        <Carosello />
+
+        <div className="w-full my-5 px-4 container mx-auto">
+          <picture> 
+            <source media="(max-width: 768px)" srcSet="/mobile_divider_newsletter.webp" />
+            <img 
+              src="/divider_newsletter.webp" 
+              alt="Newsletter"
+              className="w-full h-auto"
+              style={{ maxHeight: "400px" }}
+            />
+          </picture>
+        </div>
+
         <div className="relative py-16 bg-zinc-50/50">
           <div className="container mx-auto px-4">
             {status === "success" ? (
@@ -84,25 +105,25 @@ export default function Home() {
                   </p>
                 </div>
 
-                <form onSubmit={handleSubscribe} className="flex flex-col gap-3 max-w-md mx-auto bg-white p-6 rounded-[2.5rem] shadow-xl border border-white">
-                  {/* Campo Nome */}
+                <form onSubmit={handleSubscribe} className="flex flex-col gap-3 max-w-lg mx-auto bg-white p-6 rounded-[2.5rem] shadow-xl shadow-zinc-200/50 border border-white">
+                  
                   <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300" size={20} />
                     <input 
                       type="text" 
                       placeholder="Come possiamo chiamarti?"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-zinc-50 border-2 border-transparent focus:border-[#1e73be]/20 rounded-2xl py-4 px-6 font-bold outline-none transition-all"
+                      className="w-full bg-zinc-50 border-2 border-transparent focus:border-[#1e73be]/20 rounded-2xl py-4 pl-12 pr-6 font-bold outline-none transition-all"
                     />
                   </div>
 
-                  {/* Campo Email */}
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300" size={20} />
                     <input 
                       type="email" 
                       required
-                      placeholder="La tua email..."
+                      placeholder="La tua email migliore..."
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-zinc-50 border-2 border-transparent focus:border-[#1e73be]/20 rounded-2xl py-4 pl-12 pr-6 font-bold outline-none transition-all"
@@ -111,7 +132,7 @@ export default function Home() {
 
                   <button 
                     disabled={status === "loading"}
-                    className="bg-[#1e73be] text-white py-4 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 flex items-center justify-center"
+                    className="bg-[#1e73be] text-white py-4 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 flex items-center justify-center min-w-[160px]"
                   >
                     {status === "loading" ? <Loader2 className="animate-spin" size={20} /> : "Iscriviti Subito"}
                   </button>
@@ -121,7 +142,30 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ... [Resto del file invariato] ... */}
+        <div className="w-full my-5 md:my-12 px-4 container mx-auto">
+          <picture> 
+            <source media="(max-width: 768px)" srcSet="/mobile_divider_recensioni.webp" />
+            <img 
+              src="/divider_recensioni.webp" 
+              alt="Recensioni"
+              className="w-full h-auto"
+              style={{ maxHeight: "400px" }}
+            />
+          </picture>
+        </div>
+
+        <RecensioniGoogle />
+        
+        <div className="w-full my-5 md:my-12 px-4 container mx-auto">
+          <img 
+            src="/divider_4.png" 
+            alt="Promozione Giocattoli"
+            className="w-full h-auto"
+            style={{ maxHeight: "400px" }}
+          />
+        </div>
+
+        <div className="pb-20"></div>
       </main>
     </div>
   );
