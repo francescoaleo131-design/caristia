@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const body = await req.json() as CheckoutRequestBody;
     const { items, email, useBalance, isGiftCard, giftCardAmount, buyerName, recipientEmail, giftMessage } = body;
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://giocattolicaristia.it';
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();

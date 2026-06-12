@@ -27,8 +27,8 @@ export async function POST(req: Request) {
       ],
       mode: 'payment',
       // Reindirizziamo l'invitato alla pagina pubblica corretta con un parametro di successo
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/liste/${wishlistSlug}/regala?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/liste/${wishlistSlug}/regala`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://giocattolicaristia.it'}/liste/${wishlistSlug}/regala?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://giocattolicaristia.it'}/liste/${wishlistSlug}/regala`,
       metadata: {
         type: 'wishlist_contribution',
         wishlist_id: wishlistId,
