@@ -1,29 +1,23 @@
-export const dynamic = 'force-dynamic';
-
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { loops } from '@/lib/loops/loops';
 
-// 1. Inizializzazione sicura dentro la Route per evitare crash in Build
+// Forza la dinamicità per evitare problemi con Vercel
+export const dynamic = 'force-dynamic';
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''; // Usa la Service Role per bypassare RLS
-
-// Creiamo il client admin solo se le chiavi esistono
-const supabaseAdmin = (supabaseUrl && supabaseServiceKey) 
-  ? createClient(supabaseUrl, supabaseServiceKey) 
-  : null;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 export async function POST(req: Request) {
   try {
-    const { email, name, source = 'website' } = await req.json();
+    const body = await req.json();
+    const { email, name, source = 'website' } = body;
+    console.log("API Ricevuta:", { email, name });
 
     if (!email) return NextResponse.json({ error: "Email mancante" }, { status: 400 });
+    if (!supabaseAdmin) return NextResponse.json({ error: "Configurazione server errata" }, { status: 500 });
 
-    if (!supabaseAdmin) {
-      return NextResponse.json({ error: "Configurazione server errata" }, { status: 500 });
-    }
-
-    // 1. Salva nel DB (Supabase)
+    // 1. Salva nel DB
     const { error: dbError } = await supabaseAdmin
       .from('newsletter_subscribers')
       .insert([{ email, name, source }]);
@@ -32,8 +26,8 @@ export async function POST(req: Request) {
         console.error("Errore DB:", dbError);
     }
 
-    // 2. Invia Email Transazionale
-    // Invece di /contacts/create, usiamo l'endpoint /transactional
+    // 2. Invia Email Transazionale tramite Loops
+    console.log("Tentativo invio a Loops...");
     const loopsResponse = await fetch("https://app.loops.so/api/v1/transactional", {
       method: "POST",
       headers: {
@@ -44,14 +38,16 @@ export async function POST(req: Request) {
         transactionalId: "cmqa80x83001x0jz4im9snmc2",
         email: email,
         dataVariables: {
-          firstName: name || "Amico" // Passiamo il nome qui per il template
+          firstName: name || "Amico"
         }
       }),
     });
 
+    const result = await loopsResponse.json();
+    console.log("Risposta Loops:", result);
+
     if (!loopsResponse.ok) {
-      const errorText = await loopsResponse.text();
-      console.error("Errore Invio Transazionale Loops:", errorText);
+      return NextResponse.json({ error: "Errore invio email" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
