@@ -199,12 +199,15 @@ export async function POST(req: Request) {
     }
 
     // 🚀 CASO C: NUOVO! INSERIMENTO CONTRIBUTO SALVADANAIO WISHLIST (wishlist_contribution)
-    else if (metadata?.type === 'wishlist_contribution') {
-      console.log('💰 Elaborazione Quota Salvadanaio per Wishlist ID:', metadata.wishlist_id);
-      let dbWishlistSuccess = false;
+   else if (metadata?.type === 'wishlist_contribution') {
+      console.log('💰 Elaborazione Quota per Wishlist ID:', metadata.wishlist_id);
+      
       const amount = parseFloat(metadata.amount_contributed || '0');
+      const contributionType = metadata.contribution_type || 'money';
+      let dbWishlistSuccess = false;
 
       try {
+        // 1. Inserimento nella tabella delle contribuzioni
         const { error: wishlistInsertError } = await supabaseAdmin
           .from('wishlist_contributions')
           .insert([
@@ -212,20 +215,43 @@ export async function POST(req: Request) {
               wishlist_id: metadata.wishlist_id,
               amount: amount,
               customer_name: metadata.customer_name,
+              customer_email: customerEmail, // Aggiunto per tracciamento
               customer_message: metadata.customer_message || null,
+              gift_name: metadata.gift_name || null,
+              contribution_type: contributionType, // Il nuovo campo che abbiamo discusso
+              product_id: metadata.wishlist_item_id || null // Collegamento opzionale al prodotto
             }
           ]);
 
         if (wishlistInsertError) throw wishlistInsertError;
         dbWishlistSuccess = true;
-        console.log(`✅ Quota di €${amount} salvata nel DB per l'invitato: ${metadata.customer_name}`);
 
+        // 2. SE È UN PRODOTTO FISICO: Incrementiamo quantity_purchased
+        if (contributionType === 'physical_product' && metadata.wishlist_item_id) {
+          // Recuperiamo prima il valore attuale
+          const { data: item, error: fetchError } = await supabaseAdmin
+            .from('wishlist_items')
+            .select('quantity_purchased')
+            .eq('id', metadata.wishlist_item_id)
+            .single();
+
+          if (!fetchError && item) {
+            await supabaseAdmin
+              .from('wishlist_items')
+              .update({ quantity_purchased: (item.quantity_purchased || 0) + 1 })
+              .eq('id', metadata.wishlist_item_id);
+              
+            console.log(`✅ Aggiornata quantità per item: ${metadata.wishlist_item_id}`);
+          }
+        }
+
+        console.log(`✅ Contributo di €${amount} salvato.`);
       } catch (dbError: any) {
         console.error('❌ Errore salvataggio quota su Supabase:', dbError.message);
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
 
-      // Invio email transazionale facoltativa all'invitato tramite Loops
+      // Invio email (opzionale)
       if (dbWishlistSuccess && process.env.LOOPS_API_KEY && customerEmail && LOOPS_WISHLIST_TEMPLATE_ID !== 'cmw_placeholder_wishlist_id') {
         try {
           await loops.sendTransactionalEmail({
@@ -238,7 +264,7 @@ export async function POST(req: Request) {
             },
           });
         } catch (loopsWishlistError: any) {
-          console.error(`❌ Errore SDK Loops (Wishlist Transazionale):`, loopsWishlistError.message || loopsWishlistError);
+          console.error(`❌ Errore Loops:`, loopsWishlistError.message);
         }
       }
     }
