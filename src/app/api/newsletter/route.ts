@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { loops } from '@/lib/loops/loops';
 
 // 1. Inizializzazione sicura dentro la Route per evitare crash in Build
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -14,7 +15,7 @@ const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
 
 export async function POST(req: Request) {
   try {
-    const { email, source = 'website' } = await req.json();
+    const { email, name, source = 'website' } = await req.json();
 
     if (!email) return NextResponse.json({ error: "Email mancante" }, { status: 400 });
 
@@ -25,31 +26,32 @@ export async function POST(req: Request) {
     // 1. Salva nel DB (Supabase)
     const { error: dbError } = await supabaseAdmin
       .from('newsletter_subscribers')
-      .insert([{ email, source }]);
+      .insert([{ email, name, source }]);
 
-    // Ignoriamo l'errore se è un duplicato (codice 23505)
     if (dbError && dbError.code !== '23505') { 
         console.error("Errore DB:", dbError);
-        return NextResponse.json({ error: "Errore nel salvataggio locale" }, { status: 500 });
     }
 
-    // 2. Invia a Loops
-    const loopsResponse = await fetch("https://app.loops.so/api/v1/contacts/create", {
+    // 2. Invia Email Transazionale
+    // Invece di /contacts/create, usiamo l'endpoint /transactional
+    const loopsResponse = await fetch("https://app.loops.so/api/v1/transactional", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.LOOPS_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, source }),
+      body: JSON.stringify({ 
+        transactionalId: "cmqa80x83001x0jz4im9snmc2",
+        email: email,
+        dataVariables: {
+          firstName: name || "Amico" // Passiamo il nome qui per il template
+        }
+      }),
     });
 
-    // 3. LOGICA TOLERANTE:
-    // Se Loops restituisce un errore (es: 409 Conflict se l'utente esiste già),
-    // non blocchiamo l'utente, logghiamo solo l'errore.
     if (!loopsResponse.ok) {
-      const loopsData = await loopsResponse.json().catch(() => ({}));
-      console.warn("Avviso da Loops (potrebbe essere già iscritto):", loopsData);
-      // NON ritorniamo errore 500, perché il dato è già stato salvato nel DB locale!
+      const errorText = await loopsResponse.text();
+      console.error("Errore Invio Transazionale Loops:", errorText);
     }
 
     return NextResponse.json({ success: true });
