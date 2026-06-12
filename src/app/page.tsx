@@ -1,17 +1,28 @@
-"use client" // Necessario per gestire lo stato del form
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { Mail, Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from 'sonner';
+
+// Importa i tuoi componenti esistenti
 import HeadOne from "@/components/main";
 import Card1, { Card2, Card3 } from "@/components/maincards"; 
 import Carosello from "@/components/nuoviArrivi";
-import { Mail, Loader2, CheckCircle2 } from "lucide-react";
-import { toast } from 'sonner';
 import RecensioniGoogle from "@/components/recensioni";
-
 
 export default function Home() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  // Gestione Toast al cambio di stato
+  useEffect(() => {
+    if (status === "success") {
+      toast.success("Benvenuto nella famiglia caristia! Controlla la tua email, è appena iniziata la magia!");
+    } else if (status === "error") {
+      toast.error("Ops! Qualcosa è andato storto. Riprova tra un attimo.");
+    }
+  }, [status]);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,39 +65,39 @@ export default function Home() {
           </div>
         </div>
 
-{/* --- IMMAGINE PROMO --- */}
-<div className="w-full my-12 px-0 md:px-4"> 
-  <picture>
-    <source media="(max-width: 768px)" srcSet="/mobile_divider_prodotti.webp" />
-  <img 
-    src="/divider_prodotti.webp" 
-    alt="Prodotti"
-    className="w-full h-[800px] md:h-[400px] object-cover"
-  />
-  </picture>
-</div>
+        {/* IMMAGINE PROMO */}
+        <div className="w-full my-12 px-0 md:px-4"> 
+          <picture>
+            <source media="(max-width: 768px)" srcSet="/mobile_divider_prodotti.webp" />
+            <img 
+              src="/divider_prodotti.webp" 
+              alt="Prodotti"
+              className="w-full h-[800px] md:h-[400px] object-cover"
+            />
+          </picture>
+        </div>
 
         <Carosello />
 
         <div className="w-full my-5 px-4 container mx-auto">
           <picture> 
             <source media="(max-width: 768px)" srcSet="/mobile_divider_newsletter.webp" />
-          
-          <img 
-            src="/divider_newsletter.webp" 
-            alt="Newsletter"
-            className="w-full h-auto "
-            style={{ maxHeight: "400px" }}
-          />
+            <img 
+              src="/divider_newsletter.webp" 
+              alt="Newsletter"
+              className="w-full h-auto"
+              style={{ maxHeight: "400px" }}
+            />
           </picture>
         </div>
 
-        {/* --- SEZIONE NEWSLETTER --- */} 
+        {/* SEZIONE NEWSLETTER */} 
         <div className="relative py-16 bg-zinc-50/50">
           <div className="container mx-auto px-4">
             {status === "success" ? (
               <div className="max-w-md mx-auto text-center space-y-4 animate-in zoom-in-95 duration-500">
-           toast.success("Benvenuto nella famiglia caristia! Controlla la tua email, è appena iniziata la magia!")
+                <CheckCircle2 className="mx-auto text-green-500" size={48} />
+                <h3 className="text-xl font-black text-zinc-800">Iscrizione completata!</h3>
               </div>
             ) : (
               <>
@@ -115,12 +126,6 @@ export default function Home() {
                     {status === "loading" ? <Loader2 className="animate-spin" size={20} /> : "Iscriviti Subito"}
                   </button>
                 </form>
-                
-                {status === "error" && (
-                  
-                    toast.error("Ops! Qualcosa è andato storto. Riprova tra un attimo.")
-                  
-                )}
               </>
             )}
           </div>
@@ -129,18 +134,16 @@ export default function Home() {
         <div className="w-full my-5 md:my-12 px-4 container mx-auto">
           <picture> 
             <source media="(max-width: 768px)" srcSet="/mobile_divider_recensioni.webp" />
-          <img 
-            src="/divider_recensioni.webp" 
-            alt="Recensioni"
-            className="w-full h-auto"
-            style={{ maxHeight: "400px" }}
-          />
+            <img 
+              src="/divider_recensioni.webp" 
+              alt="Recensioni"
+              className="w-full h-auto"
+              style={{ maxHeight: "400px" }}
+            />
           </picture>
         </div>
 
         {/* RECENSIONI */}
-        <div className="mx-auto w-full max-w-5xl px-10 py-2 md:py-10">
-        </div>
         <RecensioniGoogle />
         
         <div className="w-full my-5 md:my-12 px-4 container mx-auto">
@@ -152,9 +155,6 @@ export default function Home() {
           />
         </div>
 
-
-
-        {/* PADDING FINALE PER IL FOOTER */}
         <div className="pb-20"></div>
       </main>
     </div>
