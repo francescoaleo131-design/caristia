@@ -1,8 +1,8 @@
 import {Metadata} from "next";
 
 export const metadata: Metadata = {
-  title: "Animazione",
-  description: "Scopri le nostre animazioni uniche per rendere la tua festa indimenticabile.",
+  title: "Animazione Feste di Compleanno ed Eventi",
+  description: "Organizza una festa indimenticabile! Offriamo servizi di animazione professionali per compleanni, eventi e feste per bambini a Caltagirone e dintorni.",
 };
 
 export default function AnimazioneLayout({

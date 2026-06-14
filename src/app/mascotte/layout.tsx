@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mascotte",
-  description: "Scegli la tua mascotte preferita per rendere unica la tua festa con Giocattoli Caristia.",
+  title: "Affitto e Noleggio Mascotte per Feste",
+  description: "Noleggia le mascotte dei personaggi più amati dai bambini. Scopri i nostri costumi e pacchetti completi per rendere unica la tua festa.",
 };
 
 export default function MascotteLayout({
