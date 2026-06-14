@@ -13,7 +13,6 @@ export default function Animazione() {
   return (
     <div className="w-full flex flex-col">
       
-      {/* --- BANNER DI AVVISO TERRITORIALE --- */}
       {showBanner && (
         <div className="w-full bg-amber-50 border-b border-amber-200 py-3 px-4 sm:px-6 lg:px-8 relative transition-all duration-300 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
@@ -40,18 +39,14 @@ export default function Animazione() {
         </div>
       )}
       
-      {/* --- SEZIONE HERO PRINCIPALE --- */}
       <section className="relative h-[450px] md:h-[500px] w-full flex items-center justify-center overflow-hidden bg-slate-100">
         
-        {/* Sfondo con Blur e Posizionamento Ottimizzato */}
         <div className="absolute inset-0 z-0">
           <picture>
-            {/* Immagine per Mobile (Verticale o Quadrata) */}
             <source 
               media="(max-width: 768px)" 
               srcSet="/main_animazioni_mobile.png" 
             />
-            {/* Immagine per Desktop */}
             <img 
               src="/main_animazioni.png" 
               alt="Sfondo Animazione"
@@ -61,7 +56,6 @@ export default function Animazione() {
           <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-1" />
         </div>
 
-        {/* CONTENITORE TESTUALE */}
         <div className="relative z-10 px-6 flex flex-col items-center justify-center text-center w-full max-w-4xl">
           
           <h1 className="text-5xl md:text-7xl font-black text-blue-700 tracking-tighter drop-shadow-sm uppercase">
@@ -99,12 +93,10 @@ export default function Animazione() {
       </div>
       
 
-      {/* --- SEZIONE ICONE --- */}
       <section className="bg-white py-2 md:py-4 px-2"> 
         <ServiziIcone />
       </section>
 
-      {/* --- IMMAGINE SEPARATRICE 1 --- */}
       <div className="w-full my-6 px-4 container mx-auto"> 
         <picture>
           <source media="(max-width: 768px)" srcSet="/mobile_divider_pacchetti.webp" />
@@ -117,7 +109,6 @@ export default function Animazione() {
         </picture>
       </div>
 
-      {/* --- SEZIONE 2: PACCHETTI E PROMO --- */}
       <section className="bg-white py-4 px-4"> 
         <div className="container mx-auto">
           <PacchettiPrezzi />
@@ -127,7 +118,6 @@ export default function Animazione() {
         </div>
       </section>
 
-      {/* --- IMMAGINE SEPARATRICE 2 --- */}
       <div className="w-full mt-6 mb-12 px-4 container mx-auto">
         <picture> 
           <source media="(max-width: 768px)" srcSet="/mobile_divider_prenota.webp" />
@@ -140,7 +130,6 @@ export default function Animazione() {
         </picture>
       </div>
 
-      {/* --- SEZIONE CONTATTI --- */}
       <div id="contatti" className="bg-white py-4 px-4">
         <FormContatti />
       </div>

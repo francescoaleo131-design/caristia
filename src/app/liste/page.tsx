@@ -11,11 +11,10 @@ export default function WishlistsPage() {
   const [showForm, setShowForm] = useState(false);
   const [user, setUser] = useState<any>(null);
   
-  // Campi del Form
   const [childName, setChildName] = useState('');
   const [eventDate, setEventDate] = useState('');
-  const [listType, setListType] = useState<'items' | 'money'>('items'); // 👈 Nuovo stato per il tipo di lista
-  const [minContribution, setMinContribution] = useState('10'); // 👈 Nuovo stato per la quota minima
+  const [listType, setListType] = useState<'items' | 'money'>('items'); 
+  const [minContribution, setMinContribution] = useState('10'); 
 
   useEffect(() => {
     checkUser();
@@ -54,7 +53,6 @@ export default function WishlistsPage() {
 
     const slug = `${childName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
     
-    // Preparazione dati per l'inserimento
     const insertData: any = { 
       child_name: childName, 
       event_date: eventDate, 
@@ -63,7 +61,6 @@ export default function WishlistsPage() {
       list_type: listType
     };
 
-    // Se è una raccolta fondi, salviamo la quota minima
     if (listType === 'money') {
       insertData.min_contribution = parseFloat(minContribution) || 10;
     }
@@ -87,7 +84,6 @@ export default function WishlistsPage() {
   return (
     <div className="min-h-screen bg-white">
       
-      {/* 1. SEZIONE INFORMATIVA (Hero) */}
       <section className="bg-slate-50 py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <span className="bg-[#8cc665]/20 text-[#6a9e4b] px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
@@ -102,7 +98,6 @@ export default function WishlistsPage() {
         </div>
       </section>
 
-      {/* 2. COME FUNZIONA */}
       <section className="py-20 px-6 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className="flex flex-col items-center text-center">
@@ -123,7 +118,6 @@ export default function WishlistsPage() {
         </div>
       </section>
 
-      {/* 3. IL VANTAGGIO (Banner Blu) */}
       <section className="bg-[#1e73be] py-16 px-6 rounded-[3rem] mx-4 mb-20 text-white relative overflow-hidden shadow-2xl">
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full mb-6">
@@ -139,7 +133,6 @@ export default function WishlistsPage() {
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
       </section>
 
-      {/* 4. AREA GESTIONE (Azione) */}
       <section id="gestione" className="py-20 px-6 bg-slate-50 border-t border-slate-100">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
@@ -177,7 +170,6 @@ export default function WishlistsPage() {
                   </div>
                 </div>
 
-                {/* NUOVO SELETTORE MODALITÀ LISTA */}
                 <div>
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-2 mb-3 block tracking-widest">Scegli il tipo di Lista</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

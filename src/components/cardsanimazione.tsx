@@ -26,11 +26,11 @@ const pacchetti = [
     nome: "Matrimonio Gold",
     prezzo: "da 390€",
     desc: "Durata: 4 ore",
-    img: "/card_matrimonio_4.png", // Puoi cambiare immagine se ne hai una specifica
+    img: "/card_matrimonio_4.png", 
     features: ["Giochi a tema", "Giochi a percorso", "Laboratori creativi", "Proiettore", "Baby Dance", "Trucca Bimbi", "Palloncini modellabili", "Musica e Karaoke", "Foto con cornice"],
     extra: ["Gonfiabili", "Zucchero filato", "Popcorn", "Giocoliere", "Mascotte"],
     accentColor: "text-[#1e73be]",
-    btnBg: "bg-[#8cc665] hover:bg-[#7ab354]" // Ho messo il verde per farla risaltare come "Premium"
+    btnBg: "bg-[#8cc665] hover:bg-[#7ab354]" 
   }
 ]
 
@@ -39,7 +39,6 @@ export default function PacchettiPrezzi() {
     <section className="py-10 bg-white">
       <div className="container mx-auto text-center px-4">
 
-        {/* MODIFICA: grid-cols-1 su mobile, md:grid-cols-2 su tablet, lg:grid-cols-3 su desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {pacchetti.map((p, i) => (
             <div key={i} className="flex flex-col bg-white rounded-[2.5rem] shadow-2xl overflow-hidden transition-all hover:scale-[1.02] duration-300 border border-gray-50">

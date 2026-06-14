@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
-// Protezione per la fase di build di Next.js
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn("⚠️ Attenzione: Variabili d'ambiente Supabase mancanti durante la build.");
 }
@@ -53,7 +52,6 @@ export async function GET(req: Request) {
     if (fetchError) throw fetchError;
 
     if (!abandonedItems || abandonedItems.length === 0) {
-      console.log("ℹ️ Controllo completato: nessun carrello abbandonato trovato in questa finestra temporale.");
       return NextResponse.json({ message: 'Nessun carrello registrato abbandonato in questa finestra.' }, { status: 200 });
     }
 
@@ -72,9 +70,6 @@ export async function GET(req: Request) {
       return acc;
     }, {});
 
-    console.log(`🛒 Trovati ${Object.keys(cartsByUser).length} utenti con carrelli abbandonati da elaborare.`);
-
-    // --- BLOCCO COMPLETO DI INVIO E DEBUG DI LOOPS ---
     for (const userId in cartsByUser) {
       const userCart = cartsByUser[userId];
 
@@ -83,11 +78,7 @@ export async function GET(req: Request) {
         continue;
       }
 
-      // 1. VERIFICA SE VERCEL LEGGE LA CHIAVE API
-      console.log("🔍 Verifica LOOPS_API_KEY su Vercel... Presente?", !!process.env.LOOPS_API_KEY);
-
       if (process.env.LOOPS_API_KEY) {
-        console.log(`🚀 Tentativo di invio evento '${LOOPS_EVENT_NAME}' a Loops per: ${userCart.email}`);
 
         const loopsResponse = await fetch('https://events.loops.so/v1/events/send', {
           method: 'POST',
@@ -108,11 +99,8 @@ export async function GET(req: Request) {
           }),
         });
 
-        // 2. VERIFICA LA RISPOSTA ESATTA DEI SERVER DI LOOPS
         if (loopsResponse.ok) {
-          console.log(`✅ Loops ha ACCETTATO l'evento per ${userCart.email}. Stato: ${loopsResponse.status}`);
           
-          // Aggiorna il DB solo se Loops risponde con successo
           await supabaseAdmin
             .from('cart_item')
             .update({ recovery_email_sent: true })
@@ -125,7 +113,6 @@ export async function GET(req: Request) {
         console.error("⚠️ ERRORE CRITICO: Il codice non vede la LOOPS_API_KEY nelle variabili d'ambiente di Vercel. Il blocco di invio è stato saltato.");
       }
     }
-    // --- FINE BLOCCO LOOPS ---
 
     return NextResponse.json({ success: true, processedUsers: Object.keys(cartsByUser).length }, { status: 200 });
 

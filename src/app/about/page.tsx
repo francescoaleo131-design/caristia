@@ -4,16 +4,13 @@ import { Phone, Mail, MessageCircle, MapPin, ExternalLink } from "lucide-react"
 
 export default function ChiSiamoPage() {
   
-  // Coordinate e link per Via Madonna della Via 74C, Caltagirone
   const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Giocattoli+Caristia+Via+Madonna+della+Via+74C+Caltagirone"
   
-  // URL statico di un rettangolo di mappa centrato su Caltagirone (puoi sostituirlo con uno screenshot reale di Maps se preferisci)
   const mapPreviewUrl = "https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80"
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-800">
       
-      {/* --- HERO HEADER --- */}
       <div className="bg-[#1e73be] text-white py-20 px-4 text-center border-b-8 border-[#8cc665]">
         <h1 className="text-4xl md:text-6xl font-black uppercase tracking-wide mb-4">
           Chi Siamo
@@ -25,7 +22,6 @@ export default function ChiSiamoPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-3 gap-12">
         
-        {/* --- COLONNA SINISTRA: LA STORIA (Prende 2 colonne su 3 su schermi grandi) --- */}
         <div className="lg:col-span-2 space-y-8 bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-zinc-100">
           <div className="border-b-4 border-[#8cc665] pb-4">
             <h2 className="text-2xl md:text-3xl font-black text-[#1e73be] uppercase tracking-tight">
@@ -92,10 +88,8 @@ export default function ChiSiamoPage() {
           </div>
         </div>
 
-        {/* --- COLONNA DESTRA: MAPPA E CONTATTI (1 colonna su 3) --- */}
         <div className="space-y-8">
           
-  {/* SCHEDA DOVE TROVARCI + MAPPA */}
 <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-zinc-100 flex flex-col">
   <h3 className="text-xl font-black text-[#1e73be] uppercase tracking-tight mb-4 flex items-center gap-2">
     <MapPin className="w-5 h-5 text-[#8cc665]" /> Dove Trovarci
@@ -106,7 +100,6 @@ export default function ChiSiamoPage() {
     95041, Caltagirone, Sicilia, Italia
   </p>
 
-  {/* BOX MAPPA CLICCABILE CON LA TUA ANTEPRIMA REALE */}
   <a 
     href="https://www.google.com/maps/search/?api=1&query=Via+Madonna+della+Via+74C,+Caltagirone" 
     target="_blank" 
@@ -114,12 +107,11 @@ export default function ChiSiamoPage() {
     className="relative group w-full h-48 rounded-2xl overflow-hidden shadow-inner border border-zinc-200 block bg-zinc-100"
   >
     <img 
-      src="/mappa-maps.webp" // <-- La tua immagine reale salvata in public/
+      src="/mappa-maps.webp" 
       alt="Mappa della posizione di Giocattoli Caristia" 
       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
     />
     
-    {/* Overlay che appare al passaggio del mouse */}
     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
       <span className="text-white text-xs font-black uppercase tracking-widest bg-[#1e73be] px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg">
         Apri in Google Maps <ExternalLink className="w-3 h-3" />
@@ -128,14 +120,12 @@ export default function ChiSiamoPage() {
   </a>
 </div>
 
-          {/* SCHEDA CONTATTI DIRECT-LINK */}
           <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-zinc-100">
             <h3 className="text-xl font-black text-[#1e73be] uppercase tracking-tight mb-4">
               I Nostri Contatti
             </h3>
             
             <div className="space-y-3">
-              {/* Telefono */}
               <a 
                 href="tel:+39093326865"
                 className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border hover:border-[#1e73be] hover:bg-blue-50/50 transition-all group"
@@ -149,7 +139,6 @@ export default function ChiSiamoPage() {
                 </div>
               </a>
 
-              {/* WhatsApp */}
               <a 
                 href="https://wa.me/393384083646" 
                 target="_blank" 
@@ -165,7 +154,6 @@ export default function ChiSiamoPage() {
                 </div>
               </a>
 
-              {/* Email */}
               <a 
                 href="mailto:info@giocattolicaristia.it"
                 className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border hover:border-[#8cc665] hover:bg-green-50/30 transition-all group"

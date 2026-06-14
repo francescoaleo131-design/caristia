@@ -10,7 +10,6 @@ export async function GET(req: Request) {
   }
 
   try {
-    // Recuperiamo tutte le prenotazioni per la mascotte specifica che sono pagate o in corso
     const { data, error } = await supabase
       .from('mascotte_bookings')
       .select('booking_date')

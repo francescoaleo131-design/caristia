@@ -8,7 +8,7 @@ export default function FormContatti() {
     telefono: "", 
     bambini: "", 
     tipoFesta: "Compleanno", 
-    durataMatrimonio: "3 ore", // Stato per la durata specifica del matrimonio
+    durataMatrimonio: "3 ore", 
     data: "", 
     messaggio: ""
   })
@@ -17,7 +17,6 @@ export default function FormContatti() {
     e.preventDefault()
     const numeroOwner = "393384083646" 
     
-    // Determina il pacchetto corretto da inviare nel messaggio
     const pacchettoScelto = formData.tipoFesta === "Matrimonio" 
       ? `Matrimonio (${formData.durataMatrimonio})` 
       : "Compleanno"
@@ -40,13 +39,11 @@ export default function FormContatti() {
           
           <input required type="number" name="bambini" placeholder="N. Bambini" className="p-3 bg-gray-50 border rounded-xl outline-none" onChange={handleChange} />
           
-          {/* Selettore Tipo di Evento Principale */}
           <select name="tipoFesta" className="p-3 bg-gray-50 border rounded-xl outline-none font-medium text-slate-700" onChange={handleChange} value={formData.tipoFesta}>
             <option value="Compleanno">Compleanno</option>
             <option value="Matrimonio">Matrimonio</option>
           </select>
 
-          {/* 🚀 Selettore Extra: Compare SOLO se viene selezionato "Matrimonio" */}
           {formData.tipoFesta === "Matrimonio" && (
             <div className="md:col-span-2 flex flex-col gap-1 animate-fadeIn">
               <label className="text-xs font-black text-slate-400 uppercase tracking-wider pl-1">Seleziona la durata del pacchetto</label>

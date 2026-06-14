@@ -24,9 +24,9 @@ export default function AnimatedText() {
       <AnimatePresence mode="wait">
         <motion.span
           key={phrases[index]}
-          initial={{ y: 20, opacity: 0 }} // Inizia dal basso
-          animate={{ y: 0, opacity: 1 }}  // Sale al centro
-          exit={{ y: -20, opacity: 0 }}   // Esce verso l'alto
+          initial={{ y: 20, opacity: 0 }} 
+          animate={{ y: 0, opacity: 1 }}  
+          exit={{ y: -20, opacity: 0 }}   
           transition={{ duration: 0.5, ease: "easeInOut" }}
           className="text-sm font-medium text-blue-100 block"
         >

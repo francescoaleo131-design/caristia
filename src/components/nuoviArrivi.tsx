@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Autoplay from "embla-carousel-autoplay" // Importa il plugin
+import Autoplay from "embla-carousel-autoplay" 
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Carousel,
@@ -15,12 +15,10 @@ import {
 export default function CaroselloProdotti() {
   const [api, setApi] = React.useState<CarouselApi>()
   
-  // Plugin per l'autoplay: 3 secondi, si ferma se l'utente interagisce
   const plugin = React.useRef(
     Autoplay({ delay: 3000, stopOnInteraction: true })
   )
 
-  // Dati di esempio dei prodotti
   const prodotti = [
     { id: 1, nome: "Lego Technic", prezzo: "49.99€", img: "/giocattolo1.jpg" },
     { id: 2, nome: "Barbie Dreamhouse", prezzo: "89.00€", img: "/giocattolo2.jpg" },

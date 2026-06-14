@@ -5,11 +5,9 @@ import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'
 export default function Footer() {
   return (
     <footer className="bg-[#4a69bd] text-white">
-      {/* SEZIONE SUPERIORE: Informazioni principali */}
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
 
-          {/* 1. LOGO E AZIENDA */}
           <div className="flex flex-col gap-4">
             <img
               src="/icon.jpg"
@@ -28,7 +26,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* 2. CONTATTI */}
           <div>
             <h3 className="font-bold text-lg mb-6 uppercase tracking-wider border-b border-white/20 pb-2">Contatti</h3>
             <ul className="flex flex-col gap-4 text-sm">
@@ -41,7 +38,6 @@ export default function Footer() {
                 <a href="mailto:info@giocattolicaristia.it">info@giocattolicaristia.it</a>
               </li>
 <li className="flex items-center gap-3">
-  {/* Link unico che avvolge icona e numero */}
   <a 
     href="https://wa.me/393384083646" 
     target="_blank" 
@@ -57,7 +53,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* 3. ORARI */}
           <div>
             <h3 className="font-bold text-lg mb-6 uppercase tracking-wider border-b border-white/20 pb-2">Orari di Apertura</h3>
             <ul className="text-sm flex flex-col gap-2 opacity-90">
@@ -79,7 +74,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* 4. INFO LEGALI */}
           <div>
             <h3 className="font-bold text-lg mb-6 uppercase tracking-wider border-b border-white/20 pb-2">Info Legali</h3>
             <ul className="flex flex-col gap-3 text-sm">
@@ -93,7 +87,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* SEZIONE INFERIORE: Copyright */}
       <div className="bg-[#3c559c] py-6 px-6">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] opacity-80 text-center md:text-left">
           <p>© Copyright 2026 Giocattoli Caristia di Angelo Caristia | Tutti i diritti riservati.</p>

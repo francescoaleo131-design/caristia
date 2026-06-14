@@ -26,7 +26,6 @@ export default function GiftCardPage() {
       const data = await response.json();
 
       if (response.ok && data.url) {
-        // Reindirizza l'utente alla pagina di checkout sicura di Stripe
         window.location.href = data.url;
       } else {
         console.error("Errore API:", data.error);
@@ -52,7 +51,6 @@ export default function GiftCardPage() {
 
         <div className="grid md:grid-cols-2 gap-12 items-center">
 
-          {/* Anteprima Carta Regalo */}
           <div className="relative group">
             <div
               className="w-full aspect-[1.6/1] rounded-[2rem] p-8 text-white shadow-2xl transition-all duration-500 overflow-hidden relative"
@@ -62,7 +60,6 @@ export default function GiftCardPage() {
                 backgroundPosition: 'center'
               }}
             >
-              {/* Overlay per leggibilità */}
               <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-500"></div>
 
               <div className="relative z-10 flex flex-col h-full">
@@ -85,7 +82,6 @@ export default function GiftCardPage() {
             <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#8cc665]/10 rounded-full blur-3xl -z-10"></div>
           </div>
 
-          {/* Pannello di Configurazione e Acquisto */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100">
             <h3 className="text-lg font-black text-gray-800 uppercase mb-6">Scegli l'importo</h3>
 

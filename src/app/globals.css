@@ -153,7 +153,6 @@ select {
   html {
     @apply font-sans;
   }
-  /* Questo tenta di nascondere il link del watermark */
 [class*="WidgetTitle__HeaderContainer"], 
 [class*="BadgeContainer"],
 div[href*="elfsight.com"], 

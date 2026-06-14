@@ -2,7 +2,7 @@
 import { useState, useEffect, useTransition } from "react"
 import { Wallet, Ticket, Info, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
 import { redeemCodeAction } from "@/lib/wallet" 
-import { createClient } from "@/lib/supabase/client" // <-- Assicurati che questo percorso punti al tuo client di Supabase
+import { createClient } from "@/lib/supabase/client" 
 
 export default function ProfiloGiftCardPage() {
   const [code, setCode] = useState("")
@@ -10,18 +10,15 @@ export default function ProfiloGiftCardPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   
-  // Stato per salvare i dati del profilo caricati dal database
   const [profile, setProfile] = useState<any>(null)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
 
   const supabase = createClient()
 
-  // 1. CARICAMENTO DEL SALDO REALE ALL'AVVIO
   useEffect(() => {
     async function fetchProfileBalance() {
       try {
         setIsLoadingProfile(true)
-        // Recupera l'utente loggato correntemente
         const { data: { user }, error: authError } = await supabase.auth.getUser()
         
         if (authError || !user) {
@@ -29,7 +26,6 @@ export default function ProfiloGiftCardPage() {
           return
         }
 
-        // Interroga la tabella profiles per estrarre il saldo
         const { data, error: dbError } = await supabase
           .from("profiles")
           .select("gift_card_balance")
@@ -51,10 +47,8 @@ export default function ProfiloGiftCardPage() {
     fetchProfileBalance()
   }, [supabase])
 
-  // Valore dinamico calcolato in tempo reale
   const currentBalance = profile?.gift_card_balance ?? 0.00
 
-  // 2. GESTIONE DEL RISCATTO DEL CODICE
   const handleRedeem = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -74,7 +68,6 @@ export default function ProfiloGiftCardPage() {
         setSuccess(`Ottimo! Hai riscattato €${res.amount?.toFixed(2)} nel tuo portafoglio.`)
         setCode("")
         
-        // 🔥 AGGIORNAMENTO ISTANTANEO: Somma il credito riscattato al saldo visibile nella UI
         setProfile((prev: any) => ({
           ...prev,
           gift_card_balance: (prev?.gift_card_balance ?? 0) + (res.amount ?? 0)
@@ -86,7 +79,6 @@ export default function ProfiloGiftCardPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
       
-      {/* Intestazione Pagina */}
       <div className="space-y-4">
         <div className="bg-white w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto shadow-xl shadow-[#1e73be]/10 border border-zinc-100">
           <Wallet className="text-[#1e73be]" size={36} />
@@ -101,10 +93,8 @@ export default function ProfiloGiftCardPage() {
         </div>
       </div>
 
-      {/* Grid Principale */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
-        {/* Card Saldo Attuale */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white flex flex-col items-center justify-center text-center space-y-4 md:col-span-1 min-h-[220px]">
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Credito Disponibile</p>
           
@@ -121,7 +111,6 @@ export default function ProfiloGiftCardPage() {
           </p>
         </div>
 
-        {/* Card Riscatta Codice */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white md:col-span-2 space-y-6">
           <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
             <Ticket className="text-[#8cc665]" size={24} />
@@ -157,7 +146,6 @@ export default function ProfiloGiftCardPage() {
             </div>
           </form>
 
-          {/* Feedback Messaggi */}
           {error && (
             <div className="flex items-center gap-3 p-4 bg-red-50 text-red-700 rounded-2xl border border-red-100 text-sm font-medium animate-in fade-in zoom-in-95">
               <AlertCircle size={18} className="shrink-0" />
@@ -174,7 +162,6 @@ export default function ProfiloGiftCardPage() {
         </div>
       </div>
 
-      {/* Box Informazioni Condizioni */}
       <div className="bg-zinc-50/50 rounded-[2.5rem] p-8 border border-zinc-100 flex gap-4 items-start">
         <Info className="text-[#1e73be] shrink-0 mt-0.5" size={20} />
         <div className="space-y-1">

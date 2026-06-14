@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client'; // Usa il client per il browser
+import { createClient } from '@/lib/supabase/client'; 
 import { Loader2 } from 'lucide-react';
 
 interface StatusSelectProps {
@@ -56,7 +56,6 @@ export default function StatusSelect({ orderId, currentStatus }: StatusSelectPro
           </option>
         ))}
       </select>
-      {/* Freccetta personalizzata per il select */}
       <span className="absolute right-2 pointer-events-none text-current opacity-60 font-sans text-[8px]">▼</span>
     </div>
   );

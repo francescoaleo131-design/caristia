@@ -24,7 +24,7 @@ const loops = new LoopsClient(process.env.LOOPS_API_KEY?.trim() || 'placeholder-
 const LOOPS_GIFT_TEMPLATE_ID = 'cmpd289y200do0jzntezank2n'; 
 const LOOPS_SHOP_TEMPLATE_ID = 'cmobxq8sk01a6015v4az96aze'; 
 const LOOPS_FAILED_TEMPLATE_ID = 'cmpviptqb00mc0j2nmvav7vt1'; 
-const LOOPS_WISHLIST_TEMPLATE_ID = 'cmw_placeholder_wishlist_id'; // 🚀 Sostituisci questo ID con il tuo reale template Loops se vuoi inviare mail per le liste
+const LOOPS_WISHLIST_TEMPLATE_ID = 'cmw_placeholder_wishlist_id'; 
 
 export async function POST(req: Request) {
   const headersList = await headers();
@@ -42,7 +42,6 @@ export async function POST(req: Request) {
     
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret!);
-    console.log(`✅ Webhook verificato con successo! Evento: ${event.type}`);
   } catch (err: any) {
     console.error(`❌ Errore firma Webhook: ${err.message}`);
     return NextResponse.json({ error: err.message }, { status: 400 });
@@ -50,17 +49,12 @@ export async function POST(req: Request) {
 
   const session = (event.data.object || {}) as any;
 
-  // ----------------------------------------------------
-  // GESTIONE PAGAMENTO RIUSCITO (checkout.session.completed)
-  // ----------------------------------------------------
   if (event.type === 'checkout.session.completed') {
     const metadata = session.metadata;
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
 
-    // CASO A: ACQUISTO PRODOTTI SHOP (shop_order)
     if (metadata?.type === 'shop_order') {
-      console.log('📦 Processing order for:', customerEmail);
       let dbSuccess = false;
       const userId = metadata.user_id;
 
@@ -145,7 +139,6 @@ export async function POST(req: Request) {
       }
     }
     
-    // CASO B: ACQUISTO GIFT CARD (giftcard_purchase)
     else if (metadata?.type === 'giftcard_purchase') {
       let dbGiftSuccess = false;
       const amount = session.amount_total / 100;
@@ -191,23 +184,19 @@ export async function POST(req: Request) {
               giftMessage: metadata.gift_message || 'Ecco un regalo per te!' 
             },
           });
-          console.log(`✅ Gift Card ${giftCode} creata e mail inviata a ${targetEmail}`);
         } catch (loopsGiftError: any) {
           console.error(`❌ Errore SDK Loops (Gift Card):`, loopsGiftError.message || loopsGiftError);
         }
       }
     }
 
-    // 🚀 CASO C: NUOVO! INSERIMENTO CONTRIBUTO SALVADANAIO WISHLIST (wishlist_contribution)
    else if (metadata?.type === 'wishlist_contribution') {
-      console.log('💰 Elaborazione Quota per Wishlist ID:', metadata.wishlist_id);
       
       const amount = parseFloat(metadata.amount_contributed || '0');
       const contributionType = metadata.contribution_type || 'money';
       let dbWishlistSuccess = false;
 
       try {
-        // 1. Inserimento nella tabella delle contribuzioni
         const { error: wishlistInsertError } = await supabaseAdmin
           .from('wishlist_contributions')
           .insert([
@@ -215,20 +204,18 @@ export async function POST(req: Request) {
               wishlist_id: metadata.wishlist_id,
               amount: amount,
               customer_name: metadata.customer_name,
-              customer_email: customerEmail, // Aggiunto per tracciamento
+              customer_email: customerEmail, 
               customer_message: metadata.customer_message || null,
               gift_name: metadata.gift_name || null,
-              contribution_type: contributionType, // Il nuovo campo che abbiamo discusso
-              product_id: metadata.wishlist_item_id || null // Collegamento opzionale al prodotto
+              contribution_type: contributionType, 
+              product_id: metadata.wishlist_item_id || null 
             }
           ]);
 
         if (wishlistInsertError) throw wishlistInsertError;
         dbWishlistSuccess = true;
 
-        // 2. SE È UN PRODOTTO FISICO: Incrementiamo quantity_purchased
         if (contributionType === 'physical_product' && metadata.wishlist_item_id) {
-          // Recuperiamo prima il valore attuale
           const { data: item, error: fetchError } = await supabaseAdmin
             .from('wishlist_items')
             .select('quantity_purchased')
@@ -240,18 +227,13 @@ export async function POST(req: Request) {
               .from('wishlist_items')
               .update({ quantity_purchased: (item.quantity_purchased || 0) + 1 })
               .eq('id', metadata.wishlist_item_id);
-              
-            console.log(`✅ Aggiornata quantità per item: ${metadata.wishlist_item_id}`);
           }
         }
-
-        console.log(`✅ Contributo di €${amount} salvato.`);
       } catch (dbError: any) {
         console.error('❌ Errore salvataggio quota su Supabase:', dbError.message);
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
 
-      // Invio email (opzionale)
       if (dbWishlistSuccess && process.env.LOOPS_API_KEY && customerEmail && LOOPS_WISHLIST_TEMPLATE_ID !== 'cmw_placeholder_wishlist_id') {
         try {
           await loops.sendTransactionalEmail({
@@ -270,9 +252,6 @@ export async function POST(req: Request) {
     }
   }
 
-  // ----------------------------------------------------
-  // GESTIONE PAGAMENTO FALLITO (charge.failed)
-  // ----------------------------------------------------
   else if (event.type === 'charge.failed') {
     const customerEmail = session.billing_details?.email || session.customer;
     const customerName = session.billing_details?.name || 'Cliente';
@@ -300,7 +279,6 @@ export async function POST(req: Request) {
       }
 
       try {
-        console.log(`⚠️ Rilevato pagamento fallito per ${customerEmail}. Motivo: ${motivoItaliano}`);
         
         await loops.sendTransactionalEmail({
           email: customerEmail,
@@ -312,8 +290,6 @@ export async function POST(req: Request) {
             motivoErrore: motivoItaliano 
           },
         });
-        
-        console.log(`✉️ Email di notifica pagamento fallito inviata con successo a ${customerEmail}`);
       } catch (loopsFailedError: any) {
         console.error(`❌ Errore SDK Loops durante l'invio del pagamento fallito:`, loopsFailedError.message || loopsFailedError);
       }

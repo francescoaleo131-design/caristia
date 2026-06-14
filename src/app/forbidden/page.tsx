@@ -7,7 +7,6 @@ export default function ForbiddenPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6">
       <div className="max-w-md w-full text-center">
-        {/* Icona Minimalista con animazione delicata */}
         <div className="mb-8 flex justify-center">
           <div className="relative">
             <div className="absolute inset-0 bg-indigo-100 rounded-full scale-150 blur-2xl opacity-50 animate-pulse"></div>
@@ -17,7 +16,6 @@ export default function ForbiddenPage() {
           </div>
         </div>
 
-        {/* Testo */}
         <h1 className="text-4xl font-light text-slate-900 mb-4 tracking-tight">
           Area <span className="font-medium">Riservata</span>
         </h1>
@@ -25,7 +23,6 @@ export default function ForbiddenPage() {
           Questa pagina è riservata solo al nostro personale. Non hai i permessi per accedere a questa pagina.
         </p>
 
-        {/* Azioni */}
         <div className="flex flex-col gap-3">
           <Link 
             href="/" 
@@ -44,7 +41,6 @@ export default function ForbiddenPage() {
           </button>
         </div>
 
-        {/* Footer Minimal */}
         <footer className="mt-16 pt-8 border-t border-slate-200">
           <p className="text-xs uppercase tracking-widest text-slate-400 font-semibold">
             Errore 403 — Giocattoli Caristia

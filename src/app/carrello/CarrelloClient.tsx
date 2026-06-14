@@ -15,46 +15,39 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
   const [loading, setLoading] = useState(false);
   const [useGiftCard, setUseGiftCard] = useState(true);
 
-  // 1. Calcolo del subtotale dei prodotti nel carrello
   const subtotale = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-  // 2. Calcolo dello sconto effettivo applicabile dalla Gift Card
   const scontoGiftCard = useGiftCard 
     ? Math.min(subtotale, giftCardBalance) 
     : 0;
 
-  // 3. Totale finale effettivo da pagare
   const totaleFinale = subtotale - scontoGiftCard;
 
   const handleCheckout = async () => {
     setLoading(true);
     try {
-      // Se l'utente usa la gift card e c'è uno sconto, scaliamo prima il saldo sul DB
       if (scontoGiftCard > 0) {
         const res = await deductGiftCardBalanceAction(scontoGiftCard);
         if (res?.error) {
           toast.error(res.error);
           setLoading(false);
-          return; // Blocca il processo se non ci sono abbastanza fondi reali
+          return; 
         }
       }
 
-      // Se la gift card copre l'INTERO carrello, non serve andare su Stripe!
       if (totaleFinale === 0) {
         toast.success("Ordine completato con successo usando il tuo credito!");
         clearCart();
-        // Qui puoi fare un router.push('/ordine-confermato') o simile
         setLoading(false);
         return;
       }
 
-      // Altrimenti, procediamo con il pagamento Stripe tradizionale per la differenza
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           items,
-          discountApplied: scontoGiftCard // Passiamo l'informazione anche alle API se necessario
+          discountApplied: scontoGiftCard 
         }),
       });
 
@@ -94,7 +87,6 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
         <h1 className="text-4xl font-bold text-slate-800 mb-10">Il tuo Carrello</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           
-          {/* ELENCO PRODOTTI */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
               <div key={item.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-6">
@@ -104,7 +96,6 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
                   <p className="text-blue-600 font-semibold">{item.price.toFixed(2)}€</p>
                 </div>
                 <div className="flex items-center border border-slate-200 rounded-lg bg-white">
-                  {/* Corretto bug: passavi -1 e 1 cumulativi, l'hook di solito richiede la quantità esatta o una funzione relativa */}
                   <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="px-3 py-1 hover:bg-slate-50">-</button>
                   <span className="px-4 font-bold">{item.quantity}</span>
                   <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-3 py-1 hover:bg-slate-50">+</button>
@@ -116,12 +107,10 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
             ))}
           </div>
 
-          {/* SIDEBAR RIEPILOGO */}
           <div className="lg:col-span-1">
             <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm sticky top-8 space-y-6">
               <h2 className="text-2xl font-bold">Riepilogo Ordine</h2>
               
-              {/* INTERFACCIA SELEZIONE CREDITO WALLET */}
               {giftCardBalance > 0 && (
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -141,7 +130,6 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
                 </div>
               )}
 
-              {/* DETTAGLIO COSTI */}
               <div className="space-y-4">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotale</span>
@@ -166,7 +154,6 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
                 </div>
               </div>
 
-              {/* BOTTONE DINAMICO */}
               <button
                 onClick={handleCheckout}
                 disabled={loading}

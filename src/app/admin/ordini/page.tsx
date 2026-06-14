@@ -5,7 +5,6 @@ import StatusSelect from "@/components/admin/StatusSelect";
 export default async function AdminOrdersDashboard() {
   const supabase = await createClient();
 
-  // Recuperiamo esclusivamente la lista degli ordini (senza le altre tabelle)
   const { data: ordersData } = await supabase
     .from('orders')
     .select('*')
@@ -30,7 +29,6 @@ export default async function AdminOrdersDashboard() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header Unico di Sezione */}
       <div className="border-b border-slate-100 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-light text-slate-800 tracking-tight">
@@ -66,7 +64,6 @@ export default async function AdminOrdersDashboard() {
                 orders.map((ordine) => (
                   <tr key={ordine.id} className="hover:bg-slate-50/30 transition-colors group">
                     
-                    {/* ID e Data */}
                     <td className="p-4">
                       <p className="text-xs font-mono font-bold text-slate-700">
                         #{ordine.id.toString().slice(-6).toUpperCase()}
@@ -76,7 +73,6 @@ export default async function AdminOrdersDashboard() {
                       </p>
                     </td>
 
-                    {/* Dati Cliente */}
                     <td className="p-4">
                       <p className="text-sm font-semibold text-slate-700">
                         {ordine.customer_name || "Cliente"}
@@ -86,7 +82,6 @@ export default async function AdminOrdersDashboard() {
                       </p>
                     </td>
 
-                    {/* Indirizzo Logistica */}
                     <td className="p-4 max-w-xs md:max-w-md">
                       <div className="flex items-start gap-1.5 text-slate-600">
                         <MapPin size={14} className="text-slate-400 mt-0.5 shrink-0" />
@@ -96,12 +91,10 @@ export default async function AdminOrdersDashboard() {
                       </div>
                     </td>
 
-                    {/* Importo Totale */}
                     <td className="p-4 text-sm font-bold text-slate-800">
                       € {(ordine.total_amount || 0).toFixed(2)}
                     </td>
 
-                    {/* Menu a tendina Interattivo dello Stato */}
                     <td className="p-4 text-right">
                       <StatusSelect orderId={ordine.id} currentStatus={ordine.status} />
                     </td>

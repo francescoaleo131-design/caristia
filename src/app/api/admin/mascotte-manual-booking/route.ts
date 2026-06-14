@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       .from('mascotte_bookings')
       .insert([{
         ...body,
-        status: 'confirmed' // Le prenotazioni manuali sono confermate di default
+        status: 'confirmed' 
       }]);
 
     if (error) throw error;

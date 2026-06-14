@@ -17,7 +17,7 @@ export default function MascotteAdminPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [filter, setFilter] = useState("all")
-  const [showBanner, setShowBanner] = useState(true) // Stato per la visibilità del banner
+  const [showBanner, setShowBanner] = useState(true) 
 
   const fetchBookings = async () => {
     setLoading(true)
@@ -47,7 +47,6 @@ export default function MascotteAdminPage() {
   return (
     <div className="space-y-8">
       
-      {/* --- BANNER DI AVVISO TERRITORIALE --- */}
       {showBanner && (
         <div className="w-full bg-amber-50 border border-amber-200 py-3 px-4 rounded-xl relative transition-all duration-300">
           <div className="flex items-center justify-between flex-wrap gap-2">
@@ -74,7 +73,6 @@ export default function MascotteAdminPage() {
         </div>
       )}
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-6">
         <div>
           <h2 className="text-2xl font-light text-slate-800 tracking-tight">
@@ -92,7 +90,6 @@ export default function MascotteAdminPage() {
         </button>
       </div>
 
-      {/* Filtri */}
       <div className="flex flex-wrap gap-2">
         {["all", "pending", "paid", "preparing", "delivered", "returned"].map((s) => (
           <button 
@@ -105,7 +102,6 @@ export default function MascotteAdminPage() {
         ))}
       </div>
 
-      {/* Tabella */}
       <div className="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>

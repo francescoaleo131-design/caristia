@@ -42,6 +42,6 @@ export const useCart = create<CartState>()(
       })),
       clearCart: () => set({ items: [] }),
     }),
-    { name: 'carrello-storage' } // Salva il carrello nel browser (localStorage)
+    { name: 'carrello-storage' } 
   )
 );

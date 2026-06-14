@@ -21,7 +21,6 @@ export default async function ListaDettaglioAdminPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  // 1. Recuperiamo la testata della lista
   const { data: lista, error: listaError } = await supabase
     .from('wishlists')
     .select('*')
@@ -40,7 +39,6 @@ export default async function ListaDettaglioAdminPage({ params }: PageProps) {
 
   const isMoneyList = lista.list_type === 'money';
 
-  // 2. Recuperiamo i prodotti in lista (solo se NON è una lista soldi)
   let items: any[] = [];
   if (!isMoneyList) {
     const { data: itemsData } = await supabase
@@ -60,26 +58,22 @@ export default async function ListaDettaglioAdminPage({ params }: PageProps) {
     items = itemsData || [];
   }
 
-  // 3. Recuperiamo gli ordini / contributi associati specificamente a questa lista
   const { data: ordini } = await supabase
     .from('ordini')
     .select('*')
     .eq('status', 'pagato')
-    .eq('wishlist_id', id) // Corretto il filtro per recuperare solo quelli di questa lista!
+    .eq('wishlist_id', id) 
     .order('created_at', { ascending: false });
 
-  // Calcoli statistici dinamici
   const totalRequested = items.reduce((acc, item) => acc + item.quantity_requested, 0);
   const totalPurchased = items.reduce((acc, item) => acc + item.quantity_purchased, 0);
   
-  // Calcolo progresso (oggetti per liste fisiche, euro per liste salvadanaio)
   const progress = isMoneyList
     ? (lista.target_amount && lista.target_amount > 0 ? Math.min(Math.round(((lista.current_amount || 0) / lista.target_amount) * 100), 100) : 0)
     : (totalRequested > 0 ? Math.round((totalPurchased / totalRequested) * 100) : 0);
 
   return (
     <div className="space-y-10 pb-20">
-      {/* Header & Back */}
       <div className="flex flex-col gap-4">
         <Link 
           href="/admin/liste" 
@@ -124,7 +118,6 @@ export default async function ListaDettaglioAdminPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Box di Progresso in alto a destra */}
           <div className="flex flex-col md:items-end gap-2 shrink-0">
              <div className="text-left md:text-right">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
@@ -143,9 +136,7 @@ export default async function ListaDettaglioAdminPage({ params }: PageProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         
-        {/* COLONNA SINISTRA (2/3): CONTENUTO PRINCIPALE */}
         <div className="lg:col-span-2 space-y-6">
-          {/* SE LISTA ARTICOLI: TABELLA PRODOTTI */}
           {!isMoneyList ? (
             <>
               <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -192,7 +183,6 @@ export default async function ListaDettaglioAdminPage({ params }: PageProps) {
               </div>
             </>
           ) : (
-            /* SE LISTA SOLDI: PANNELLO DI ESTRATTO CONTO DEL SALVADANAIO */
             <>
               <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <Coins size={20} className="text-amber-500" />
@@ -223,7 +213,6 @@ export default async function ListaDettaglioAdminPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Informazione per l'admin per sapere come liquidare */}
               <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-sm">
                 <h4 className="font-bold text-sm uppercase tracking-wide mb-2 text-amber-400">Nota per l'amministratore</h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
@@ -234,7 +223,6 @@ export default async function ListaDettaglioAdminPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* COLONNA DESTRA (1/3): PAGAMENTI E TRANSAZIONI CRONOLOGICHE */}
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <UserCheck size={20} className="text-indigo-600" />
@@ -265,7 +253,6 @@ export default async function ListaDettaglioAdminPage({ params }: PageProps) {
               </div>
             )}
             
-            {/* Box Riepilogo in fondo a destra */}
             {!isMoneyList ? (
               <div className="bg-amber-50 rounded-3xl p-6 border border-amber-100 mt-6">
                 <h4 className="font-black text-amber-800 text-xs uppercase tracking-widest mb-4">Mancano al totale</h4>

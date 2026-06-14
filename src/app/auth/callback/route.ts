@@ -5,7 +5,6 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // Se vuoi mandare l'utente in una pagina specifica dopo il login
   const next = searchParams.get('next') ?? '/'
 
   if (code) {
@@ -35,6 +34,5 @@ export async function GET(request: Request) {
     }
   }
 
-  // Se c'è un errore nel codice, rimandalo alla home o a una pagina di errore
   return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }

@@ -13,21 +13,18 @@ export default function OrdiniPage() {
       try {
         setLoading(true)
         
-        // 1. Recupera la sessione attiva dell'utente nel client
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) throw sessionError
         
         const userEmail = session?.user?.email
 
-        // Se l'utente è loggato e ha un'email valida, eseguiamo la query
         if (userEmail) {
-          console.log("👤 Tentativo di recupero ordini per l'email:", userEmail)
 
           const { data, error } = await supabase
             .from("orders")
             .select("*")
-            .eq("customer_email", userEmail) // Cerca la corrispondenza esatta con la colonna del DB
+            .eq("customer_email", userEmail) 
             .order("created_at", { ascending: false })
 
           if (error) throw error
@@ -58,7 +55,6 @@ export default function OrdiniPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
       
-      {/* Intestazione */}
       <div>
         <div className="bg-white w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto shadow-xl shadow-[#1e73be]/10 border border-zinc-100 mb-4">
           <Archive className="text-[#1e73be]" size={36} />
@@ -71,7 +67,6 @@ export default function OrdiniPage() {
         </div>
       </div>
 
-      {/* Vista se l'utente non ha ordini nel database */}
       {orders.length === 0 ? (
         <div className="bg-white rounded-[2.5rem] p-12 shadow-2xl shadow-zinc-200/50 border border-white flex flex-col items-center justify-center text-center space-y-6">
           <div className="bg-zinc-50 w-24 h-24 rounded-[2rem] flex items-center justify-center shadow-inner">
@@ -90,7 +85,6 @@ export default function OrdiniPage() {
           </a>
         </div>
       ) : (
-        /* Vista dinamica degli ordini estratti */
         <div className="space-y-4">
           {orders.map((ordine) => (
             <div key={ordine.id} className="bg-white rounded-3xl p-6 shadow-xl shadow-zinc-100 border border-zinc-100 hover:border-zinc-200 transition-all">
@@ -127,7 +121,6 @@ export default function OrdiniPage() {
                 </div>
               </div>
 
-              {/* Prodotti dell'ordine */}
               <div className="space-y-3">
                 {Array.isArray(ordine.items) && ordine.items.map((item: any, idx: number) => (
                   <div key={idx} className="flex items-center justify-between text-sm bg-zinc-50 p-3 rounded-xl">
@@ -147,7 +140,6 @@ export default function OrdiniPage() {
                 ))}
               </div>
 
-              {/* Indirizzo di Spedizione */}
               {ordine.shipping_address && (
                 <div className="mt-4 pt-3 border-t border-zinc-100 text-left">
                   <p className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Spedito a:</p>

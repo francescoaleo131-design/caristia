@@ -13,12 +13,10 @@ export default function FatturazionePage() {
       try {
         setLoading(true)
         
-        // 1. Recupera la sessione dell'utente attualmente loggato
         const { data: { session } } = await supabase.auth.getSession()
         const user = session?.user
         
         if (user && user.email) {
-          // 2. Recupera solo gli ordini pagati con successo per mostrare i documenti fiscali
           const { data, error } = await supabase
             .from("orders")
             .select("*")
@@ -39,9 +37,7 @@ export default function FatturazionePage() {
     fetchBillingData()
   }, [supabase])
 
-  // Funzione di cortesia per stampare o salvare i dettagli della ricevuta
   const handleDownloadReceipt = (ordine: any) => {
-    // Se salvi la ricevuta di Stripe puoi fare il redirect, altrimenti apri la finestra di stampa dell'ordine
     if (ordine.stripe_session_id) {
       window.open(`https://dashboard.stripe.com/receipts/invoices/`, "_blank")
     } else {
@@ -61,7 +57,6 @@ export default function FatturazionePage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
       
-      {/* Icona e Intestazione */}
       <div>
         <div className="bg-white w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto shadow-xl shadow-[#1e73be]/10 border border-zinc-100 mb-4">
           <BookOpen className="text-[#1e73be]" size={36} />
@@ -74,7 +69,6 @@ export default function FatturazionePage() {
         </div>
       </div>
 
-      {/* Grid delle Statistiche Dinamiche */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-6 rounded-[2rem] shadow-xl shadow-zinc-200/40 border border-white flex items-center gap-4">
           <div className="bg-[#1e73be]/10 p-4 rounded-2xl text-[#1e73be]">
@@ -101,7 +95,6 @@ export default function FatturazionePage() {
         </div>
       </div>
 
-      {/* Contenitore Storico Documenti */}
       <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-2xl shadow-zinc-200/50 border border-white">
         <div className="p-6 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
           <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Storico Documenti</span>
@@ -109,7 +102,6 @@ export default function FatturazionePage() {
         </div>
         
         {orders.length === 0 ? (
-          /* Stato Vuoto Reale */
           <div className="p-12 text-center space-y-4">
             <p className="text-zinc-300 font-bold">Nessuna fattura emessa al momento.</p>
             <div className="w-full h-px bg-zinc-50"></div>
@@ -118,7 +110,6 @@ export default function FatturazionePage() {
             </p>
           </div>
         ) : (
-          /* Tabella / Lista Documenti Dinamica */
           <div className="divide-y divide-zinc-100">
             {orders.map((ordine) => (
               <div key={ordine.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50/50 transition-colors">

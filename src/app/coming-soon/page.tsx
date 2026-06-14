@@ -3,17 +3,15 @@ export default function ComingSoonPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center">
       <div className="flex flex-col items-center max-w-xl">
         
-        {/* Logo centrato sopra il titolo */}
         <div className="mb-8 transform hover:scale-105 transition-transform duration-300">
           <img
             src="/icon.jpg"
             alt="Logo Giocattoli Caristia"
             className="object-contain rounded-2xl shadow-sm"
-            style={{ height: "120px", width: "auto" }} // Ho ingrandito leggermente il logo per farlo risaltare di più
+            style={{ height: "120px", width: "auto" }} 
           />
         </div>
 
-        {/* Testo di Manutenzione */}
         <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl tracking-tight">
           Sito in manutenzione
         </h1>

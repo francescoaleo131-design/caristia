@@ -2,7 +2,6 @@
 import { useState } from "react"
 import { Gift, CheckCircle2, Smartphone, Loader2 } from "lucide-react"
 
-// Configurazione dei tagli disponibili con le rispettive immagini locali
 const CARDS_DISPONIBILI = [
   { id: 1, amount: 25, image: "/card20.jpeg", label: "Gift Card Bronze" },
   { id: 2, amount: 50, image: "/card50.jpeg", label: "Gift Card Silver" },
@@ -10,16 +9,14 @@ const CARDS_DISPONIBILI = [
 ];
 
 export default function GiftCardPage() {
-  const [selectedCard, setSelectedCard] = useState(CARDS_DISPONIBILI[1]); // Default a 50€
+  const [selectedCard, setSelectedCard] = useState(CARDS_DISPONIBILI[1]); 
   const [loading, setLoading] = useState(false);
   
-  // Dati opzionali per la dedica della card
   const [buyerName, setBuyerName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [giftMessage, setGiftMessage] = useState("");
 
   const handleAcquista = async () => {
-    // Validazione base se viene inserita l'email
     if (recipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
       alert("Inserisci un indirizzo email valido per il destinatario.");
       return;
@@ -27,13 +24,11 @@ export default function GiftCardPage() {
 
     setLoading(true);
     try {
-      // 🚀 Modificato l'endpoint per puntare alla rotta di checkout principale ed unificata
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        // 🚀 Inviamo i parametri corretti mappati su quelli che si aspetta il backend in checkout.txt
         body: JSON.stringify({ 
           isGiftCard: true,
           giftCardAmount: selectedCard.amount,
@@ -46,7 +41,6 @@ export default function GiftCardPage() {
       const data = await response.json();
 
       if (response.ok && data.url) {
-        // Rimanda l'utente alla pagina di pagamento sicuro di Stripe
         window.location.href = data.url;
       } else {
         console.error("Errore API:", data.error);
@@ -107,10 +101,8 @@ export default function GiftCardPage() {
             <p className="text-center text-xs text-gray-400 italic">Anteprima della Gift Card da €{selectedCard.amount}</p>
           </div>
 
-          {/* Pannello Configurazione con Selettore Immagini e Dedica */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100 space-y-6">
             
-            {/* Scelta Taglio Tramite Miniature */}
             <div className="space-y-3">
               <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider">Seleziona la Gift Card</h3>
               
@@ -126,7 +118,6 @@ export default function GiftCardPage() {
                         : "border-gray-100 bg-gray-50 hover:border-gray-200"
                     }`}
                   >
-                    {/* Mini-anteprima immagine */}
                     <div 
                       className="w-full aspect-[1.6/1] bg-cover bg-center rounded-lg shadow-sm mb-2"
                       style={{ backgroundImage: `url(${card.image})` }}
@@ -139,7 +130,6 @@ export default function GiftCardPage() {
               </div>
             </div>
 
-            {/* Campi Dedica (Opzionali - passati come metadata a Stripe) */}
             <div className="space-y-3 pt-2 border-t border-gray-50">
               <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider">Aggiungi una dedica (Opzionale)</h3>
               <input
@@ -165,7 +155,6 @@ export default function GiftCardPage() {
               />
             </div>
 
-            {/* Vantaggi della Card */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center gap-3 text-xs text-gray-600 font-medium">
                 <CheckCircle2 size={16} className="text-[#8cc665]" />

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Mail, Loader2, CheckCircle2, User } from "lucide-react";
 import { toast } from 'sonner';
 
-// Importa i tuoi componenti esistenti
 import HeadOne from "@/components/main";
 import Card1, { Card2, Card3 } from "@/components/maincards"; 
 import Carosello from "@/components/nuoviArrivi";

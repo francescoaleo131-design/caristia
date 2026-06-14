@@ -12,7 +12,6 @@ export default function NuovoProdottoPage() {
   async function handleSubmit(formData: FormData) {
     const supabase = await createClient();
 
-    // Dati Base
     const sku = formData.get('sku') as string;
     const nome = formData.get('name') as string;
     const brand = formData.get('brand') as string;
@@ -21,7 +20,6 @@ export default function NuovoProdottoPage() {
     const stock = parseInt(formData.get('stock_quantity') as string);
     const descrizione = formData.get('description') as string;
 
-    // Costruzione oggetto Specs (le 11 caratteristiche)
     const specs = {
       "Età consigliata": formData.get('spec_eta'),
       "Materiale": formData.get('spec_materiale'),
@@ -30,13 +28,12 @@ export default function NuovoProdottoPage() {
       "Dimensioni": formData.get('spec_dimensioni'),
       "Peso": formData.get('spec_peso'),
       "Pezzi": formData.get('spec_pezzi'),
-      "Modello": sku, // Usiamo lo SKU come numero modello
+      "Modello": sku, 
       "Assemblaggio necessario": formData.get('spec_assemblaggio'),
       "Batterie necessarie": formData.get('spec_batterie_req'),
       "Batterie incluse": formData.get('spec_batterie_inc')
     };
 
-    // Pulizia specs (rimuoviamo i campi vuoti)
     const filteredSpecs = Object.fromEntries(
       Object.entries(specs).filter(([_, v]) => v !== "" && v !== null)
     );
@@ -78,7 +75,6 @@ export default function NuovoProdottoPage() {
       </div>
 
       <form action={handleSubmit} className="space-y-8">
-        {/* SEZIONE 1: DATI PRINCIPALI */}
         <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-8 space-y-6">
           <div className="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-widest mb-2">
             <Box size={16} /> Informazioni Base
@@ -119,7 +115,6 @@ export default function NuovoProdottoPage() {
           </div>
         </div>
 
-        {/* SEZIONE 2: SPECIFICHE TECNICHE (SPECS) */}
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 space-y-6">
           <div className="flex items-center gap-2 text-slate-600 font-bold text-xs uppercase tracking-widest mb-2">
             <ListPlus size={16} /> Caratteristiche Tecniche (Specs)
@@ -177,7 +172,6 @@ export default function NuovoProdottoPage() {
           </div>
         </div>
 
-        {/* AZIONI */}
         <div className="pt-6 flex justify-end gap-4">
           <Link href="/admin/magazzino" className="px-6 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
             Annulla

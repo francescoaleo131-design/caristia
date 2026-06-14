@@ -24,7 +24,6 @@ export default function CostumiDisponibili({ onSelectCostume }: CostumiDisponibi
               className="flex flex-col items-center text-center group cursor-pointer border-none bg-transparent outline-none"
             >
               
-              {/* Contenitore Immagine con Placeholder */}
               <div className="mb-4 h-24 w-24 md:h-32 md:w-32 flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110">
                 <img 
                   src={item.img} 

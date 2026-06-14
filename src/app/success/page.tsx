@@ -14,7 +14,6 @@ function SuccessContent() {
   const { clearCart } = useCart();
 
   useEffect(() => {
-    // Clear cart on successful checkout
     if (session_id && type !== 'mascotte') {
       clearCart();
     }

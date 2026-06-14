@@ -13,9 +13,8 @@ export default function AddToWishlistButton({ productId, productName }: Props) {
   const [lists, setLists] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [addedToLists, setAddedToLists] = useState<string[]>([]); // Per mostrare il check se già aggiunto
+  const [addedToLists, setAddedToLists] = useState<string[]>([]); 
 
-  // Carica le liste dell'utente
   const fetchUserLists = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -68,7 +67,6 @@ export default function AddToWishlistButton({ productId, productName }: Props) {
         <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* DROPDOWN DELLE LISTE */}
       {isOpen && (
         <div className="absolute z-50 bottom-full mb-2 left-0 w-full bg-white border border-slate-100 shadow-2xl rounded-2xl p-2 animate-in fade-in slide-in-from-bottom-2">
           {lists.length > 0 ? (

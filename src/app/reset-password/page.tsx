@@ -11,7 +11,6 @@ export default function UpdatePasswordPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  // Verifichiamo che l'utente sia arrivato qui con una sessione valida (dal link email)
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession()
@@ -38,7 +37,6 @@ export default function UpdatePasswordPage() {
 
     setLoading(true)
 
-    // ESECUZIONE DELLA MODIFICA NEL DATABASE DI SUPABASE
     const { error } = await supabase.auth.updateUser({
       password: password,
     })
@@ -47,7 +45,6 @@ export default function UpdatePasswordPage() {
       toast.error("Errore nell'aggiornamento: " + error.message)
     } else {
       toast.success("Password modificata con successo!")
-      // Dopo il successo, rimandiamo alla home o alla cassa
       router.push("/")
       router.refresh()
     }
@@ -58,7 +55,6 @@ export default function UpdatePasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 px-4 py-20">
       <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-10 border-b-8 border-[#1e73be]">
         
-        {/* ICONA E TITOLO COERENTE CON IL BRAND */}
         <div className="text-center mb-8 flex flex-col items-center">
           <div className="mb-4 p-3 bg-blue-50 rounded-full">
             <ShieldCheck className="text-[#1e73be]" size={32} />

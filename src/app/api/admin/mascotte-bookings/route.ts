@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/supabaseAdmin";
 
-// Questa deve chiamarsi obbligatoriamente GET per permettere la lettura
 export async function GET() {
   try {
     if (!supabaseAdmin) {
@@ -19,7 +18,6 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Restituiamo l'oggetto con la chiave 'bookings' che il tuo frontend aspetta
     return NextResponse.json({ bookings: data || [] });
 
   } catch (err: any) {

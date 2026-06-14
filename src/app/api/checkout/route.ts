@@ -16,7 +16,6 @@ interface CheckoutRequestBody {
   useBalance?: boolean;
   isGiftCard?: boolean; 
   giftCardAmount?: number;
-  // 🚀 Nuovi campi per i dettagli del regalo passati dal frontend
   buyerName?: string;
   recipientEmail?: string;
   giftMessage?: string;
@@ -34,15 +33,10 @@ export async function POST(req: Request) {
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    // =========================================================
-    // FLUSSO SPECIFICO: ACQUISTO DI UNA GIFT CARD
-    // =========================================================
     if (isGiftCard) {
       if (!giftCardAmount || giftCardAmount <= 0) {
         return NextResponse.json({ error: "Importo della Gift Card non valido" }, { status: 400 });
       }
-
-      console.log(`🎁 Richiesta checkout ricevuta per una Gift Card da €${giftCardAmount}`);
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card', 'klarna', 'paypal'],
@@ -61,7 +55,6 @@ export async function POST(req: Request) {
         success_url: `${baseUrl}/success?type=giftcard&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/giftcard`,
         customer_email: user?.email || email || undefined,
-        // 🚀 Ora passiamo tutti i metadati che il webhook leggerà in background
         metadata: {
           type: 'giftcard_purchase',
           amount: giftCardAmount.toString(),
@@ -75,14 +68,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: session.url });
     }
 
-    // =========================================================
-    // FLUSSO REGOLARE: ACQUISTO PRODOTTI DELLO SHOP
-    // =========================================================
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "Il carrello è vuoto" }, { status: 400 });
     }
-
-    console.log("🛒 Richiesta checkout ricevuta per Giocattoli Caristia. Uso saldo:", useBalance);
 
     const orderTotal = items.reduce((acc: number, item: CartItem) => acc + (item.price * item.quantity), 0);
     let discount = 0;
@@ -127,8 +115,6 @@ export async function POST(req: Request) {
           },
         });
       }
-
-      console.log("🎁 Ordine interamente pagato con credito portafoglio. Email Loops Inviata!");
       return NextResponse.json({ url: `${baseUrl}/success?type=wallet` });
     }
 

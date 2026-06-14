@@ -13,7 +13,6 @@ export default function ProfilePage() {
   useEffect(() => {
     const getProfile = async () => {
       setLoading(true)
-      // Otteniamo l'utente sessione attuale
       const { data: { user }, error: authError } = await supabase.auth.getUser()
 
       if (authError || !user) {
@@ -21,17 +20,12 @@ export default function ProfilePage() {
         return
       }
 
-      // Proviamo a prendere i dati dal DB (tabella profiles)
       const { data: dbProfile } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single()
 
-      // LOGICA DI RECUPERO NOME:
-      // 1. Cerca nel DB (dbProfile)
-      // 2. Se non c'è, cerca nei metadati salvati durante la registrazione (user_metadata)
-      // 3. Altrimenti "Ospite Caristia"
       const displayName = dbProfile?.full_name || user.user_metadata?.full_name || "Ospite Caristia";
 
       setProfile({
@@ -83,7 +77,6 @@ export default function ProfilePage() {
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Gestisci i tuoi dati e la tua sicurezza</p>
         </div>
 
-        {/* BOX INFORMAZIONI */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white space-y-6">
           <div className="flex items-center gap-2 mb-2">
             <ShieldCheck className="text-[#8cc665]" size={20} />
@@ -119,14 +112,12 @@ export default function ProfilePage() {
           </div>
         </div>
     
-        {/* BOX SICUREZZA E LOGOUT */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white space-y-4">
           <div className="flex items-center gap-2 mb-2">            
             <KeyRound className="text-[#8cc665]" size={20} />
             <h2 className="font-black uppercase text-sm tracking-widest text-[#1e73be]">Azioni Rapide</h2>
           </div>
           
-          {/* RESET PASSWORD */}
           <div className="flex items-center justify-between gap-4 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
             <div className="flex items-center gap-3">
               <div className="bg-white p-3 rounded-xl shadow-sm">
@@ -145,7 +136,6 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {/* LOGOUT */}
           <button 
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-red-50 text-red-500 hover:bg-red-50 font-black uppercase text-xs tracking-widest transition-all"

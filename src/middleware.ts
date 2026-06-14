@@ -5,12 +5,10 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const { searchParams } = request.nextUrl
 
-  // 0. SE È IL WEBHOOK DI STRIPE, PASSA OLTRE SENZA TOCCARE NULLA 🚀
   if (path.startsWith('/api/webhooks/stripe')) {
     return NextResponse.next()
   }
 
-  // 1. Escludiamo subito la pagina di coming-soon per evitare loop infiniti
   if (path === '/coming-soon') {
     return NextResponse.next()
   }
@@ -45,10 +43,8 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // 2. Controlliamo l'utente su Supabase
   const { data: { user } } = await supabase.auth.getUser()
 
-  // 3. LOGICA DI ACCESSO "PORTA SUL RETRO" (Cookie Bypass)
   const adminSecret = 'caristia_admin'
   const hasAdminQuery = searchParams.get('access') === adminSecret
   const hasAdminCookie = request.cookies.has('admin_bypass')
@@ -56,13 +52,12 @@ export async function middleware(request: NextRequest) {
   if (hasAdminQuery) {
     const redirectResponse = NextResponse.redirect(new URL('/', request.url))
     redirectResponse.cookies.set('admin_bypass', 'true', {
-      maxAge: 60 * 60 * 24 * 30, // 30 giorni
+      maxAge: 60 * 60 * 24 * 30, 
       path: '/',
     })
     return redirectResponse
   }
 
-  // 4. VERIFICA RUOLO ADMIN DAL DATABASE DI SUPABASE
   let isDbAdmin = false
   if (user) {
     const { data: profile } = await supabase
@@ -76,22 +71,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 5. BLOCCO COMING SOON
   if (!isDbAdmin && !hasAdminCookie && path !== '/login') {
     return NextResponse.redirect(new URL('/coming-soon', request.url))
   }
 
-  // Se non loggato e prova ad andare in zone protette
   if (!user && (path.startsWith('/profilo') || path.startsWith('/admin'))) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Se loggato e va su /login
   if (user && path === '/login') {
     return NextResponse.redirect(new URL('/profilo', request.url))
   }
 
-  // Se prova ad andare su /admin ma non è admin nel DB
   if (path.startsWith('/admin') && !isDbAdmin) {
     return NextResponse.redirect(new URL('/profilo', request.url))
   }

@@ -20,7 +20,6 @@ export default function ServiziIcone() {
           {servizi.map((servizio, index) => (
             <div key={index} className="flex flex-col items-center text-center group">
               
-              {/* Contenitore con ALTEZZA e LARGHEZZA fissa per uniformare */}
               <div className="mb-4 h-24 w-24 md:h-28 md:w-28 flex items-center justify-center transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
                 <img 
                   src={servizio.img} 

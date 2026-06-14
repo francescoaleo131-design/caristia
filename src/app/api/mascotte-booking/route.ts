@@ -21,7 +21,6 @@ export async function POST(req: Request) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-    // 1. Crea la sessione di checkout Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{
@@ -38,7 +37,7 @@ export async function POST(req: Request) {
       mode: 'payment',
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&type=mascotte`,
       cancel_url: `${baseUrl}/mascotte`,
-      customer_email: undefined, // Opzionale: chiedi email nel form se serve
+      customer_email: undefined, 
       metadata: {
         type: 'mascotte_bookings',
         customer_name: nome,
@@ -52,9 +51,6 @@ export async function POST(req: Request) {
       }
     });
 
-    // 2. Salva nel database (Archive)
-    // Nota: Se la tabella 'mascotte_bookings' non esiste, questo fallirà.
-    // L'utente dovrà crearla in Supabase.
     if (supabaseAdmin) {
       const { error } = await supabaseAdmin
         .from('mascotte_bookings')
@@ -75,7 +71,6 @@ export async function POST(req: Request) {
       if (error) {
         console.error("Errore salvataggio DB:", error);
         logError("MascotteBooking_DB_Insert", error);
-        // Continuiamo comunque perché la sessione Stripe è creata
       }
     }
 

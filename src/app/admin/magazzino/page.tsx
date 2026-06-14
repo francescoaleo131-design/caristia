@@ -22,7 +22,6 @@ export default function MagazzinoPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [productToEdit, setProductToEdit] = useState<any>(null);
 
-  // Recupera i prodotti dal database
   const fetchProdotti = async () => {
     setIsLoading(true);
     const { data, error } = await supabase
@@ -42,21 +41,17 @@ export default function MagazzinoPage() {
     fetchProdotti();
   }, []);
 
-  // Gestisce l'aggiornamento dei dati testuali e l'eventuale upload dell'immagine su Supabase Storage
   const handleUpdateProduct = async (updatedProduct: any, imageFile?: File) => {
     setIsLoading(true);
     
     try {
       let imageUrl = updatedProduct.image_url;
 
-      // Se l'utente ha selezionato un nuovo file dal modale, eseguiamo l'upload
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
-        // Generiamo un nome file univoco basato su SKU/ID e timestamp
         const fileName = `${updatedProduct.sku || updatedProduct.id}-${Date.now()}.${fileExt}`;
         const filePath = `products/${fileName}`;
 
-        // Caricamento nel bucket 'product-images'
         const { error: uploadError } = await supabase.storage
           .from('product-images')
           .upload(filePath, imageFile, {
@@ -68,7 +63,6 @@ export default function MagazzinoPage() {
           throw new Error("Errore caricamento immagine: " + uploadError.message);
         }
 
-        // Recuperiamo l'URL pubblico dell'immagine appena salvata
         const { data: publicUrlData } = supabase.storage
           .from('product-images')
           .getPublicUrl(filePath);
@@ -76,7 +70,6 @@ export default function MagazzinoPage() {
         imageUrl = publicUrlData.publicUrl;
       }
 
-      // Eseguiamo l'update definitivo del record nella tabella 'prodotti'
       const { error: dbError } = await supabase
         .from('prodotti')
         .update({
@@ -85,7 +78,7 @@ export default function MagazzinoPage() {
           stock_quantity: updatedProduct.stock_quantity,
           specs: updatedProduct.specs,
           brand: updatedProduct.brand,
-          image_url: imageUrl // Aggiornato con il nuovo URL (o null se è stata rimossa)
+          image_url: imageUrl 
         })
         .eq('id', updatedProduct.id);
 
@@ -101,7 +94,6 @@ export default function MagazzinoPage() {
     }
   };
 
-  // Elimina un prodotto dal database
   const handleDelete = async (id: string) => {
     if (!confirm("Vuoi eliminare definitivamente questo prodotto?")) return;
     const { error } = await supabase.from('prodotti').delete().eq('id', id);
@@ -113,7 +105,6 @@ export default function MagazzinoPage() {
     }
   };
 
-  // Logica di importazione file CSV da Danea
   const handleDaneaImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -127,13 +118,11 @@ export default function MagazzinoPage() {
           const formattedData = results.data.map((row: any) => {
             const dynamicSpecs: any = {};
 
-            // Mappatura Campi Liberi Danea
             if (row['Libero 1']) dynamicSpecs["Età consigliata"] = row['Libero 1'];
             if (row['Libero 2']) dynamicSpecs["Materiale"] = row['Libero 2'];
             if (row['Libero 3']) dynamicSpecs["Colore"] = row['Libero 3'];
             if (row['Libero 4']) dynamicSpecs["Lingua"] = row['Libero 4'];
 
-            // Mappatura Campi Standard Danea
             if (row['Codice']) dynamicSpecs["Modello"] = row['Codice'];
             if (row['Peso lordo'] && row['Peso lordo'] !== '0') dynamicSpecs["Peso"] = row['Peso lordo'];
             if (row['Dimensioni']) dynamicSpecs["Dimensioni"] = row['Dimensioni'];
@@ -165,7 +154,6 @@ export default function MagazzinoPage() {
     });
   };
 
-  // Filtro di ricerca locale
   const prodottiFiltrati = prodotti.filter(p => 
     p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     p.sku?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -173,7 +161,6 @@ export default function MagazzinoPage() {
 
   return (
     <div className="space-y-8 p-6">
-      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
         <h2 className="text-2xl font-light text-slate-800 tracking-tight">
           Gestione <span className="font-semibold text-indigo-600">Magazzino</span>
@@ -209,7 +196,6 @@ export default function MagazzinoPage() {
         </div>
       </div>
 
-      {/* TABELLA PRODOTTI */}
       <div className="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -269,7 +255,6 @@ export default function MagazzinoPage() {
         )}
       </div>
 
-      {/* MODALE IMPORTAZIONE DANEA */}
       {isModalImportOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => !isImporting && setIsModalImportOpen(false)} />
@@ -307,7 +292,6 @@ export default function MagazzinoPage() {
         </div>
       )}
 
-      {/* MODALE EDIT PRODOTTO (IMMAGINI COMPRESE) */}
       {productToEdit && (
         <EditProductModal
           prodotto={productToEdit}

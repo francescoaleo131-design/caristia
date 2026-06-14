@@ -4,7 +4,6 @@ import { ArrowLeft } from "lucide-react";
 export default function TerminiCondizioniPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Header navigazione */}
       <nav className="border-b border-slate-100 py-6 mb-12 sticky top-0 bg-white/80 backdrop-blur-md z-10">
         <div className="max-w-4xl mx-auto px-6 flex items-center">
           <Link href="/" className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-900 hover:text-indigo-600 transition-colors">
@@ -15,7 +14,6 @@ export default function TerminiCondizioniPage() {
       </nav>
 
       <main className="max-w-4xl mx-auto px-6 pb-24">
-        {/* Titolo Principale in stile BOLD */}
         <header className="mb-16">
           <h1 className="text-6xl font-black text-slate-900 uppercase tracking-tighter mb-4">
             Termini e <span className="text-indigo-600">Condizioni</span>
@@ -27,7 +25,6 @@ export default function TerminiCondizioniPage() {
           </div>
         </header>
 
-        {/* Corpo del testo legale */}
         <article className="prose prose-slate max-w-none">
           <div className="space-y-8 text-slate-700 leading-relaxed text-lg">
             <p>Per gli utenti minorenni<br /><br /></p>

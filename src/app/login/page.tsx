@@ -1,11 +1,11 @@
 "use client"
 import { useState } from "react"
-// 1. IMPORTA IL CLIENT SSR PER IL BROWSER
+
 import { createBrowserClient } from "@supabase/ssr" 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from 'sonner'
-// IMPORTA LE ICONE DA LUCIDE
+
 import { Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
@@ -15,7 +15,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  // 2. INIZIALIZZA IL CLIENT SSR
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -77,19 +76,16 @@ export default function LoginPage() {
               </Link>
             </div>
             
-            {/* CONTENITORE RELATIVE PER POSIZIONARE L'OCCHIO */}
             <div className="relative flex items-center">
               <input 
                 type={showPassword ? "text" : "password"} 
                 required 
-                // pr-12 lascia lo spazio perfetto per l'icona da 20px
                 className="w-full p-4 pr-12 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-[#1e73be] text-black" 
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               
-              {/* PULSANTE CON ICONA */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}

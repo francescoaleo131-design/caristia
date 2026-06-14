@@ -5,7 +5,6 @@ import Link from 'next/link';
 export default async function ListeCompleannoPage() {
   const supabase = await createClient();
 
-  // Recuperiamo le liste dal database (tabella: wishlists)
   const { data: liste, error } = await supabase
     .from('wishlists')
     .select('*')
@@ -17,7 +16,6 @@ export default async function ListeCompleannoPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
         <div>
           <h2 className="text-2xl font-light text-slate-800 tracking-tight">
@@ -37,13 +35,11 @@ export default async function ListeCompleannoPage() {
         </Link>
       </div>
 
-      {/* Grid delle Liste */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {liste && liste.length > 0 ? (
           liste.map((lista) => {
             const isMoneyList = lista.list_type === 'money';
             
-            // Calcolo percentuale progresso per il salvadanaio (se c'è un obiettivo, altrimenti 100% o dinamico)
             const moneyProgress = lista.target_amount && lista.target_amount > 0
               ? Math.min(Math.round(((lista.current_amount || 0) / lista.target_amount) * 100), 100)
               : 0;
@@ -55,7 +51,6 @@ export default async function ListeCompleannoPage() {
                     {isMoneyList ? <Coins size={20} /> : <Users size={20} />}
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Badge tipo lista */}
                     <span className={`text-[9px] font-extrabold uppercase px-2 py-1 rounded-md ${isMoneyList ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
                       {isMoneyList ? 'Soldi' : 'Articoli'}
                     </span>
@@ -73,7 +68,6 @@ export default async function ListeCompleannoPage() {
                     <span>{new Date(lista.event_date).toLocaleDateString('it-IT')}</span>
                   </div>
                   
-                  {/* Info dinamiche in base al tipo */}
                   {!isMoneyList ? (
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Gift size={14} />
@@ -90,7 +84,6 @@ export default async function ListeCompleannoPage() {
                   )}
                 </div>
 
-                {/* Barra di progressione Dinamica */}
                 <div className="space-y-1.5 mb-6">
                   <div className="flex justify-between text-xs font-medium">
                     <span className="text-slate-400">

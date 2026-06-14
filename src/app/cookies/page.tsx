@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic';
 export default function CookiePolicyPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigazione Sticky */}
       <nav className="border-b border-slate-100 py-6 mb-12 sticky top-0 bg-white/80 backdrop-blur-md z-10">
         <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-900 hover:text-indigo-600 transition-colors">
@@ -21,7 +20,6 @@ export default function CookiePolicyPage() {
       </nav>
 
       <main className="max-w-4xl mx-auto px-6 pb-24">
-        {/* Header BOLD */}
         <header className="mb-16">
           <h1 className="text-6xl font-black text-slate-900 uppercase tracking-tighter mb-4">
             Cookie <span className="text-indigo-600">Policy</span>
@@ -35,7 +33,6 @@ export default function CookiePolicyPage() {
           </div>
         </header>
 
-        {/* Contenuto Informativa */}
         <article className="prose prose-slate max-w-none">
           <div className="space-y-8 text-slate-700 leading-relaxed text-lg">
             <p>Questa politica sui cookie è stata aggiornata l'ultima volta il Dicembre 4, 2023 e si applica ai cittadini e ai residenti permanenti legali dello Spazio Economico Europeo e della Svizzera.<br /><br /></p>

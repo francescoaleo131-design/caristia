@@ -3,7 +3,6 @@ import { stripe } from '@/lib/stripe';
 
 export async function POST(req: Request) {
   try {
-    // Riceviamo i nuovi campi dal frontend
     const { 
       amount, 
       wishlistId, 
@@ -20,7 +19,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Dati mancanti" }, { status: 400 });
     }
 
-    // Determiniamo il tipo di contributo
     const contributionType = wishlistItemId ? 'physical_product' : 'money';
 
     const session = await stripe.checkout.sessions.create({
@@ -50,8 +48,8 @@ export async function POST(req: Request) {
         customer_message: guestMessage || '',
         product_id: productId || '',
         gift_name: giftName || '',
-        wishlist_item_id: wishlistItemId || '', // Fondamentale per aggiornare quantity_purchased
-        contribution_type: contributionType     // Il nuovo campo che abbiamo creato
+        wishlist_item_id: wishlistItemId || '', 
+        contribution_type: contributionType     
       },
     });
 

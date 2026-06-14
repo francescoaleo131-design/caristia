@@ -5,11 +5,10 @@ import StatCard from "@/components/admin/StatCard";
 export default async function AdminDashboard() {
   const supabase = await createClient();
 
-  // Eseguiamo tutte le query contemporaneamente pescando total_amount
   const [salesResponse, pendingResponse, listsResponse, latestOrdersResponse] = await Promise.all([
     supabase
       .from('orders')
-      .select('total_amount') // 💡 Corretto: prima era total_price
+      .select('total_amount') 
       .eq('status', 'paid'),
     supabase
       .from('orders')
@@ -26,7 +25,6 @@ export default async function AdminDashboard() {
       .limit(10) 
   ]);
 
-  // Calcolo sicuro usando total_amount
   const totalSales = salesResponse.data?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0;
   const pendingCount = pendingResponse.count || 0;
   const activeListsCount = listsResponse.count || 0;
@@ -45,7 +43,6 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-10 p-6">
-      {/* Header */}
       <div className="border-b border-slate-100 pb-6">
         <h2 className="text-2xl font-light text-slate-800 tracking-tight">
           Pannello <span className="font-semibold text-indigo-600">Gestionale</span>
@@ -53,7 +50,6 @@ export default async function AdminDashboard() {
         <p className="text-slate-500 text-sm mt-1">Riepilogo delle attività in tempo reale per Caristia.</p>
       </div>
 
-      {/* Grid delle Statistiche */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard 
           title="Incasso Totale" 
@@ -65,7 +61,6 @@ export default async function AdminDashboard() {
         <StatCard title="Liste Attive" value={activeListsCount} icon={Users} color="text-indigo-600" />
       </div>
 
-      {/* Tabella Ordini */}
       <div className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold text-slate-800 tracking-tight">Ultimi Ordini Ricevuti</h3>
@@ -107,7 +102,7 @@ export default async function AdminDashboard() {
                       </div>
                     </td>
                     <td className="p-4 text-sm font-bold text-slate-800">
-                      € {(ordine.total_amount || 0).toFixed(2)} {/* 💡 Corretto anche qui */}
+                      € {(ordine.total_amount || 0).toFixed(2)} 
                     </td>
                     <td className="p-4 text-right">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${

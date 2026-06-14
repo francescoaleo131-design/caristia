@@ -14,17 +14,14 @@ interface NegozioPageProps {
 }
 
 export default async function NegozioPage({ searchParams }: NegozioPageProps) {
-  // 1. Estrai il parametro di ricerca dall'URL in modo asincrono
   const { search } = await searchParams;
 
   const supabase = await createClient();
   
-  // 2. Prepara la query base su Supabase
   let query = supabase
     .from('prodotti')
     .select('*');
 
-  // 3. Se esiste una stringa di ricerca, filtra i prodotti per nome
   if (search) {
     query = query.ilike('name', `%${search}%`);
   }
@@ -42,7 +39,6 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Banner Promozionale */}
       <div className="w-full bg-white border-b"> 
         <div className="container mx-auto px-4 py-6">
           <img 
@@ -57,7 +53,6 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row gap-12">
           
-          {/* Sidebar Filtri Pulita */}
           <aside className="w-full md:w-64 shrink-0">
             <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Categorie</h3>
             <ul className="space-y-4 text-lg font-medium">
@@ -68,9 +63,7 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
             </ul>
           </aside>
 
-          {/* Griglia Prodotti Moderna */}
           <main className="flex-grow">
-            {/* Titolo contestuale se l'utente sta cercando qualcosa */}
             {search && (
               <div className="mb-6">
                 <p className="text-sm text-slate-500">
@@ -83,7 +76,6 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                 {prodotti.map((p: Prodotto) => (
                   <Link href={`/shop/${p.id}`} key={p.id} className="group cursor-pointer">
-                    {/* Immagine Prodotto */}
                     <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden mb-4 transition-shadow group-hover:shadow-xl group-hover:shadow-slate-100/50">
                       <div className="aspect-square relative overflow-hidden bg-slate-50">
                         <img 
@@ -94,7 +86,6 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
                       </div>
                     </div>
                     
-                    {/* Info Prodotto */}
                     <div className="space-y-1">
                       <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">
                         {p.category || 'Generale'}

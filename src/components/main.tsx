@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image"; // Passiamo a Next Image per stabilità
+import Image from "next/image"; 
 
 const slides = [
   {
@@ -41,7 +41,6 @@ export default function DynamicHero() {
   return (
     <section className="relative h-[400px] md:h-[500px] w-full overflow-hidden bg-slate-200">
       
-      {/* --- LIVELLO 1: IMMAGINI DI SFONDO --- */}
       <div className="absolute inset-0 z-0">
         <AnimatePresence mode="wait">
           <motion.div
@@ -59,16 +58,14 @@ export default function DynamicHero() {
               priority
               sizes="200vw"
               unoptimized
-              className="object-cover object-center" // Forza il riempimento proporzionale
+              className="object-cover object-center" 
             />
           </motion.div>
         </AnimatePresence>
         
-        {/* Overlay fisso */}
         <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-[1]" />
       </div>
 
-      {/* --- LIVELLO 2: CONTENUTO (Testo e Bottone) --- */}
       <div className="absolute inset-0 z-10 flex items-center justify-center">
         <div className="w-full max-w-4xl px-6 text-center">
           <AnimatePresence mode="wait">
@@ -96,7 +93,6 @@ export default function DynamicHero() {
         </div>
       </div>
 
-      {/* --- LIVELLO 3: DECORAZIONI (Opzionali) --- */}
       <div className="absolute inset-0 pointer-events-none z-[5]">
         <motion.div 
           animate={{ x: [0, 20, 0], opacity: [0.2, 0.3, 0.2] }}

@@ -16,24 +16,20 @@ export default function Header() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Stato interno per tracciare il testo inserito nella barra di ricerca
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
 
-  // --- LOGICA CARRELLO ---
   const items = useCart((state) => state.items);
   const [mounted, setMounted] = useState(false);
 
-  // Calcolo quantità totale e prezzo totale
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-  // Sincronizza l'input se il parametro nell'URL cambia esternamente
   useEffect(() => {
     setSearchQuery(searchParams.get("search") || "");
   }, [searchParams]);
 
   useEffect(() => {
-    setMounted(true); // Evita hydration mismatch
+    setMounted(true); 
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
@@ -46,7 +42,6 @@ export default function Header() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Funzione centralizzata per eseguire la ricerca ed aggiornare la rotta
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = searchQuery.trim();
@@ -55,7 +50,7 @@ export default function Header() {
     } else {
       router.push(`/shop`);
     }
-    setSearchOpen(false); // Chiude il pannello mobile se aperto
+    setSearchOpen(false); 
   };
 
   const handleLogout = async () => {
@@ -74,7 +69,6 @@ export default function Header() {
 
   return (
     <header className="w-full shadow-sm bg-white relative">
-      {/* 1. TOP BAR */}
       <div className="bg-[#4a69bd] text-white py-2 px-4 flex flex-col sm:flex-row justify-between items-center text-[12px] font-medium">
         <div className="flex items-center gap-2">
           <MapPin size={14} />
@@ -88,7 +82,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* 2. MAIN BAR */}
       <div className="container mx-auto py-4 px-4 border-b border-gray-50">
         <div className="hidden md:flex items-center justify-between gap-8">
           <div className="w-48 shrink-0">
@@ -102,7 +95,6 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* BARRA DI RICERCA DESKTOP DINAMICA */}
           <div className="flex-1 max-w-5xl mx-2">
             <form 
               onSubmit={handleSearchSubmit} 
@@ -159,7 +151,6 @@ export default function Header() {
               </Link>
             )}
 
-            {/* --- CARRELLO DESKTOP FUNZIONANTE --- */}
             <Link href="/carrello" className="flex items-center gap-3 bg-slate-50 rounded-full pr-5 pl-2 py-2 shadow-sm relative cursor-pointer hover:bg-slate-100 transition-colors">
               <div className="bg-[#1e73be] p-2.5 rounded-full text-white">
                 <ShoppingBag size={18} />
@@ -179,7 +170,6 @@ export default function Header() {
           </div>
         </div>
 
-        {/* --- LAYOUT MOBILE --- */}
         <div className="md:hidden flex flex-col items-center">
           <div className="relative w-full flex items-center pt-2 pb-3 px-2">
             <button onClick={() => setMenuOpen(true)} className="z-10 p-1">
@@ -205,7 +195,6 @@ export default function Header() {
                 <User size={22} className={user ? "text-[#8cc665]" : "text-gray-700"} />
               </Link>
 
-              {/* --- CARRELLO MOBILE FUNZIONANTE --- */}
               <Link href="/carrello" className="relative p-1">
                 <ShoppingBag size={22} className="text-gray-700" />
                 {mounted && totalItems > 0 && (
@@ -217,7 +206,6 @@ export default function Header() {
             </div>
           </div>
 
-          {/* BARRA DI RICERCA MOBILE DINAMICA */}
           {searchOpen && (
             <div className="mt-2 px-4 w-full animate-in fade-in slide-in-from-top-1 pb-2">
               <form onSubmit={handleSearchSubmit}>
@@ -235,7 +223,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* 3. NAVBAR DESKTOP */}
       <nav className="hidden md:block border-b-2 border-[#8cc665]">
         <div className="container mx-auto px-4">
           <ul className="flex items-center justify-start">
@@ -265,7 +252,6 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* --- MENU MOBILE SIDEBAR --- */}
       <div
         className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] transition-opacity duration-300 ${menuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
         onClick={() => setMenuOpen(false)}

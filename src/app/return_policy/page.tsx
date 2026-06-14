@@ -4,7 +4,6 @@ import { ArrowLeft, RefreshCcw, PackageCheck, AlertCircle, CalendarClock, Shield
 export default function PoliticaRimborsoPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar di cortesia */}
       <nav className="border-b border-slate-50 py-4 mb-12">
         <div className="max-w-4xl mx-auto px-6 flex items-center">
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-indigo-600 transition-colors">
@@ -24,7 +23,6 @@ export default function PoliticaRimborsoPage() {
 
         <div className="space-y-12 text-slate-600 leading-relaxed">
           
-          {/* 🚀 NUOVA SEZIONE: Servizi di Animazione ed Eventi */}
           <section className="grid md:grid-cols-3 gap-8 items-start border-b border-slate-100 pb-12">
             <div className="flex items-center gap-3 text-indigo-600 font-semibold uppercase text-xs tracking-widest">
               <CalendarClock size={18} />
@@ -45,7 +43,6 @@ export default function PoliticaRimborsoPage() {
             </div>
           </section>
 
-          {/* Sezione 1: Il Diritto di Recesso (Prodotti Fisici) */}
           <section className="grid md:grid-cols-3 gap-8 items-start ">
             <div className="flex items-center gap-3 text-indigo-600 font-semibold uppercase text-xs tracking-widest">
               <RefreshCcw size={18} />
@@ -58,7 +55,6 @@ export default function PoliticaRimborsoPage() {
             </div>
           </section>
 
-          {/* Sezione 2: Condizioni del Prodotto */}
           <section className="grid md:grid-cols-3 gap-8 items-start border-t border-slate-50 pt-12">
             <div className="flex items-center gap-3 text-indigo-600 font-semibold uppercase text-xs tracking-widest">
               <PackageCheck size={18} />
@@ -80,7 +76,6 @@ export default function PoliticaRimborsoPage() {
             </div>
           </section>
 
-          {/* Sezione 3: Procedura */}
           <section className="grid md:grid-cols-3 gap-8 items-start border-t border-slate-50 pt-12">
             <div className="text-indigo-600 font-semibold uppercase text-xs tracking-widest">
               <span>Come procedere</span>

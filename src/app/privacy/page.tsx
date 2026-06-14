@@ -4,7 +4,6 @@ import { ArrowLeft, ShieldCheck } from "lucide-react";
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigazione Sticky */}
       <nav className="border-b border-slate-100 py-6 mb-12 sticky top-0 bg-white/80 backdrop-blur-md z-10">
         <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-900 hover:text-indigo-600 transition-colors">
@@ -19,7 +18,6 @@ export default function PrivacyPolicyPage() {
       </nav>
 
       <main className="max-w-4xl mx-auto px-6 pb-24">
-        {/* Header BOLD */}
         <header className="mb-16">
           <h1 className="text-6xl font-black text-slate-900 uppercase tracking-tighter mb-4">
             Informativa sulla <span className="text-indigo-600">Privacy</span>
@@ -33,7 +31,6 @@ export default function PrivacyPolicyPage() {
           </div>
         </header>
 
-        {/* Contenuto Informativa */}
         <article className="prose prose-slate max-w-none">
           <div className="space-y-8 text-slate-700 leading-relaxed text-lg">
             <p>Informativa Sulla Privacy Online Generale Di Giocattoli Caristia<br /><br /></p>
@@ -639,7 +636,6 @@ export default function PrivacyPolicyPage() {
           </div>
         </article>
 
-        {/* Footer */}
         <footer className="mt-20 pt-12 border-t-4 border-slate-900">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-sm font-bold uppercase tracking-widest text-slate-500">

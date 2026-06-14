@@ -7,7 +7,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("Attenzione: Chiavi Supabase mancanti nel file .env!")
 }
 
-// Esporta un'unica istanza del client usando lo standard SSR
 export const supabase = createBrowserClient(
   supabaseUrl,
   supabaseAnonKey

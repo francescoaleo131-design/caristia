@@ -24,7 +24,6 @@ export default function GuestWishlistPage({ params }: PageProps) {
     async function fetchData() {
       setLoading(true);
       
-      // 1. Recupera la testata della wishlist
       const { data: wishlistData, error: wError } = await supabase
         .from('wishlists')
         .select('*')
@@ -38,7 +37,6 @@ export default function GuestWishlistPage({ params }: PageProps) {
       }
       setWishlist(wishlistData);
 
-      // 2. Recupera gli articoli SENZA chiedere lo slug del prodotto che non esiste nel DB
       if (wishlistData.list_type !== 'money') {
         const { data: itemsData, error: iError } = await supabase
           .from('wishlist_items')
@@ -185,7 +183,6 @@ export default function GuestWishlistPage({ params }: PageProps) {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-12">
-        {/* Form Dati Invitato */}
         <div className="bg-white rounded-[3rem] p-8 border border-slate-100 shadow-xl mb-12">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
             <User className="text-[#1e73be]" size={20} />

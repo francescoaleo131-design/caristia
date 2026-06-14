@@ -33,7 +33,6 @@ export default function WishlistOwnerPage({ params }: PageProps) {
       }
       setWishlist(wishlistData);
 
-      // Recupero contributi
       const { data: contribData } = await supabase
         .from('wishlist_contributions')
         .select('*')
@@ -78,7 +77,6 @@ export default function WishlistOwnerPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
-      {/* HEADER */}
       <div className="bg-white border-b p-12">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-5xl font-black uppercase">Lista di {wishlist.child_name}</h1>
@@ -87,7 +85,6 @@ export default function WishlistOwnerPage({ params }: PageProps) {
 
       <div className="max-w-5xl mx-auto px-6 mt-12 space-y-12">
         
-        {/* SEZIONE CONTRIBUTI (CHI HA REGALATO) */}
         <div className="bg-white p-8 rounded-[2rem] border shadow-sm">
           <div className="flex items-center gap-3 mb-8">
             <Users className="text-[#1e73be]" />
@@ -123,7 +120,6 @@ export default function WishlistOwnerPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* LISTA REGALI */}
         {wishlist.list_type !== 'money' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {items.map((item) => (

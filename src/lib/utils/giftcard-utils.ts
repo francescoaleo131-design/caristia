@@ -1,4 +1,4 @@
-// src/lib/giftcard-utils.ts
+
 
 export function generateSecureGiftCode(): string {
   const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; 
@@ -11,6 +11,5 @@ export function generateSecureGiftCode(): string {
     return result;
   };
 
-  // Restituisce CART-XXXX-XXXX-XXXX
   return `CAR-${makeBlock()}-${makeBlock()}-${makeBlock()}`;
 }

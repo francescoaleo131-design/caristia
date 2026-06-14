@@ -1,4 +1,4 @@
-import Link from "next/link" // 1. Importa Link
+import Link from "next/link" 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -26,7 +26,6 @@ export default function Card1() {
         </CardDescription>
       </CardHeader>
       <CardFooter className= "mt-auto">
-        {/* Uso asChild per trasformare il Button in un Link mantenendo lo stile */}
         <Button asChild className="w-full">
           <Link href="/shop">Vai al negozio</Link>
         </Button>

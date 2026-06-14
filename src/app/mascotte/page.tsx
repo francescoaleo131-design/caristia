@@ -36,7 +36,6 @@ export default function MascottePage() {
         </picture>
       </div>
 
-            {/* Catalogo Mascotte Disponibili */}
             <div className="text-xl text-center text-black-200">
             <h2 className="text-center">Mascotte</h2>
              </div>
@@ -45,7 +44,6 @@ export default function MascottePage() {
             <h2 className="text-center">Costumi</h2>
              </div>
             <CostumiDisponibili onSelectCostume={handleSelectMascot} />
-            {/* Divider */}
             <div className="w-full my-6 px-4 container mx-auto">
                 <div className="h-px bg-slate-100 w-full" />
             </div>
@@ -60,13 +58,11 @@ export default function MascottePage() {
         />
         </picture>
       </div>
-            {/* Packages Section - Aggiunto ID per lo scroll */}
             <div id="pacchetti-sezione">
                 <MascottePackages onSelect={(pkg) => setSelectedPackage(pkg)} />
             </div>
             
 
-            {/* Modal Form */}
             {selectedPackage && (
                 <MascotteBookingForm
                     packageInfo={selectedPackage}

@@ -18,7 +18,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
     if (prodotto) {
       setFormData({
         ...prodotto,
-        // Ci assicuriamo che specs sia sempre un oggetto valido e non null/undefined
         specs: prodotto.specs || {}
       });
     }
@@ -26,7 +25,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
 
   if (!isOpen || !formData) return null;
 
-  // Funzione helper per aggiornare un singolo campo all'interno dell'oggetto JSONB specs
   const handleSpecChange = (key: string, value: string) => {
     setFormData({
       ...formData,
@@ -52,7 +50,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
       
       <div className="relative bg-white w-full max-w-3xl rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
         
-        {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
@@ -68,14 +65,11 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
           </button>
         </div>
 
-        {/* CONTENUTO FORM */}
         <div className="space-y-6">
           
-          {/* SEZIONE INFORMAZIONI PRINCIPALI */}
           <div className="bg-slate-50/50 p-5 rounded-3xl border border-slate-100 space-y-4">
             <h4 className="text-xs font-black text-indigo-600 uppercase tracking-wider mb-2">Informazioni Base</h4>
             
-            {/* GESTIONE URL IMMAGINE */}
             <div>
               <label className="text-xs font-bold text-slate-400 uppercase ml-1">Immagine Prodotto (URL)</label>
               <div className="flex items-start gap-4 mt-1.5">
@@ -108,7 +102,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
               </div>
             </div>
 
-            {/* NOME PRODOTTO */}
             <div>
               <label className="text-xs font-bold text-slate-400 uppercase ml-1">Nome Prodotto</label>
               <input
@@ -119,7 +112,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
               />
             </div>
 
-            {/* PREZZO, STOCK, MARCA */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Prezzo (€)</label>
@@ -152,14 +144,12 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
             </div>
           </div>
 
-          {/* SEZIONE CARATTERISTICHE TECNICHE (SPECS JSONB) */}
           <div className="bg-white p-5 rounded-3xl border border-slate-100 space-y-4">
             <h4 className="text-xs font-black text-indigo-600 uppercase tracking-wider flex items-center gap-1.5">
               <span>🛠️</span> Caratteristiche Tecniche (Specs)
             </h4>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Età Consigliata */}
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Età Consigliata</label>
                 <input
@@ -171,7 +161,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
                 />
               </div>
 
-              {/* Materiale */}
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Materiale</label>
                 <input
@@ -183,7 +172,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
                 />
               </div>
 
-              {/* Colore */}
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Colore</label>
                 <input
@@ -195,7 +183,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
                 />
               </div>
 
-              {/* Lingua */}
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Lingua</label>
                 <input
@@ -207,7 +194,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
                 />
               </div>
 
-              {/* Dimensioni */}
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Dimensioni</label>
                 <input
@@ -219,7 +205,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
                 />
               </div>
 
-              {/* Peso */}
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Peso</label>
                 <input
@@ -231,7 +216,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
                 />
               </div>
 
-              {/* Assemblaggio? */}
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Assemblaggio?</label>
                 <select
@@ -245,7 +229,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
                 </select>
               </div>
 
-              {/* Batterie Necessarie? */}
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Batterie Necessarie?</label>
                 <select
@@ -259,7 +242,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
                 </select>
               </div>
 
-              {/* Batterie Incluse? */}
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Batterie Incluse?</label>
                 <select
@@ -276,7 +258,6 @@ export default function EditProductModal({ prodotto, isOpen, onClose, onSave }: 
           </div>
         </div>
 
-        {/* FOOTER - PULSANTI */}
         <div className="flex items-center gap-3 mt-8 border-t border-slate-100 pt-6">
           <button
             type="button"

@@ -17,13 +17,11 @@ export default function RegisterPage() {
     e.preventDefault()
     setLoading(true)
 
-    // Eseguiamo il signUp passando il fullName nei metadata
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        // Salviamo il nome qui per recuperarlo facilmente nel profilo
         data: {
           full_name: fullName,
         },
@@ -36,7 +34,6 @@ export default function RegisterPage() {
     } else {
       toast.success("Registrazione completata! Controlla l'email per confermare.")
       
-      // Dopo 3 secondi lo mandiamo al login
       setTimeout(() => {
         router.push("/login")
       }, 3000)

@@ -7,7 +7,6 @@ export default function VantaggiPromo() {
     <section className="py-4">
       <div className="container mx-auto px-4 flex justify-center">
         
-        {/* Card centrata orizzontalmente con max-w-md */}
         <div className="bg-white p-6 rounded-3xl flex flex-col justify-between shadow-lg border-b-4 border-[#8cc665] w-full max-w-md">
           <div className="flex items-center gap-5 mb-6">
             <div className="bg-[#8cc665]/10 p-4 rounded-2xl shrink-0">

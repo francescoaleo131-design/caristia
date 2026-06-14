@@ -25,7 +25,6 @@ export default function MascotteBookingForm({ packageInfo, initialMascot, onClos
     note: ""
   })
 
-  // Controllo disponibilità quando cambia il personaggio
   React.useEffect(() => {
     if (formData.personaggio) {
       fetch(`/api/mascotte-availability?mascot=${encodeURIComponent(formData.personaggio)}`)
@@ -65,7 +64,7 @@ export default function MascotteBookingForm({ packageInfo, initialMascot, onClos
 
       const data = await response.json()
       if (data.url) {
-        window.location.href = data.url // Redireziona a Stripe
+        window.location.href = data.url 
       } else {
         alert("Errore nella creazione della prenotazione: " + data.error)
       }

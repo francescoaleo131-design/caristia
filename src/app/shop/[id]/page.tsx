@@ -23,11 +23,9 @@ export default async function ProdottoPage({ params }: Props) {
     return notFound();
   }
 
-  // Funzione helper per renderizzare le specifiche tecniche
   const renderSpecs = () => {
     if (!prodotto.specs) return null;
 
-    // Caso 1: Le specifiche sono salvate come oggetto JSON (Consigliato per Danea)
     if (typeof prodotto.specs === 'object' && !Array.isArray(prodotto.specs)) {
       return Object.entries(prodotto.specs).map(([key, value]) => (
         <div key={key} className="flex justify-between py-3 border-b border-slate-100 text-sm">
@@ -37,7 +35,6 @@ export default async function ProdottoPage({ params }: Props) {
       ));
     }
 
-    // Caso 2: Le specifiche sono salvate come stringa semplice
     return <p className="text-sm text-slate-600 leading-relaxed">{prodotto.specs}</p>;
   };
 
@@ -45,7 +42,6 @@ export default async function ProdottoPage({ params }: Props) {
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-6 py-12 lg:py-20">
         
-        {/* Navigazione superiore */}
         <nav className="mb-10 flex items-center justify-between">
           <Link 
             href="/shop" 
@@ -61,7 +57,6 @@ export default async function ProdottoPage({ params }: Props) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
 
-          {/* COLONNA SINISTRA: Visualizzazione Prodotto */}
           <div className="space-y-6">
             <div className="bg-slate-50 rounded-[2.5rem] p-8 md:p-12 flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden">
               <img
@@ -71,7 +66,6 @@ export default async function ProdottoPage({ params }: Props) {
               />
             </div>
             
-            {/* Badge spedizione rapida sotto l'immagine per mobile */}
             <div className="hidden lg:flex items-center justify-center gap-8 py-4 px-8 bg-slate-50 rounded-2xl border border-slate-100">
                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
                   <Truck size={16} className="text-blue-500" />
@@ -84,7 +78,6 @@ export default async function ProdottoPage({ params }: Props) {
             </div>
           </div>
 
-          {/* COLONNA DESTRA: Dettagli e Acquisto */}
           <div className="flex flex-col">
             <div className="mb-6">
               <span className="bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] px-3 py-1 rounded-md">
@@ -102,7 +95,6 @@ export default async function ProdottoPage({ params }: Props) {
 
             <div className="h-px bg-slate-100 w-full mb-8"></div>
 
-            {/* Descrizione */}
             <div className="mb-10">
                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Descrizione</h3>
                <p className="text-lg text-slate-600 leading-relaxed">
@@ -110,7 +102,6 @@ export default async function ProdottoPage({ params }: Props) {
                </p>
             </div>
 
-            {/* SPECIFICHE TECNICHE (Specs da Danea) */}
             {prodotto.specs && (
               <div className="mb-10 bg-slate-50/80 rounded-3xl p-6 border border-slate-100">
                 <div className="flex items-center gap-2 mb-4 text-slate-900 font-black uppercase text-[10px] tracking-[0.2em]">
@@ -123,7 +114,6 @@ export default async function ProdottoPage({ params }: Props) {
               </div>
             )}
 
-            {/* AREA ACQUISTO */}
             <div className="space-y-4">
               <div className="flex gap-4 items-center">
                 <div className="flex-grow">
@@ -140,7 +130,6 @@ export default async function ProdottoPage({ params }: Props) {
               />
             </div>
 
-            {/* Promozione Compleanno */}
             <div className="mt-8 p-6 bg-blue-50 rounded-3xl border border-blue-100 flex gap-5 items-center">
               <div className="bg-white p-3 rounded-2xl shadow-sm text-blue-600 shrink-0">
                 <Gift size={28} />
@@ -151,7 +140,6 @@ export default async function ProdottoPage({ params }: Props) {
               </div>
             </div>
 
-            {/* Stock info */}
             <div className="mt-8 flex items-center text-sm text-slate-500 font-medium">
                <div className={`h-2 w-2 rounded-full mr-3 ${prodotto.stock_quantity > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                Disponibilità: <span className="text-slate-900 ml-1 font-bold">{prodotto.stock_quantity} pezzi a magazzino</span>

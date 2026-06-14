@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export default function GenerateCardsForm() {
   const [quantity, setQuantity] = useState(10);
-  const [amount, setAmount] = useState(20); // Ora rappresenta il valore libero inserito
+  const [amount, setAmount] = useState(20); 
   const [loading, setLoading] = useState(false);
   const [generatedCards, setGeneratedCards] = useState<any[]>([]);
 
@@ -86,7 +86,6 @@ export default function GenerateCardsForm() {
         <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-zinc-200/50 border border-white">
           <div className="space-y-8">
             
-            {/* SEZIONE IMPORTO LIBERO (MODIFICATA) */}
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase text-zinc-400 ml-2 tracking-widest text-center block">
                 Valore della singola card (€)
@@ -105,7 +104,6 @@ export default function GenerateCardsForm() {
               </div>
             </div>
 
-            {/* SEZIONE QUANTITÀ */}
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase text-zinc-400 ml-2 tracking-widest text-center block">
                 Quantità da generare
@@ -120,7 +118,6 @@ export default function GenerateCardsForm() {
               />
             </div>
 
-            {/* BOTTONE GENERA */}
             <button 
               onClick={handleGenerate} 
               disabled={loading} 
@@ -133,7 +130,6 @@ export default function GenerateCardsForm() {
           </div>
         </div>
 
-        {/* ANTEPRIMA CARD GENERATE */}
         {generatedCards.length > 0 && (
           <div className="bg-white p-8 rounded-[2.5rem] shadow-xl animate-in zoom-in-95 border border-white">
             <h2 className="font-bold uppercase text-[10px] tracking-[0.2em] text-zinc-400 mb-6 text-center">
