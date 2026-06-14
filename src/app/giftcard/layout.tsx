@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Gift Card Regalo Online | Bronze, Silver e Gold",
+  title: "Gift Card Regalo Online",
   description: "Fai il regalo perfetto con le Gift Card di Giocattoli Caristia. Disponibili in vari tagli, pronte da stampare o inviare via email in pochi istanti!",
 };
 
