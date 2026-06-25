@@ -12,7 +12,7 @@ export default function Animazione() {
 
   return (
     <div className="w-full flex flex-col">
-      
+
       {showBanner && (
         <div className="w-full bg-amber-50 border-b border-amber-200 py-3 px-4 sm:px-6 lg:px-8 relative transition-all duration-300 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
@@ -21,7 +21,7 @@ export default function Animazione() {
                 <AlertTriangle size={18} className="animate-pulse" />
               </span>
               <p className="text-sm font-semibold text-amber-900">
-                <span className="font-black uppercase tracking-wide mr-1 text-amber-700">Attenzione:</span> 
+                <span className="font-black uppercase tracking-wide mr-1 text-amber-700">Attenzione:</span>
                 Questo servizio è limitato esclusivamente al territorio di Caltagirone e dintorni!
               </p>
             </div>
@@ -38,26 +38,26 @@ export default function Animazione() {
           </div>
         </div>
       )}
-      
+
       <section className="relative h-[450px] md:h-[500px] w-full flex items-center justify-center overflow-hidden bg-slate-100">
-        
+
         <div className="absolute inset-0 z-0">
           <picture>
-            <source 
-              media="(max-width: 768px)" 
-              srcSet="/main_animazioni_mobile.png" 
+            <source
+              media="(max-width: 768px)"
+              srcSet="/main_animazioni_mobile.png"
             />
-            <img 
-              src="/main_animazioni.png" 
+            <img
+              src="/main_animazioni.png"
               alt="Sfondo Animazione"
-              className="absolute inset-0 w-full h-full object-cover object-center blur-[4px]" 
+              className="absolute inset-0 w-full h-full object-cover object-center blur-[4px]"
             />
           </picture>
           <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-1" />
         </div>
 
         <div className="relative z-10 px-6 flex flex-col items-center justify-center text-center w-full max-w-4xl">
-          
+
           <h1 className="text-5xl md:text-7xl font-black text-blue-700 tracking-tighter drop-shadow-sm uppercase">
             Animazione
           </h1>
@@ -70,9 +70,9 @@ export default function Animazione() {
               con le nostre animazioni nel Calatino!
             </p>
           </div>
-          
-          <Link 
-            href="#contatti" 
+
+          <Link
+            href="#contatti"
             className="mt-8 bg-[#8cc665] text-white font-black py-4 px-10 rounded-full uppercase tracking-widest transition-all"
           >
             Prenota ora
@@ -80,49 +80,49 @@ export default function Animazione() {
         </div>
       </section>
 
-      <div className="w-full my-3 md:my-6 px-4 container mx-auto"> 
+      <div className="w-full my-3 md:my-6 px-4 container mx-auto">
         <picture>
           <source media="(max-width: 768px)" srcSet="/mobile_divider_servizi.webp" />
-          <img 
+          <img
             src="/divider_servizi.webp"
             alt="Promozione Giocattoli"
             className="w-full h-auto"
-            style={{ maxHeight: "300px" }} 
+            style={{ maxHeight: "300px" }}
           />
         </picture>
       </div>
-      
 
-      <section className="bg-white py-2 md:py-4 px-2"> 
+
+      <section className="bg-white py-2 md:py-4 px-2">
         <ServiziIcone />
       </section>
 
-      <div className="w-full my-6 px-4 container mx-auto"> 
+      <div className="w-full my-6 px-4 container mx-auto">
         <picture>
           <source media="(max-width: 768px)" srcSet="/mobile_divider_pacchetti.webp" />
-          <img 
-            src="/divider_pacchetti.webp" 
+          <img
+            src="/divider_pacchetti.webp"
             alt="Promozione Giocattoli"
             className="w-full h-auto"
-            style={{ maxHeight: "300px" }} 
+            style={{ maxHeight: "300px" }}
           />
         </picture>
       </div>
 
-      <section className="bg-white py-4 px-4"> 
+      <section className="bg-white py-4 px-4">
         <div className="container mx-auto">
           <PacchettiPrezzi />
-          <div className="mt-8"> 
+          <div className="mt-8">
             <VantaggiPromo />
           </div>
         </div>
       </section>
 
       <div className="w-full mt-6 mb-12 px-4 container mx-auto">
-        <picture> 
+        <picture>
           <source media="(max-width: 768px)" srcSet="/mobile_divider_prenota.webp" />
-          <img 
-            src="/divider_prenota.webp" 
+          <img
+            src="/divider_prenota.webp"
             alt="Promozione Giocattoli"
             className="w-full h-auto"
             style={{ maxHeight: "300px" }}
@@ -133,10 +133,10 @@ export default function Animazione() {
       <div id="contatti" className="bg-white py-4 px-4">
         <FormContatti />
       </div>
-    
+
       <div className="w-full my-12 px-4 container mx-auto">
-        <img 
-          src="/divider_4.png" 
+        <img
+          src="/divider_4.webp"
           alt="Promozione Giocattoli"
           className="w-full h-auto"
           style={{ maxHeight: "400px" }}

@@ -17,7 +17,7 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
   const { search } = await searchParams;
 
   const supabase = await createClient();
-  
+
   let query = supabase
     .from('prodotti')
     .select('*');
@@ -39,20 +39,20 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="w-full bg-white border-b"> 
+      <div className="w-full bg-white border-b">
         <div className="container mx-auto px-4 py-6">
-          <img 
-            src="/divider_negozio.webp" 
+          <img
+            src="/negozio.png"
             alt="Promozione Giocattoli"
             className="w-full h-auto rounded-xl"
-            style={{ maxHeight: "300px", objectFit: "cover" }} 
+            style={{ maxHeight: "300px", objectFit: "cover" }}
           />
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row gap-12">
-          
+
           <aside className="w-full md:w-64 shrink-0">
             <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Categorie</h3>
             <ul className="space-y-4 text-lg font-medium">
@@ -78,14 +78,14 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
                   <Link href={`/shop/${p.id}`} key={p.id} className="group cursor-pointer">
                     <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden mb-4 transition-shadow group-hover:shadow-xl group-hover:shadow-slate-100/50">
                       <div className="aspect-square relative overflow-hidden bg-slate-50">
-                        <img 
-                          src={p.image_url} 
+                        <img
+                          src={p.image_url}
                           alt={p.name}
                           className="object-contain w-full h-full p-4 transition-transform duration-500 group-hover:scale-110"
                         />
                       </div>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">
                         {p.category || 'Generale'}
@@ -108,8 +108,8 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
             ) : (
               <div className="border-2 border-dashed border-slate-200 rounded-3xl p-20 text-center">
                 <p className="text-slate-400 font-medium italic">
-                  {search 
-                    ? `Nessun prodotto corrisponde alla ricerca "${search}".` 
+                  {search
+                    ? `Nessun prodotto corrisponde alla ricerca "${search}".`
                     : "Nessun prodotto disponibile in questa categoria."}
                 </p>
               </div>
