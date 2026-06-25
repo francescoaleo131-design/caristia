@@ -3,6 +3,7 @@ import React, { useState } from "react"
 import { Send, User, Phone, Users, PartyPopper, Calendar } from "lucide-react"
 
 export default function FormContatti() {
+  const [acceptedReturnPolicy, setAcceptedReturnPolicy] = useState(false)
   const [formData, setFormData] = useState({
     nome: "", 
     telefono: "", 
@@ -15,6 +16,10 @@ export default function FormContatti() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!acceptedReturnPolicy) {
+      alert("Devi accettare la Politica di Reso e Cancellazione prima di procedere.");
+      return;
+    }
     const numeroOwner = "393384083646" 
     
     const pacchettoScelto = formData.tipoFesta === "Matrimonio" 
@@ -58,7 +63,21 @@ export default function FormContatti() {
           
           <textarea name="messaggio" rows={3} placeholder="Note speciali..." className="md:col-span-2 p-3 bg-gray-50 border rounded-xl outline-none resize-none" onChange={handleChange} />
           
-          <button type="submit" className="md:col-span-2 bg-[#1e73be] hover:bg-[#8cc665] text-white font-black py-4 rounded-2xl uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md">
+          <div className="md:col-span-2 flex items-start gap-2.5 px-2 py-1">
+            <input 
+              type="checkbox" 
+              required 
+              id="animation-return-policy"
+              checked={acceptedReturnPolicy}
+              onChange={(e) => setAcceptedReturnPolicy(e.target.checked)}
+              className="mt-1 shrink-0 accent-[#1e73be] cursor-pointer" 
+            />
+            <label htmlFor="animation-return-policy" className="text-xs text-slate-500 font-semibold leading-snug cursor-pointer select-none">
+              Confermo di aver letto e accettato la <a href="/return_policy" target="_blank" rel="noopener noreferrer" className="text-[#1e73be] underline hover:text-[#8cc665] font-bold">Politica di Reso e Cancellazione</a>. *
+            </label>
+          </div>
+
+          <button type="submit" className="md:col-span-2 bg-[#1e73be] hover:bg-[#8cc665] text-white font-black py-4 rounded-2xl uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
             Invia su WhatsApp <Send size={20} />
           </button>
         </form>

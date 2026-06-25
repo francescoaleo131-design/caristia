@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Mail, Loader2, CheckCircle2, User } from "lucide-react";
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 import HeadOne from "@/components/main";
 import Card1, { Card2, Card3 } from "@/components/maincards"; 
@@ -125,13 +126,25 @@ export default function Home() {
                       placeholder="La tua email migliore..."
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-zinc-50 border-2 border-transparent focus:border-[#1e73be]/20 rounded-2xl py-4 pl-12 pr-6 font-bold outline-none transition-all"
+                      className="w-full bg-zinc-50 border-2 border-transparent focus:border-[#1e73be]/20 rounded-2xl py-4 pl-12 pr-6 font-bold outline-none transition-all text-black"
                     />
+                  </div>
+
+                  <div className="flex items-start gap-2.5 px-2 py-1">
+                    <input 
+                      type="checkbox" 
+                      required 
+                      id="newsletter-privacy"
+                      className="mt-1 shrink-0 accent-[#1e73be] cursor-pointer" 
+                    />
+                    <label htmlFor="newsletter-privacy" className="text-xs text-zinc-500 font-semibold leading-snug cursor-pointer select-none">
+                      Ho letto e accetto la <Link href="/privacy" className="text-[#1e73be] underline hover:text-blue-700 font-bold">Privacy Policy</Link> di Giocattoli Caristia. *
+                    </label>
                   </div>
 
                   <button 
                     disabled={status === "loading"}
-                    className="bg-[#1e73be] text-white py-4 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 flex items-center justify-center min-w-[160px]"
+                    className="bg-[#1e73be] text-white py-4 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 flex items-center justify-center min-w-[160px] cursor-pointer"
                   >
                     {status === "loading" ? <Loader2 className="animate-spin" size={20} /> : "Iscriviti Subito"}
                   </button>

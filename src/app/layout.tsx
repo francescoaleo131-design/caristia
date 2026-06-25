@@ -7,6 +7,7 @@ import Footer from "@/components/footer";
 import Script from "next/script"; 
 import { Toaster } from 'sonner';
 import { Suspense } from "react";
+import CookieBanner from "@/components/CookieBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-white text-zinc-900`}>
         <SpeedInsights />
+        <CookieBanner />
         <Toaster 
           position="top-center" 
           expand={false} 

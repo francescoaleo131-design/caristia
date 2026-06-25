@@ -15,6 +15,7 @@ interface MascotteBookingFormProps {
 export default function MascotteBookingForm({ packageInfo, initialMascot, onClose }: MascotteBookingFormProps) {
   const [loading, setLoading] = useState(false)
   const [bookedDates, setBookedDates] = useState<string[]>([])
+  const [acceptedReturnPolicy, setAcceptedReturnPolicy] = useState(false)
   const [formData, setFormData] = useState({
     personaggio: initialMascot || "",
     data: "",
@@ -48,6 +49,10 @@ export default function MascotteBookingForm({ packageInfo, initialMascot, onClos
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!acceptedReturnPolicy) {
+      alert("Devi accettare la Politica di Reso e Cancellazione prima di prenotare.");
+      return;
+    }
     setLoading(true)
 
     try {
@@ -148,10 +153,24 @@ export default function MascotteBookingForm({ packageInfo, initialMascot, onClos
               <textarea name="note" value={formData.note} onChange={handleChange} rows={2} placeholder="Eventuali richieste particolari..." className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-[#1e73be] transition-all font-bold" />
             </div>
 
+            <div className="md:col-span-2 flex items-start gap-2.5 px-2 py-1">
+              <input 
+                type="checkbox" 
+                required 
+                id="mascot-return-policy"
+                checked={acceptedReturnPolicy}
+                onChange={(e) => setAcceptedReturnPolicy(e.target.checked)}
+                className="mt-1 shrink-0 accent-[#8cc665] cursor-pointer" 
+              />
+              <label htmlFor="mascot-return-policy" className="text-xs text-slate-500 font-semibold leading-snug cursor-pointer select-none">
+                Confermo di aver letto e accettato la <a href="/return_policy" target="_blank" rel="noopener noreferrer" className="text-[#1e73be] underline hover:text-blue-700 font-bold">Politica di Reso e Cancellazione</a>. *
+              </label>
+            </div>
+
             <button
               disabled={loading}
               type="submit"
-              className="md:col-span-2 bg-[#8cc665] hover:bg-[#1e73be] text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-50 mt-4"
+              className="md:col-span-2 bg-[#8cc665] hover:bg-[#1e73be] text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-50 mt-4 cursor-pointer"
             >
               {loading ? "Elaborazione..." : "Procedi al Pagamento"} <Send size={20} />
             </button>

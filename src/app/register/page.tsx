@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [loading, setLoading] = useState(false)
+  const [marketingAccepted, setMarketingAccepted] = useState(false)
   const router = useRouter()
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -24,6 +25,7 @@ export default function RegisterPage() {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           full_name: fullName,
+          marketing_accepted: marketingAccepted,
         },
       },
     })
@@ -97,10 +99,37 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          <div className="space-y-3 pt-2">
+            <div className="flex items-start gap-2.5">
+              <input 
+                type="checkbox" 
+                required 
+                id="register-terms-privacy"
+                className="mt-1 shrink-0 accent-[#1e73be] cursor-pointer" 
+              />
+              <label htmlFor="register-terms-privacy" className="text-xs text-gray-500 font-semibold leading-snug cursor-pointer select-none">
+                Accetto i <Link href="/tos" className="text-[#1e73be] underline hover:text-blue-700 font-bold">Termini e Condizioni</Link> e la <Link href="/privacy" className="text-[#1e73be] underline hover:text-blue-700 font-bold">Privacy Policy</Link>. *
+              </label>
+            </div>
+            
+            <div className="flex items-start gap-2.5">
+              <input 
+                type="checkbox" 
+                id="register-marketing"
+                checked={marketingAccepted}
+                onChange={(e) => setMarketingAccepted(e.target.checked)}
+                className="mt-1 shrink-0 accent-[#1e73be] cursor-pointer" 
+              />
+              <label htmlFor="register-marketing" className="text-xs text-gray-500 font-semibold leading-snug cursor-pointer select-none">
+                Desidero ricevere newsletter commerciali e offerte speciali. (Facoltativo)
+              </label>
+            </div>
+          </div>
+
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-[#1e73be] hover:bg-[#8cc665] text-white font-black py-5 rounded-2xl uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95 disabled:opacity-50 mt-4"
+            className="w-full bg-[#1e73be] hover:bg-[#8cc665] text-white font-black py-5 rounded-2xl uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95 disabled:opacity-50 mt-4 cursor-pointer"
           >
             {loading ? "Elaborazione..." : "Registrati ora"}
           </button>

@@ -14,6 +14,7 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
   const { items, updateQuantity, removeItem, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [useGiftCard, setUseGiftCard] = useState(true);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const subtotale = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
@@ -24,6 +25,10 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
   const totaleFinale = subtotale - scontoGiftCard;
 
   const handleCheckout = async () => {
+    if (!acceptedTerms) {
+      toast.error("Devi accettare i Termini e Condizioni e la Politica di Reso prima di procedere al pagamento.");
+      return;
+    }
     setLoading(true);
     try {
       if (scontoGiftCard > 0) {
@@ -154,10 +159,23 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
                 </div>
               </div>
 
+              <div className="flex items-start gap-2.5 px-1 py-1">
+                <input 
+                  type="checkbox" 
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  id="checkout-terms-checkbox"
+                  className="mt-1 shrink-0 accent-blue-600 cursor-pointer" 
+                />
+                <label htmlFor="checkout-terms-checkbox" className="text-xs text-slate-500 font-semibold leading-snug cursor-pointer select-none">
+                  Accetto i <Link href="/tos" className="text-blue-600 underline font-bold hover:text-blue-750">Termini e Condizioni</Link> e la <Link href="/return_policy" className="text-blue-600 underline font-bold hover:text-blue-750">Politica di Reso</Link> di Giocattoli Caristia. *
+                </label>
+              </div>
+
               <button
                 onClick={handleCheckout}
                 disabled={loading}
-                className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
+                className={`w-full py-4 rounded-xl font-bold text-white transition-all cursor-pointer ${
                   loading ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-200'
                 }`}
               >
