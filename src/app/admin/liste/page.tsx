@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Users, Calendar, Gift, ChevronRight, Plus, Coins } from "lucide-react";
 import Link from 'next/link';
+import CopyLinkButton from "@/components/admin/CopyLinkButton";
 
 export default async function ListeCompleannoPage() {
   const supabase = await createClient();
@@ -101,13 +102,16 @@ export default async function ListeCompleannoPage() {
                   </div>
                 </div>
 
-                <Link 
-                  href={`/admin/liste/${lista.id}`}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-50 text-slate-600 rounded-xl text-sm font-medium group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"
-                >
-                  Dettagli Lista
-                  <ChevronRight size={16} />
-                </Link>
+                <div className="flex gap-2">
+                  <Link 
+                    href={`/admin/liste/${lista.id}`}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-50 text-slate-600 rounded-xl text-sm font-medium group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"
+                  >
+                    Dettagli
+                    <ChevronRight size={16} />
+                  </Link>
+                  <CopyLinkButton slug={lista.slug} />
+                </div>
               </div>
             );
           })

@@ -15,7 +15,7 @@ export default async function AdminDashboard() {
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pending'),
     supabase
-      .from('birthday_lists')
+      .from('wishlists')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true),
     supabase

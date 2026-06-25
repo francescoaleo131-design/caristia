@@ -241,10 +241,23 @@ export default function WishlistsPage() {
                         </span>
                       </div>
                       <h3 className="text-2xl font-black text-slate-900 mb-2">{list.child_name}</h3>
-                      <div className="flex items-center gap-2 text-slate-400 font-bold text-sm">
-                        <Calendar size={14} />
-                        <span>{new Date(list.event_date).toLocaleDateString('it-IT')}</span>
+                      <div className="flex items-center gap-3 text-slate-400 font-bold text-sm mb-4">
+                        <div className="flex items-center gap-1">
+                          <Calendar size={14} />
+                          <span>{new Date(list.event_date).toLocaleDateString('it-IT')}</span>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          const url = `${window.location.origin}/regala/${list.slug}`;
+                          navigator.clipboard.writeText(url);
+                          toast.success("Link invitati copiato!");
+                        }}
+                        className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-[#1e73be] bg-blue-50 hover:bg-[#1e73be] hover:text-white px-3 py-1.5 rounded-full transition-all cursor-pointer"
+                      >
+                        <Share2 size={12} />
+                        Copia Link Condivisione
+                      </button>
                     </div>
                     <Link href={`/liste/${list.slug}`} className="bg-slate-50 p-4 rounded-2xl text-slate-400 group-hover:bg-[#1e73be] group-hover:text-white transition-all">
                       <ArrowRight size={24} />
