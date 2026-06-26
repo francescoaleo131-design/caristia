@@ -69,7 +69,7 @@ export default function MascotteBookingForm({ packageInfo, initialMascot, onClos
 
       const data = await response.json()
       if (data.url) {
-        window.location.href = data.url 
+        window.location.href = data.url
       } else {
         alert("Errore nella creazione della prenotazione: " + data.error)
       }
@@ -82,97 +82,70 @@ export default function MascotteBookingForm({ packageInfo, initialMascot, onClos
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-lg sm:max-w-xl md:max-w-2xl rounded-[2rem] shadow-2xl relative animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
+
+        {/* Pulsante chiusura - posizionato meglio per mobile */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 transition-colors z-10"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
 
-        <div className="p-8 md:p-12">
-          <div className="mb-8">
-            <span className="bg-blue-50 text-[#1e73be] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
+        <div className="p-6 md:p-10">
+          <div className="mb-6">
+            <span className="bg-blue-50 text-[#1e73be] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
               Stai prenotando: {packageInfo.nome}
             </span>
-            <h3 className="text-3xl font-black text-slate-900 mt-2 uppercase">Dettagli Prenotazione</h3>
+            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2 uppercase leading-tight">Dettagli Prenotazione</h3>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Personaggio Scelto</label>
-              <div className="relative">
-                <input required name="personaggio" value={formData.personaggio} onChange={handleChange} placeholder="Es. Topolino, Elsa..." className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-[#1e73be] transition-all pl-12 font-bold" />
-                <User className="absolute left-4 top-4 text-slate-300" size={20} />
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* Ho aggiunto 'sm:text-sm' e ridotto il padding degli input */}
+            {[
+              { label: "Personaggio", name: "personaggio", icon: User, type: "text" },
+              { label: "Data", name: "data", icon: Calendar, type: "date" },
+              { label: "Orario", name: "orario", icon: Clock, type: "text" },
+              { label: "Luogo", name: "luogo", icon: MapPin, type: "text" },
+              { label: "Nome", name: "nome", icon: User, type: "text" },
+              { label: "Telefono", name: "telefono", icon: Phone, type: "tel" },
+            ].map((field) => (
+              <div key={field.name} className="space-y-1">
+                <label className="text-[9px] font-black uppercase text-slate-400 ml-2">{field.label}</label>
+                <div className="relative">
+                  <input
+                    required
+                    name={field.name}
+                    type={field.type}
+                    value={formData[field.name as keyof typeof formData]}
+                    onChange={handleChange}
+                    className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-[#1e73be] transition-all pl-10 text-sm font-bold"
+                  />
+                  <field.icon className="absolute left-3 top-3.5 text-slate-300" size={16} />
+                </div>
               </div>
+            ))}
+
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Note Speciali</label>
+              <textarea name="note" value={formData.note} onChange={handleChange} rows={2} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-[#1e73be] transition-all text-sm font-bold" />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Data dell'evento</label>
-              <div className="relative">
-                <input required type="date" name="data" value={formData.data} onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-[#1e73be] transition-all pl-12 font-bold" />
-                <Calendar className="absolute left-4 top-4 text-slate-300" size={20} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Orario Indicativo</label>
-              <div className="relative">
-                <input required name="orario" value={formData.orario} onChange={handleChange} placeholder="Es. 16:30" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-[#1e73be] transition-all pl-12 font-bold" />
-                <Clock className="absolute left-4 top-4 text-slate-300" size={20} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Luogo / Indirizzo</label>
-              <div className="relative">
-                <input required name="luogo" value={formData.luogo} onChange={handleChange} placeholder="Indirizzo o Sala Feste" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-[#1e73be] transition-all pl-12 font-bold" />
-                <MapPin className="absolute left-4 top-4 text-slate-300" size={20} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Tuo Nome e Cognome</label>
-              <div className="relative">
-                <input required name="nome" value={formData.nome} onChange={handleChange} placeholder="Nome Cliente" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-[#1e73be] transition-all pl-12 font-bold" />
-                <User className="absolute left-4 top-4 text-slate-300" size={20} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Telefono WhatsApp</label>
-              <div className="relative">
-                <input required name="telefono" value={formData.telefono} onChange={handleChange} placeholder="3XX XXXXXXX" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-[#1e73be] transition-all pl-12 font-bold" />
-                <Phone className="absolute left-4 top-4 text-slate-300" size={20} />
-              </div>
-            </div>
-
-            <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Note Speciali</label>
-              <textarea name="note" value={formData.note} onChange={handleChange} rows={2} placeholder="Eventuali richieste particolari..." className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-[#1e73be] transition-all font-bold" />
-            </div>
-
-            <div className="md:col-span-2 flex items-start gap-2.5 px-2 py-1">
-              <input 
-                type="checkbox" 
-                required 
-                id="mascot-return-policy"
-                checked={acceptedReturnPolicy}
-                onChange={(e) => setAcceptedReturnPolicy(e.target.checked)}
-                className="mt-1 shrink-0 accent-[#8cc665] cursor-pointer" 
-              />
-              <label htmlFor="mascot-return-policy" className="text-xs text-slate-500 font-semibold leading-snug cursor-pointer select-none">
-                Confermo di aver letto e accettato la <a href="/return_policy" target="_blank" rel="noopener noreferrer" className="text-[#1e73be] underline hover:text-blue-700 font-bold">Politica di Reso e Cancellazione</a>. *
+            <div className="md:col-span-2 flex items-start gap-2 px-1">
+              <input type="checkbox" required checked={acceptedReturnPolicy} onChange={(e) => setAcceptedReturnPolicy(e.target.checked)} className="mt-1 shrink-0 accent-[#8cc665] cursor-pointer" />
+              <label className="text-[11px] text-slate-500 font-medium leading-tight cursor-pointer">
+                Accetto la <a href="/return_policy" target="_blank" className="text-[#1e73be] underline font-bold">Politica di Reso e Cancellazione</a>. *
               </label>
             </div>
 
             <button
               disabled={loading}
               type="submit"
-              className="md:col-span-2 bg-[#8cc665] hover:bg-[#1e73be] text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-50 mt-4 cursor-pointer"
+              className="md:col-span-2 bg-[#8cc665] hover:bg-[#1e73be] text-white font-black py-4 rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg mt-2 cursor-pointer text-sm"
             >
-              {loading ? "Elaborazione..." : "Procedi al Pagamento"} <Send size={20} />
+              {loading ? "Elaborazione..." : "Procedi al Pagamento"} <Send size={16} />
             </button>
           </form>
         </div>

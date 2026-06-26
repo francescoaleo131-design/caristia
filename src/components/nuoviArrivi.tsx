@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Autoplay from "embla-carousel-autoplay" 
+import Autoplay from "embla-carousel-autoplay"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Carousel,
@@ -14,7 +14,7 @@ import {
 
 export default function CaroselloProdotti() {
   const [api, setApi] = React.useState<CarouselApi>()
-  
+
   const plugin = React.useRef(
     Autoplay({ delay: 3000, stopOnInteraction: true })
   )
@@ -30,11 +30,11 @@ export default function CaroselloProdotti() {
   return (
     <div className="mx-auto w-full max-w-5xl px-10 py-10">
       <h2 className="text-4xl text-center font-black uppercase tracking-tighter text-[#5c59ff] pb-5">prodotti piu' venduti</h2>
-      
+
       <Carousel
         setApi={setApi}
         plugins={[plugin.current]}
-        onMouseEnter={plugin.current.stop} 
+        onMouseEnter={plugin.current.stop}
         onMouseLeave={plugin.current.reset}
         className="w-full"
         opts={{
@@ -50,8 +50,8 @@ export default function CaroselloProdotti() {
                 <Card className="relative overflow-hidden group border-none shadow-lg rounded-2xl">
                   <CardContent className="flex aspect-square items-center justify-center p-0">
                     {/* Immagine del Prodotto */}
-                    <img 
-                      src={prodotto.img} 
+                    <img
+                      src={prodotto.img}
                       alt={prodotto.nome}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />

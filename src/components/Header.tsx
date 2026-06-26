@@ -29,7 +29,7 @@ export default function Header() {
   }, [searchParams]);
 
   useEffect(() => {
-    setMounted(true); 
+    setMounted(true);
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
@@ -46,11 +46,11 @@ export default function Header() {
     e.preventDefault();
     const trimmed = searchQuery.trim();
     if (trimmed) {
-      router.push(`/shop?search=${encodeURIComponent(trimmed)}`);
+      router.push(`/`);
     } else {
-      router.push(`/shop`);
+      router.push(`/`);
     }
-    setSearchOpen(false); 
+    setSearchOpen(false);
   };
 
   const handleLogout = async () => {
@@ -59,12 +59,11 @@ export default function Header() {
   };
 
   const navLinks = [
-    { name: "Negozio", link: "/shop" },
     { name: "Animazione", link: "/animazione" },
     { name: "Affitto Mascotte", link: "/mascotte" },
     { name: "Liste Regalo", link: "/liste" },
     { name: "Gift Card", link: "/giftcard" },
-    { name: "Chi siamo" , link: "/about" }
+    { name: "Chi siamo", link: "/about" }
   ];
 
   return (
@@ -96,19 +95,19 @@ export default function Header() {
           </div>
 
           <div className="flex-1 max-w-5xl mx-2">
-            <form 
-              onSubmit={handleSearchSubmit} 
+            <form
+              onSubmit={handleSearchSubmit}
               className="flex border-2 border-gray-200 rounded-full overflow-hidden focus-within:border-blue-400"
             >
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-1 outline-none text-zinc-700" 
-                placeholder="Cerca prodotti..." 
+                className="w-full px-4 py-1 outline-none text-zinc-700"
+                placeholder="Cerca prodotti..."
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="bg-[#1e73be] text-white px-10 font-bold hover:bg-blue-700 transition-colors whitespace-nowrap"
               >
                 Cerca
@@ -209,13 +208,13 @@ export default function Header() {
           {searchOpen && (
             <div className="mt-2 px-4 w-full animate-in fade-in slide-in-from-top-1 pb-2">
               <form onSubmit={handleSearchSubmit}>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full border-2 border-blue-100 p-2 rounded-lg text-sm outline-none focus:border-blue-400 text-zinc-700" 
-                  placeholder="Cerca prodotti..." 
-                  autoFocus 
+                  className="w-full border-2 border-blue-100 p-2 rounded-lg text-sm outline-none focus:border-blue-400 text-zinc-700"
+                  placeholder="Cerca prodotti..."
+                  autoFocus
                 />
               </form>
             </div>
@@ -239,8 +238,8 @@ export default function Header() {
                   <Link
                     href={item.link}
                     className={`block py-3 px-6 text-sm font-bold uppercase tracking-wider transition-colors ${isActive
-                        ? "bg-[#8cc665] text-white"
-                        : "text-gray-700 hover:text-[#1e73be]"
+                      ? "bg-[#8cc665] text-white"
+                      : "text-gray-700 hover:text-[#1e73be]"
                       }`}
                   >
                     {item.name}
