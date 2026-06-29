@@ -76,7 +76,7 @@ export default function Home() {
           </picture>
         </div>
 
-        <Carosello />
+        <h1 className="text-center text-4xl font-bold text-[#1e73be]">IN ARRIVO</h1>
 
         <div className="w-full my-5 px-4 container mx-auto">
           <picture>
