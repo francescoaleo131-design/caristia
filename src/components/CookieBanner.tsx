@@ -16,6 +16,16 @@ export default function CookieBanner() {
     setIsOpen(false);
   };
 
+  const handleRejectAll = () => {
+    localStorage.setItem('cookie-consent', 'rejected');
+    setIsOpen(false);
+  };
+
+  const handleManage = () => {
+    // Navigate to detailed cookie management page
+    window.location.href = '/cookies';
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -32,7 +42,19 @@ export default function CookieBanner() {
           onClick={handleAccept}
           className="bg-slate-950 hover:bg-[#1e73be] text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-md active:scale-95 w-full md:w-auto"
         >
-          Accetta
+          Accetta tutti
+        </button>
+        <button
+          onClick={handleRejectAll}
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-md active:scale-95 w-full md:w-auto"
+        >
+          Rifiuta tutti
+        </button>
+        <button
+          onClick={handleManage}
+          className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-md active:scale-95 w-full md:w-auto"
+        >
+          Gestisci
         </button>
       </div>
     </div>
