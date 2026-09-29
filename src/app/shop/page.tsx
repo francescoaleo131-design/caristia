@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { SHOP_CATEGORIES } from '@/config/categories';
 
 interface Prodotto {
   id: string;
@@ -10,11 +11,11 @@ interface Prodotto {
 }
 
 interface NegozioPageProps {
-  searchParams: Promise<{ search?: string }>;
+  searchParams: Promise<{ search?: string; cat?: string; sub?: string }>;
 }
 
 export default async function NegozioPage({ searchParams }: NegozioPageProps) {
-  const { search } = await searchParams;
+  const { search, cat, sub } = await searchParams;
 
   const supabase = await createClient();
 
@@ -26,16 +27,19 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
     query = query.ilike('name', `%${search}%`);
   }
 
+  if (cat) {
+    const selectedCategoryObj = SHOP_CATEGORIES.find((c) => c.slug === cat);
+    const categoryTitle = selectedCategoryObj?.title || cat;
+    query = query.or(`category.ilike.%${categoryTitle}%,name.ilike.%${categoryTitle}%`);
+  }
+
+  if (sub) {
+    query = query.or(`category.ilike.%${sub}%,name.ilike.%${sub}%`);
+  }
+
   const { data: prodotti, error } = await query;
 
-  if (error) {
-    return (
-      <div className="p-20 text-center">
-        <h2 className="text-2xl font-bold text-red-600">Errore Database</h2>
-        <p className="text-slate-500">{error.message}</p>
-      </div>
-    );
-  }
+  const currentCatObj = SHOP_CATEGORIES.find((c) => c.slug === cat);
 
   return (
     <div className="min-h-screen bg-white">
@@ -53,30 +57,104 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row gap-12">
 
-          <aside className="w-full md:w-64 shrink-0">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Categorie</h3>
-            <ul className="space-y-4 text-lg font-medium">
-              <li className="cursor-pointer text-blue-600 border-l-2 border-blue-600 pl-4">Tutti</li>
-              <li className="cursor-pointer hover:text-blue-600 border-l-2 border-transparent hover:border-blue-600 pl-4 transition-all text-slate-500">Costruzioni</li>
-              <li className="cursor-pointer hover:text-blue-600 border-l-2 border-transparent hover:border-blue-600 pl-4 transition-all text-slate-500">Società</li>
-              <li className="cursor-pointer hover:text-blue-600 border-l-2 border-transparent hover:border-blue-600 pl-4 transition-all text-slate-500">Veicoli</li>
+          {/* Sidebar */}
+          <aside className="w-full md:w-72 shrink-0 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Categorie Shop</h3>
+              {(cat || sub || search) && (
+                <Link href="/shop" className="text-[11px] font-bold text-[#1e73be] hover:underline uppercase">
+                  Azzera filtri
+                </Link>
+              )}
+            </div>
+
+            <ul className="space-y-2 text-sm font-semibold">
+              <li>
+                <Link
+                  href="/shop"
+                  className={`block px-4 py-2.5 rounded-xl transition-all ${
+                    !cat && !sub && !search
+                      ? "bg-[#1e73be] text-white font-bold shadow-md shadow-[#1e73be]/20"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Tutti i Prodotti
+                </Link>
+              </li>
+
+              {SHOP_CATEGORIES.map((c) => {
+                const isSelected = cat === c.slug;
+                return (
+                  <li key={c.slug} className="space-y-1">
+                    <Link
+                      href={`/shop?cat=${c.slug}`}
+                      className={`block px-4 py-2.5 rounded-xl transition-all ${
+                        isSelected
+                          ? "bg-[#1e73be] text-white font-bold shadow-md shadow-[#1e73be]/20"
+                          : "text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      {c.title}
+                    </Link>
+
+                    {isSelected && (
+                      <ul className="pl-4 pr-2 py-1 space-y-1 border-l-2 border-[#8cc665] ml-4 my-1">
+                        {c.subcategories.map((s) => (
+                          <li key={s.name}>
+                            <Link
+                              href={`/shop?cat=${c.slug}&sub=${encodeURIComponent(s.name)}`}
+                              className={`block text-xs py-1 px-2 rounded-lg transition-colors ${
+                                sub === s.name
+                                  ? "text-[#1e73be] font-extrabold bg-blue-50"
+                                  : "text-slate-500 hover:text-slate-900"
+                              }`}
+                            >
+                              {s.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </aside>
 
+          {/* Main content */}
           <main className="flex-grow">
-            {search && (
-              <div className="mb-6">
-                <p className="text-sm text-slate-500">
-                  Risultati della ricerca per: <span className="font-bold text-slate-800">"{search}"</span>
-                </p>
+            {/* Active filter summary */}
+            {(search || cat || sub) && (
+              <div className="mb-6 p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-wrap items-center gap-2 text-xs font-bold text-slate-700">
+                <span>Filtri attivi:</span>
+                {cat && (
+                  <span className="bg-[#1e73be]/10 text-[#1e73be] px-3 py-1 rounded-full">
+                    Categoria: {currentCatObj?.title || cat}
+                  </span>
+                )}
+                {sub && (
+                  <span className="bg-[#8cc665]/20 text-slate-800 px-3 py-1 rounded-full">
+                    Sottocategoria: {sub}
+                  </span>
+                )}
+                {search && (
+                  <span className="bg-amber-100 text-amber-900 px-3 py-1 rounded-full">
+                    Ricerca: "{search}"
+                  </span>
+                )}
               </div>
             )}
 
-            {prodotti && prodotti.length > 0 ? (
+            {error ? (
+              <div className="p-12 text-center bg-rose-50 border border-rose-100 rounded-2xl">
+                <h2 className="text-xl font-bold text-rose-600">Errore Database</h2>
+                <p className="text-slate-500 text-sm mt-1">{error.message}</p>
+              </div>
+            ) : prodotti && prodotti.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                 {prodotti.map((p: Prodotto) => (
                   <Link href={`/shop/${p.id}`} key={p.id} className="group cursor-pointer">
-                    <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden mb-4 transition-shadow group-hover:shadow-xl group-hover:shadow-slate-100/50">
+                    <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden mb-4 transition-all group-hover:shadow-xl group-hover:shadow-slate-100/80">
                       <div className="aspect-square relative overflow-hidden bg-slate-50">
                         <img
                           src={p.image_url}
@@ -90,14 +168,14 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
                       <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">
                         {p.category || 'Generale'}
                       </p>
-                      <h2 className="text-xl font-semibold text-slate-800 group-hover:text-blue-600 transition-colors leading-tight">
+                      <h2 className="text-lg font-bold text-slate-800 group-hover:text-[#1e73be] transition-colors leading-tight">
                         {p.name}
                       </h2>
                       <div className="flex items-center justify-between pt-2">
-                        <span className="text-2xl font-bold text-slate-900">
+                        <span className="text-2xl font-black text-slate-900">
                           {p.price.toFixed(2)}€
                         </span>
-                        <span className="text-blue-600 text-sm font-bold group-hover:underline">
+                        <span className="text-[#1e73be] text-xs font-black uppercase tracking-wider group-hover:underline">
                           Dettagli →
                         </span>
                       </div>
@@ -106,15 +184,20 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
                 ))}
               </div>
             ) : (
-              <div className="border-2 border-dashed border-slate-200 rounded-3xl p-20 text-center">
-                <p className="text-slate-400 font-medium italic">
-                  {search
-                    ? `Nessun prodotto corrisponde alla ricerca "${search}".`
-                    : "Nessun prodotto disponibile in questa categoria."}
+              <div className="border-2 border-dashed border-slate-200 rounded-3xl p-16 text-center space-y-3">
+                <p className="text-slate-500 font-bold">
+                  Nessun prodotto trovato con i filtri selezionati.
                 </p>
+                <Link
+                  href="/shop"
+                  className="inline-block px-5 py-2.5 bg-[#1e73be] text-white font-black uppercase text-xs tracking-widest rounded-xl hover:bg-blue-700 transition"
+                >
+                  Mostra Tutti i Prodotti
+                </Link>
               </div>
             )}
           </main>
+
         </div>
       </div>
     </div>

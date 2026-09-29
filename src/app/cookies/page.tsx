@@ -1,286 +1,345 @@
-import Link from 'next/link';
-import { ArrowLeft, Cookie, ShieldCheck, Settings, Eye } from "lucide-react";
+'use client';
 
-export const dynamic = 'force-dynamic';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Cookie, ShieldCheck, Settings, Check, Lock, Sparkles, RefreshCcw } from "lucide-react";
+import { CookiePreferences } from '@/components/CookieBanner';
+
+const DEFAULT_PREFERENCES: CookiePreferences = {
+  necessary: true,
+  analytics: false,
+  marketing: false,
+  functional: false,
+};
 
 export default function CookiePolicyPage() {
+  const [preferences, setPreferences] = useState<CookiePreferences>(DEFAULT_PREFERENCES);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('cookie-consent-preferences');
+      if (saved) {
+        setPreferences({ ...DEFAULT_PREFERENCES, ...JSON.parse(saved), necessary: true });
+      }
+    } catch (e) {
+      // default
+    }
+  }, []);
+
+  const handleToggle = (key: keyof CookiePreferences) => {
+    if (key === 'necessary') return;
+    setPreferences((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const handleSave = () => {
+    try {
+      localStorage.setItem('cookie-consent-preferences', JSON.stringify({ ...preferences, necessary: true }));
+      localStorage.setItem('cookie-consent', 'custom');
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 4000);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAcceptAll = () => {
+    const all = { necessary: true, analytics: true, marketing: true, functional: true };
+    setPreferences(all);
+    localStorage.setItem('cookie-consent-preferences', JSON.stringify(all));
+    localStorage.setItem('cookie-consent', 'accepted');
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 4000);
+  };
+
+  const handleRejectAll = () => {
+    const min = { necessary: true, analytics: false, marketing: false, functional: false };
+    setPreferences(min);
+    localStorage.setItem('cookie-consent-preferences', JSON.stringify(min));
+    localStorage.setItem('cookie-consent', 'rejected');
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 4000);
+  };
+
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="border-b border-slate-100 py-6 mb-12 sticky top-0 bg-white/80 backdrop-blur-md z-10">
+    <div className="min-h-screen bg-[#f8fafc] text-zinc-900 font-sans">
+      
+      {/* Top Navbar */}
+      <nav className="border-b border-zinc-200/80 py-4 sticky top-0 bg-white/90 backdrop-blur-md z-20">
         <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-900 hover:text-indigo-600 transition-colors">
-            <ArrowLeft size={18} strokeWidth={3} />
+          <Link 
+            href="/" 
+            className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-700 hover:text-[#1e73be] transition-colors"
+          >
+            <ArrowLeft size={16} strokeWidth={3} />
             Torna allo store
           </Link>
-          <div className="flex items-center gap-2 text-indigo-600 font-black uppercase text-xs tracking-widest">
-            <Cookie size={16} />
+          <div className="flex items-center gap-2 text-[#1e73be] font-black uppercase text-xs tracking-widest">
+            <Cookie size={18} />
             Cookie Policy
           </div>
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 pb-24">
-        <header className="mb-16">
-          <h1 className="text-6xl font-black text-slate-900 uppercase tracking-tighter mb-4">
-            Cookie <span className="text-indigo-600">Policy</span>
+      <main className="max-w-4xl mx-auto px-6 py-12 pb-24 space-y-10">
+        
+        {/* Header Section */}
+        <header className="text-center space-y-4">
+          <div className="bg-white w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto shadow-xl shadow-[#1e73be]/10 border border-zinc-100">
+            <Cookie className="text-[#1e73be]" size={36} />
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter text-zinc-800">
+            Cookie <span className="text-[#8cc665]">Policy</span>
           </h1>
-          <div className="flex flex-wrap items-center gap-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
+            Informativa estesa sull'uso dei Cookie & Gestione dei Consensi
+          </p>
+          <div className="inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 bg-white px-4 py-1.5 rounded-full border border-zinc-200 shadow-sm">
             <span>Giocattoli Caristia</span>
-            <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span>
-            <span>Ultimo aggiornamento: 04 Dicembre 2023</span>
-            <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span>
-            <span>EEA & Svizzera</span>
+            <span className="w-1.5 h-1.5 bg-[#1e73be] rounded-full"></span>
+            <span>Aggiornato: Settembre 2026</span>
           </div>
         </header>
 
-        <article className="prose prose-slate max-w-none">
-          <div className="space-y-8 text-slate-700 leading-relaxed text-lg">
-            <p>Questa politica sui cookie è stata aggiornata l'ultima volta il Dicembre 4, 2023 e si applica ai cittadini e ai residenti permanenti legali dello Spazio Economico Europeo e della Svizzera.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">1. Introduzione</h2>
-            <p>Il nostro sito web, https://giocattolicaristia.it (di seguito: "il sito web") utilizza i cookie e altre tecnologie correlate (per comodità tutte le tecnologie sono definite "cookie").<br /><br />
-            I cookie vengono anche inseriti da terze parti che abbiamo ingaggiato.<br /><br />
-            Nel documento sottostante ti informiamo sull'uso dei cookie sul nostro sito web.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">2. Cosa sono i cookie?</h2>
-            <p>I cookie sono dei semplici file spediti assieme alle pagine di questo sito e salvati dal tuo browser sul disco rigido del tuo computer o altri dispositivi.<br /><br />
-            Le informazioni raccolte in essi possono venire rispediti ai nostri server oppure ai server di terze parti durante la prossima visita.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">3. Cosa sono gli script?</h2>
-            <p>Uno script è un pezzo di codice usato per far funzionare correttamente ed interattivamente il nostro sito.<br /><br />
-            Questo codice viene eseguito sui nostri server o sul tuo dispositivo.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">4. Cos'è un web beacon?</h2>
-            <p>Un web beacon (o pixel tag) è un piccolo, invisibile pezzo di testo o immagine su un sito che viene usato per monitorare il traffico di un sito web.<br /><br />
-            Per fare questo, diversi dati su di te vengono conservati utilizzando dei web beacon.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">5. Cookie</h2>
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">5.1 Cookie tecnici o funzionali</h2>
-            <p>Alcuni cookie assicurano il corretto funzionamento del sito e che le tue preferenze rimangano valide.<br /><br />
-            Piazzando cookie funzionali, rendiamo più facile per te visitare il nostro sito web.<br /><br />
-            In questo modo non devi inserire ripetutamente le stesse informazioni quando visiti il nostro sito web, per esempio, l'oggetto rimane nel tuo carrello finché non hai pagato.<br /><br />
-            Possiamo piazzare questi cookie senza il tuo consenso.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">5.2 Cookie statistici</h2>
-            <p>Utilizziamo i cookie statistici per ottimizzare l'esperienza del sito web per i nostri utenti.<br /><br />
-            Con questi cookie statistici otteniamo approfondimenti sull'uso del nostro sito web.<br /><br />
-            Chiediamo il tuo permesso per piazzare cookie statistici.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">5.3 Cookie di marketing/tracciamento</h2>
-            <p>I cookie di marketing/tracciamento sono cookie o qualsiasi altra forma di memorizzazione locale, utilizzati per creare profili utente per visualizzare pubblicità o per tracciare l'utente su questo sito web o su diversi siti web per scopi di marketing simili.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">5.4 Social media</h2>
-            <p>Sul nostro sito web abbiamo inserito contenuti di Facebook, WhatsApp, Instagram e TikTok per promuovere pagine web (ad es.<br /><br />
-            "mi piace", "pin") o condividerle (ad es.<br /><br />
-            "tweet") su social network come Facebook, WhatsApp, Instagram e TikTok.<br /><br />
-            Questo contenuto è incorporato con codice derivato da Facebook, WhatsApp, Instagram e TikTok e inserisce cookie.<br /><br />
-            Questo contenuto potrebbe memorizzare ed elaborare alcune informazioni per la pubblicità personalizzata.<br /><br /></p>
-
-            <p>Leggi l'informativa sulla privacy di questi social network (che possono cambiare regolarmente) per sapere cosa fanno con i tuoi dati (personali) che processano usando questi cookie.<br /><br />
-            I dati ottenuti vengono anonimizzati quanto possibile.<br /><br />
-            Facebook, WhatsApp, Instagram e TikTok si trovano negli Stati Uniti.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">6. Cookie inseriti</h2>
-            <p>WordPress<br /><br /></p>
-
-            <p>Funzionale<br /><br /></p>
-
-            <p>Consent to service wordpress<br /><br /></p>
-
-            <p>WooCommerce<br /><br /></p>
-
-            <p>Funzionale, Statistiche<br /><br /></p>
-
-            <p>Consent to service woocommerce<br /><br /></p>
-
-            <p>Elementor<br /><br /></p>
-
-            <p>Statistiche (anonimo)<br /><br /></p>
-
-            <p>Consent to service elementor<br /><br /></p>
-
-            <p>Matomo<br /><br /></p>
-
-            <p>Statistiche (anonimo)<br /><br /></p>
-
-            <p>Consent to service matomo<br /><br /></p>
-
-            <p>Google Analytics<br /><br /></p>
-
-            <p>Statistiche<br /><br /></p>
-
-            <p>Consent to service google-analytics<br /><br /></p>
-
-            <p>mailpoet<br /><br /></p>
-
-            <p>Pubblicità<br /><br /></p>
-
-            <p>Consent to service mailpoet<br /><br /></p>
-
-            <p>Google Fonts<br /><br /></p>
-
-            <p>Pubblicità<br /><br /></p>
-
-            <p>Consent to service google-fonts<br /><br /></p>
-
-            <p>Google reCAPTCHA<br /><br /></p>
-
-            <p>Pubblicità<br /><br /></p>
-
-            <p>Consent to service google-recaptcha<br /><br /></p>
-
-            <p>Google Maps<br /><br /></p>
-
-            <p>Pubblicità<br /><br /></p>
-
-            <p>Consent to service google-maps<br /><br /></p>
-
-            <p>YouTube<br /><br /></p>
-
-            <p>Pubblicità<br /><br /></p>
-
-            <p>Consent to service youtube<br /><br /></p>
-
-            <p>PayPal<br /><br /></p>
-
-            <p>Funzionale<br /><br /></p>
-
-            <p>Consent to service paypal<br /><br /></p>
-
-            <p>LiveChat<br /><br /></p>
-
-            <p>Funzionale, Pubblicità<br /><br /></p>
-
-            <p>Consent to service livechat<br /><br /></p>
-
-            <p>Facebook<br /><br /></p>
-
-            <p>Pubblicità, Funzionale<br /><br /></p>
-
-            <p>Consent to service facebook<br /><br /></p>
-
-            <p>WhatsApp<br /><br /></p>
-
-            <p>Funzionale<br /><br /></p>
-
-            <p>Consent to service whatsapp<br /><br /></p>
-
-            <p>TikTok<br /><br /></p>
-
-            <p>Pubblicità, Funzionale<br /><br /></p>
-
-            <p>Consent to service tiktok<br /><br /></p>
-
-            <p>Varie<br /><br /></p>
-
-            <p>Scopo in attesa di indagine<br /><br /></p>
-
-            <p>Consent to service varie<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">7. Consenso</h2>
-            <p>Quando visiti il sito web per la prima volta, noi mostreremo un popup con una spiegazione dei cookie.<br /><br />
-            Appena clicchi su "Salva preferenze", dai il permesso a noi di usare le categorie di cookie e plugin come descritto in questa dichiarazione relativa ai popup e cookie.<br /><br />
-            Puoi disabilitare i cookie attraverso il tuo browser, ma prendi in considerazione, che il nostro sito web potrebbe non funzionare più correttamente.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">7.1 Gestisci le tue impostazioni di consenso</h2>
-            <p>Funzionale<br /><br /></p>
-
-            <p>Sempre attivo<br /><br /></p>
-
-            <p>Statistiche<br /><br /></p>
-
-            <p>Statistiche<br /><br /></p>
-
-            <p>Marketing<br /><br /></p>
-
-            <p>Marketing<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">8. Abilitare/disabilitare e cancellazione dei cookie</h2>
-            <p>Puoi usare il tuo browser per cancellare automaticamente o manualmente i cookie.<br /><br />
-            È anche possibile specificare che determinati cookie non possono essere piazzati.<br /><br />
-            Un'altra opzione è quella di modificare le impostazioni del tuo browser internet in modo da ricevere un messaggio ogni volta che viene inserito un cookie.<br /><br />
-            Per ulteriori informazioni su queste opzioni, consultare le istruzioni nella sezione Guida del tuo browser.<br /><br /></p>
-
-            <p>Tieni presente che il nostro sito web potrebbe non funzionare correttamente se tutti i cookie sono disabilitati.<br /><br />
-            Se cancelli i cookie nel vostro browser, essi verranno nuovamente inseriti dopo il consenso fornito quando visiterete nuovamente il nostro sito web.<br /><br /></p>
-
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">9. I tuoi diritti in relazione ai dati personali</h2>
-            <p>Hai i seguenti diritti relativi ai tuoi dati personali:<br /><br /></p>
-
-            <p>Hai il diritto di sapere quando i tuoi dati personali sono necessari, cosa succede ad essi, quanto a lungo verranno mantenuti.<br /><br /></p>
-
-            <div className="flex gap-3 items-start bg-slate-50 p-4 border-l-2 border-slate-200">
-                <div className="mt-1.5 w-1.5 h-1.5 bg-indigo-600 rounded-full flex-shrink-0"></div>
-                <p className="font-bold text-slate-800 uppercase text-sm tracking-tight m-0">Diritto di accesso: hai il diritto ad accedere ai tuoi dati personali dei quali siamo a conoscenza.</p>
+        {/* Success Alert */}
+        {savedSuccess && (
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 shadow-lg">
+            <Sparkles className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Preferenze sui cookie aggiornate con successo!
+            </span>
+          </div>
+        )}
+
+        {/* Interactive Consent Panel */}
+        <section className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-zinc-200/50 border border-white space-y-6">
+          <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
+            <Settings className="text-[#1e73be]" size={22} />
+            <div>
+              <h2 className="font-black uppercase text-sm tracking-widest text-[#1e73be]">
+                Pannello di Controllo Consensi
+              </h2>
+              <p className="text-xs text-zinc-500 font-semibold">
+                Modifica le tue preferenze sui cookie in qualsiasi momento.
+              </p>
             </div>
-            <div className="flex gap-3 items-start bg-slate-50 p-4 border-l-2 border-slate-200">
-                <div className="mt-1.5 w-1.5 h-1.5 bg-indigo-600 rounded-full flex-shrink-0"></div>
-                <p className="font-bold text-slate-800 uppercase text-sm tracking-tight m-0">Diritto di rettifica: hai il diritto di completare, correggere, cancellare o bloccare i tuoi dati personali quando lo desideri.</p>
+          </div>
+
+          <div className="space-y-4">
+            
+            {/* Category 1: Necessary */}
+            <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-6 h-6 text-emerald-600 shrink-0" />
+                <div>
+                  <div className="text-xs font-black uppercase tracking-wider text-zinc-800 flex items-center gap-2">
+                    Cookie Necessari / Tecnici
+                    <span className="text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
+                      Sempre Attivi
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500 font-semibold mt-1">
+                    Essenziali per navigare, autenticarti, aggiungere prodotti al carrello ed effettuare ordini in sicurezza.
+                  </p>
+                </div>
+              </div>
+
+              <div className="w-11 h-6 bg-emerald-500 rounded-full opacity-80 flex items-center justify-end px-1 shrink-0">
+                <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+              </div>
             </div>
-            <p>Se ci darai il consenso per elaborare i tuoi dati, hai il diritto di revocare questo consenso e di eliminare i tuoi dati personali.<br /><br /></p>
 
-            <div className="flex gap-3 items-start bg-slate-50 p-4 border-l-2 border-slate-200">
-                <div className="mt-1.5 w-1.5 h-1.5 bg-indigo-600 rounded-full flex-shrink-0"></div>
-                <p className="font-bold text-slate-800 uppercase text-sm tracking-tight m-0">Diritto di trasferire i tuoi dati: hai il diritto di richiedere tutti i tuoi dati dal controllore e trasferirli tutti quanti ad un altro controllore.</p>
+            {/* Category 2: Functional */}
+            <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div>
+                <div className="text-xs font-black uppercase tracking-wider text-zinc-800">
+                  Cookie Funzionali
+                </div>
+                <p className="text-xs text-zinc-500 font-semibold mt-1">
+                  Memorizzano preferenze personalizzate come la lingua, il carrello o la valuta per visite future.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleToggle('functional')}
+                className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 shrink-0 cursor-pointer ${
+                  preferences.functional ? 'bg-[#1e73be] justify-end' : 'bg-zinc-300 justify-start'
+                }`}
+              >
+                {preferences.functional && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+              </button>
             </div>
-            <div className="flex gap-3 items-start bg-slate-50 p-4 border-l-2 border-slate-200">
-                <div className="mt-1.5 w-1.5 h-1.5 bg-indigo-600 rounded-full flex-shrink-0"></div>
-                <p className="font-bold text-slate-800 uppercase text-sm tracking-tight m-0">Diritto di opposizione: hai il diritto di opporti al trattamento dei tuoi dati. Noi rispetteremo questa scelta, a meno che non ci siano delle basi valide per trattarli.</p>
+
+            {/* Category 3: Analytics */}
+            <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div>
+                <div className="text-xs font-black uppercase tracking-wider text-zinc-800">
+                  Cookie Analitici e Statistiche
+                </div>
+                <p className="text-xs text-zinc-500 font-semibold mt-1">
+                  Permettono di misurare l'afflusso di visitatori e capire quali pagine vengono visitate maggiormente.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleToggle('analytics')}
+                className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 shrink-0 cursor-pointer ${
+                  preferences.analytics ? 'bg-[#1e73be] justify-end' : 'bg-zinc-300 justify-start'
+                }`}
+              >
+                {preferences.analytics && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+              </button>
             </div>
-            <p>Per esercitare questi diritti, non esitate a contattarci.<br /><br />
-            Si prega di fare riferimento ai dettagli di contatto in fondo a questa Cookie Policy.<br /><br />
-            Se hai un reclamo su come gestiamo i tuoi dati, vorremmo sentirti, ma hai anche il diritto di presentare un reclamo all'autorità di vigilanza (l'Autorità per la Protezione dei Dati).<br /><br /></p>
 
-            <h2 className="text-2xl font-black text-slate-900 uppercase mt-12 mb-4 border-l-4 border-indigo-600 pl-4">10. Dettagli di contatto</h2>
-            <p>Per domande e/o commenti riguardo la Cookie Policy e questa dichiarazione, per favore contattaci usando i seguenti dati di contatto:<br /><br /></p>
+            {/* Category 4: Marketing */}
+            <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div>
+                <div className="text-xs font-black uppercase tracking-wider text-zinc-800">
+                  Cookie di Marketing e Profilazione
+                </div>
+                <p className="text-xs text-zinc-500 font-semibold mt-1">
+                  Utilizzati da partner terzi per offrirti messaggi promozionali pertinenti alle tue ricerche.
+                </p>
+              </div>
 
-            <p>Giocattoli Caristia di Angelo Caristia<br /><br /></p>
-
-            <p>Via Madonna della Via, 74/C, 95041 Caltagirone CT<br /><br /></p>
-
-            <p>Italia<br /><br /></p>
-
-            <p>Sito web: https://giocattolicaristia.it<br /><br /></p>
-
-            <p>Email: info@giocattolicaristia.it<br /><br /></p>
-
-            <p>Numero di telefono: +39 09332 6865<br /><br /></p>
-
-            <p>Questa politica sui cookie è stata sincronizzata con cookiedatabase.org il Dicembre 4, 2023<br /><br /></p>
+              <button
+                type="button"
+                onClick={() => handleToggle('marketing')}
+                className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 shrink-0 cursor-pointer ${
+                  preferences.marketing ? 'bg-[#1e73be] justify-end' : 'bg-zinc-300 justify-start'
+                }`}
+              >
+                {preferences.marketing && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+              </button>
+            </div>
 
           </div>
-        </article>
 
-        {/* Box Contatti Finale BOLD */}
-        <section className="mt-20 p-10 bg-slate-900 text-white rounded-3xl">
-            <h2 className="text-3xl font-black uppercase mb-6 text-indigo-400">Dettagli di contatto</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-2 uppercase font-bold tracking-widest text-sm opacity-80">
-                    <p>Giocattoli Caristia di Angelo Caristia</p>
-                    <p>Via Madonna della Via, 74/C</p>
-                    <p>95041 Caltagirone (CT)</p>
-                </div>
-                <div className="space-y-2 uppercase font-bold tracking-widest text-sm">
-                    <p className="text-indigo-400">Email:</p>
-                    <p className="text-lg font-black">info@giocattolicaristia.it</p>
-                    <p className="mt-4 text-indigo-400">Web:</p>
-                    <p>https://giocattolicaristia.it</p>
-                </div>
-            </div>
+          <div className="flex flex-wrap sm:flex-nowrap gap-3 pt-4 border-t border-zinc-100">
+            <button
+              onClick={handleSave}
+              className="flex-1 bg-[#8cc665] hover:bg-[#8cc665]/90 text-white py-3.5 px-6 rounded-2xl font-black uppercase text-xs tracking-widest transition shadow-lg shadow-[#8cc665]/20 cursor-pointer active:scale-95"
+            >
+              Salva Preferenze
+            </button>
+            <button
+              onClick={handleAcceptAll}
+              className="flex-1 bg-[#1e73be] hover:bg-[#1e73be]/90 text-white py-3.5 px-6 rounded-2xl font-black uppercase text-xs tracking-widest transition shadow-lg shadow-[#1e73be]/20 cursor-pointer active:scale-95"
+            >
+              Accetta Tutti
+            </button>
+            <button
+              onClick={handleRejectAll}
+              className="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-3.5 px-6 rounded-2xl font-black uppercase text-xs tracking-widest transition border border-zinc-200 cursor-pointer active:scale-95"
+            >
+              Rifiuta Non Essenziali
+            </button>
+          </div>
         </section>
 
-        {/* Footer */}
-        <footer className="mt-20 pt-12 border-t-4 border-slate-900">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-sm font-bold uppercase tracking-widest text-slate-500">
-              © {new Date().getFullYear()} Giocattoli Caristia. Trasparenza sui Cookie.
+        {/* Detailed Informative Policy Body */}
+        <article className="bg-white rounded-[2.5rem] p-8 sm:p-12 shadow-2xl shadow-zinc-200/50 border border-white space-y-8 text-zinc-700 leading-relaxed text-sm">
+          
+          <section>
+            <h2 className="text-lg font-black text-zinc-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-l-4 border-[#1e73be] pl-3">
+              1. Cosa sono i Cookie?
+            </h2>
+            <p>
+              I cookie sono piccoli file di testo che i siti visitati inviano al dispositivo dell'utente (computer, smartphone, tablet), dove vengono memorizzati per essere poi ritrasmessi agli stessi siti alla visita successiva. I cookie svolgono diverse funzioni importanti, come permettere la navigazione tra le pagine, ricordare le preferenze salvate ed esaminare le modalità d'uso del sito.
             </p>
-            <div className="flex gap-8 text-xs font-black uppercase tracking-widest">
-              <Link href="/privacy" className="hover:text-indigo-600">Privacy Policy</Link>
-              <Link href="/termini-condizioni" className="hover:text-indigo-600">Termini e Condizioni</Link>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black text-zinc-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-l-4 border-[#1e73be] pl-3">
+              2. Servizi Utilizzati e Cookie Inseriti
+            </h2>
+            <p className="mb-4">
+              Questo sito web utilizza esclusivamente i servizi di seguito elencati, necessari per il funzionamento dell'e-commerce, l'autenticazione, la gestione dei pagamenti e l'analisi prestazionale:
+            </p>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse border border-zinc-200 text-xs">
+                <thead>
+                  <tr className="bg-zinc-100 text-zinc-800 uppercase font-black tracking-wider border-b border-zinc-200">
+                    <th className="p-3 border-r border-zinc-200">Servizio / Fornitore</th>
+                    <th className="p-3 border-r border-zinc-200">Tipologia</th>
+                    <th className="p-3 border-r border-zinc-200">Scopo</th>
+                    <th className="p-3">Privacy Policy</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 font-medium text-zinc-700">
+                  <tr className="hover:bg-zinc-50/80">
+                    <td className="p-3 font-bold text-zinc-900 border-r border-zinc-200">Supabase Auth & Database</td>
+                    <td className="p-3 border-r border-zinc-200 font-bold text-emerald-700">Tecnico / Necessario</td>
+                    <td className="p-3 border-r border-zinc-200">Gestione sessioni utente, autenticazione sicura e salvataggio carrello/ordini.</td>
+                    <td className="p-3"><a href="https://supabase.com/privacy" target="_blank" rel="noreferrer" className="text-[#1e73be] font-bold hover:underline">Supabase Privacy</a></td>
+                  </tr>
+                  <tr className="hover:bg-zinc-50/80">
+                    <td className="p-3 font-bold text-zinc-900 border-r border-zinc-200">Stripe Payments</td>
+                    <td className="p-3 border-r border-zinc-200 font-bold text-emerald-700">Tecnico / Necessario</td>
+                    <td className="p-3 border-r border-zinc-200">Elaborazione sicura dei pagamenti con carta di credito e prevenzione frodi.</td>
+                    <td className="p-3"><a href="https://stripe.com/it/privacy" target="_blank" rel="noreferrer" className="text-[#1e73be] font-bold hover:underline">Stripe Privacy</a></td>
+                  </tr>
+                  <tr className="hover:bg-zinc-50/80">
+                    <td className="p-3 font-bold text-zinc-900 border-r border-zinc-200">Vercel Speed Insights & Analytics</td>
+                    <td className="p-3 border-r border-zinc-200 font-bold text-sky-700">Analitico / Prestazioni</td>
+                    <td className="p-3 border-r border-zinc-200">Monitoraggio anonimo delle prestazioni di caricamento del sito web.</td>
+                    <td className="p-3"><a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noreferrer" className="text-[#1e73be] font-bold hover:underline">Vercel Privacy</a></td>
+                  </tr>
+                  <tr className="hover:bg-zinc-50/80">
+                    <td className="p-3 font-bold text-zinc-900 border-r border-zinc-200">Preference Cookie Store</td>
+                    <td className="p-3 border-r border-zinc-200 font-bold text-purple-700">Funzionale</td>
+                    <td className="p-3 border-r border-zinc-200">Memorizzazione locale (`localStorage`) del consenso ai cookie e preferenze utente.</td>
+                    <td className="p-3"><span className="text-zinc-400">Interno</span></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black text-zinc-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-l-4 border-[#1e73be] pl-3">
+              3. Come disabilitare i Cookie tramite Browser
+            </h2>
+            <p className="mb-3">
+              È possibile configurare il proprio browser internet affinché accetti o rifiuti i cookie. Di seguito i link alle guide ufficiali dei principali browser:
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-bold">
+              <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noreferrer" className="p-3 bg-zinc-50 hover:bg-zinc-100 rounded-xl text-[#1e73be] border border-zinc-200 text-center">Google Chrome</a>
+              <a href="https://support.mozilla.org/it/kb/Gestione%20dei%20cookie" target="_blank" rel="noreferrer" className="p-3 bg-zinc-50 hover:bg-zinc-100 rounded-xl text-[#1e73be] border border-zinc-200 text-center">Mozilla Firefox</a>
+              <a href="https://support.apple.com/it-it/guide/safari/sfri11471/mac" target="_blank" rel="noreferrer" className="p-3 bg-zinc-50 hover:bg-zinc-100 rounded-xl text-[#1e73be] border border-zinc-200 text-center">Apple Safari</a>
+              <a href="https://support.microsoft.com/it-it/microsoft-edge/eliminare-i-cookie-in-microsoft-edge-6394440f-50b9-5753-5425-d04550164606" target="_blank" rel="noreferrer" className="p-3 bg-zinc-50 hover:bg-zinc-100 rounded-xl text-[#1e73be] border border-zinc-200 text-center">Microsoft Edge</a>
+            </div>
+          </section>
+
+          <section className="bg-zinc-900 text-white rounded-3xl p-6 sm:p-8 space-y-4">
+            <h3 className="text-lg font-black uppercase text-[#8cc665] tracking-wide">Titolare del Trattamento</h3>
+            <div className="text-xs font-bold space-y-1 text-zinc-300">
+              <p className="text-sm font-black text-white">Giocattoli Caristia di Angelo Caristia</p>
+              <p>Via Madonna della Via, 74/C - 95041 Caltagirone (CT)</p>
+              <p>Email: <a href="mailto:info@giocattolicaristia.it" className="text-[#1e73be] underline">info@giocattolicaristia.it</a></p>
+              <p>Telefono: +39 09332 6865</p>
+            </div>
+          </section>
+
+        </article>
+
+        {/* Footer */}
+        <footer className="pt-8 border-t border-zinc-200 text-center space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+            © {new Date().getFullYear()} Giocattoli Caristia - Tutti i diritti riservati.
+          </p>
+          <div className="flex justify-center gap-6 text-xs font-black uppercase tracking-widest text-zinc-600">
+            <Link href="/privacy" className="hover:text-[#1e73be]">Privacy Policy</Link>
+            <Link href="/cookies" className="hover:text-[#1e73be]">Cookie Policy</Link>
           </div>
         </footer>
+
       </main>
     </div>
   );

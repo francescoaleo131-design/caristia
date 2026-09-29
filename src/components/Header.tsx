@@ -1,15 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search, ShoppingBag, User, Phone, MapPin, Menu, X, ChevronDown, LogOut, } from "lucide-react";
+import { Search, ShoppingBag, User, Phone, MapPin, Menu, X, ChevronDown, ChevronRight, LogOut, Store } from "lucide-react";
 import { supabase } from "@/lib/supabase/supabase";
 import Link from "next/link";
 import { useCart } from "@/app/shop/useCart";
-import { Suspense } from 'react';
+import { SHOP_CATEGORIES } from "@/config/categories";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [shopMenuOpen, setShopMenuOpen] = useState(false);
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const [mobileExpandedCat, setMobileExpandedCat] = useState<string | null>(null);
+
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
@@ -46,9 +50,9 @@ export default function Header() {
     e.preventDefault();
     const trimmed = searchQuery.trim();
     if (trimmed) {
-      router.push(`/`);
+      router.push(`/shop?search=${encodeURIComponent(trimmed)}`);
     } else {
-      router.push(`/`);
+      router.push(`/shop`);
     }
     setSearchOpen(false);
   };
@@ -66,8 +70,11 @@ export default function Header() {
     { name: "Chi siamo", link: "/about" }
   ];
 
+  const currentCategory = SHOP_CATEGORIES[activeCategoryIndex] || SHOP_CATEGORIES[0];
+
   return (
-    <header className="w-full shadow-sm bg-white relative">
+    <header className="w-full shadow-sm bg-white relative z-[80]">
+      {/* Top Bar */}
       <div className="bg-[#4a69bd] text-white py-2 px-4 flex flex-col sm:flex-row justify-between items-center text-[12px] font-medium">
         <div className="flex items-center gap-2">
           <MapPin size={14} />
@@ -81,6 +88,7 @@ export default function Header() {
         </div>
       </div>
 
+      {/* Main Header Container */}
       <div className="container mx-auto py-4 px-4 border-b border-gray-50">
         <div className="hidden md:flex items-center justify-between gap-8">
           <div className="w-48 shrink-0">
@@ -104,7 +112,7 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-1 outline-none text-zinc-700"
-                placeholder="Cerca prodotti..."
+                placeholder="Cerca giochi, costumi, LEGO e molto altro..."
               />
               <button
                 type="submit"
@@ -114,7 +122,7 @@ export default function Header() {
               </button>
             </form>
             <p className="text-[10px] mt-2 text-gray-400 uppercase font-bold tracking-widest pl-4">
-              Scopri i Nuovi Prodotti in Vetrina! <span className="text-blue-500 cursor-pointer">CLICCA QUI</span>
+              Scopri i Nuovi Prodotti in Vetrina! <Link href="/shop" className="text-blue-500 cursor-pointer hover:underline">CLICCA QUI</Link>
             </p>
           </div>
 
@@ -169,6 +177,7 @@ export default function Header() {
           </div>
         </div>
 
+        {/* Mobile Header Bar */}
         <div className="md:hidden flex flex-col items-center">
           <div className="relative w-full flex items-center pt-2 pb-3 px-2">
             <button onClick={() => setMenuOpen(true)} className="z-10 p-1">
@@ -222,13 +231,115 @@ export default function Header() {
         </div>
       </div>
 
-      <nav className="hidden md:block border-b-2 border-[#8cc665]">
+      {/* Desktop Navbar */}
+      <nav className="hidden md:block border-b-2 border-[#8cc665] bg-white relative">
         <div className="container mx-auto px-4">
           <ul className="flex items-center justify-start">
             <li className={`transition-colors ${pathname === "/" ? "bg-[#8cc665] text-white" : "bg-white text-gray-700 hover:text-[#1e73be]"}`}>
-              <Link href="/" className="px-8 py-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+              <Link href="/" className="px-6 py-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2">
                 Home
               </Link>
+            </li>
+
+            {/* Shop Megamenu Dropdown Trigger */}
+            <li 
+              className="relative"
+              onMouseEnter={() => setShopMenuOpen(true)}
+              onMouseLeave={() => setShopMenuOpen(false)}
+            >
+              <Link
+                href="/shop"
+                className={`py-3 px-6 text-sm font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 ${
+                  pathname.startsWith("/shop")
+                    ? "bg-[#8cc665] text-white"
+                    : "text-[#1e73be] hover:bg-slate-50 font-black"
+                }`}
+              >
+                <Store size={16} />
+                Shop
+                <ChevronDown size={14} className={`transition-transform duration-200 ${shopMenuOpen ? "rotate-180" : ""}`} />
+              </Link>
+
+              {/* Megamenu Box */}
+              {shopMenuOpen && (
+                <div className="absolute top-full left-0 w-[920px] bg-white border border-zinc-200 shadow-2xl rounded-b-3xl overflow-hidden z-[150] animate-in fade-in slide-in-from-top-2 duration-200 flex">
+                  
+                  {/* Left Column: Categories List */}
+                  <div className="w-72 bg-zinc-50 border-r border-zinc-200/80 p-3 space-y-1 shrink-0">
+                    <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 border-b border-zinc-200/60 mb-1">
+                      Tutte le Categorie
+                    </div>
+                    {SHOP_CATEGORIES.map((cat, idx) => {
+                      const isSelected = activeCategoryIndex === idx;
+                      return (
+                        <button
+                          key={cat.title}
+                          onMouseEnter={() => setActiveCategoryIndex(idx)}
+                          onClick={() => {
+                            router.push(`/shop?cat=${encodeURIComponent(cat.slug)}`);
+                            setShopMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${
+                            isSelected
+                              ? "bg-[#1e73be] text-white shadow-md shadow-[#1e73be]/20"
+                              : "text-zinc-700 hover:bg-zinc-200/70"
+                          }`}
+                        >
+                          <span className="truncate">{cat.title}</span>
+                          <ChevronRight size={14} className={isSelected ? "text-white" : "text-zinc-400 group-hover:text-zinc-700"} />
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Right Content Column: Subcategories & Product Items */}
+                  <div className="flex-1 p-6 bg-white overflow-y-auto max-h-[460px]">
+                    <div className="flex items-center justify-between pb-3 border-b border-zinc-100 mb-4">
+                      <h3 className="text-base font-black uppercase text-[#1e73be] tracking-tight">
+                        {currentCategory.title}
+                      </h3>
+                      <Link
+                        href={`/shop?cat=${encodeURIComponent(currentCategory.slug)}`}
+                        onClick={() => setShopMenuOpen(false)}
+                        className="text-xs font-bold text-[#8cc665] hover:underline uppercase tracking-wider"
+                      >
+                        Vedi tutti in {currentCategory.title} &rarr;
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-6">
+                      {currentCategory.subcategories.map((sub) => (
+                        <div key={sub.name} className="space-y-2">
+                          <Link
+                            href={`/shop?cat=${encodeURIComponent(currentCategory.slug)}&sub=${encodeURIComponent(sub.name)}`}
+                            onClick={() => setShopMenuOpen(false)}
+                            className="text-xs font-black uppercase tracking-wider text-zinc-800 hover:text-[#1e73be] block border-l-2 border-[#8cc665] pl-2"
+                          >
+                            {sub.name}
+                          </Link>
+
+                          {sub.items && sub.items.length > 0 && (
+                            <ul className="space-y-1 pl-2.5">
+                              {sub.items.map((item) => (
+                                <li key={item}>
+                                  <Link
+                                    href={`/shop?search=${encodeURIComponent(item)}`}
+                                    onClick={() => setShopMenuOpen(false)}
+                                    className="text-[11px] font-semibold text-zinc-500 hover:text-[#1e73be] transition-colors block py-0.5"
+                                  >
+                                    {item}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
             </li>
 
             {navLinks.map((item) => {
@@ -237,10 +348,11 @@ export default function Header() {
                 <li key={item.name}>
                   <Link
                     href={item.link}
-                    className={`block py-3 px-6 text-sm font-bold uppercase tracking-wider transition-colors ${isActive
-                      ? "bg-[#8cc665] text-white"
-                      : "text-gray-700 hover:text-[#1e73be]"
-                      }`}
+                    className={`block py-3 px-6 text-sm font-bold uppercase tracking-wider transition-colors ${
+                      isActive
+                        ? "bg-[#8cc665] text-white"
+                        : "text-gray-700 hover:text-[#1e73be]"
+                    }`}
                   >
                     {item.name}
                   </Link>
@@ -251,47 +363,105 @@ export default function Header() {
         </div>
       </nav>
 
+      {/* Mobile Backdrop Overlay */}
       <div
         className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] transition-opacity duration-300 ${menuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
         onClick={() => setMenuOpen(false)}
       />
 
+      {/* Mobile Drawer Menu */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[280px] bg-white z-[101] shadow-2xl transition-transform duration-300 ease-in-out ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-0 left-0 h-full w-[310px] bg-white z-[101] shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="flex flex-col h-full">
-          <div className="p-5 border-b flex items-center justify-between">
-            <span className="font-black uppercase italic text-[#1e73be]">Menu</span>
-            <button onClick={() => setMenuOpen(false)} className="p-2 text-gray-500">
-              <X size={24} />
-            </button>
+        <div className="p-5 border-b flex items-center justify-between bg-zinc-50">
+          <span className="font-black uppercase italic text-[#1e73be] tracking-wider text-base">Menu Navigazione</span>
+          <button onClick={() => setMenuOpen(false)} className="p-2 text-gray-500 hover:text-zinc-800">
+            <X size={24} />
+          </button>
+        </div>
+
+        <nav className="flex-1 p-4 overflow-y-auto space-y-2">
+          <Link
+            href="/"
+            onClick={() => setMenuOpen(false)}
+            className={`block p-3.5 rounded-2xl font-bold uppercase text-xs tracking-wide ${pathname === "/" ? "bg-[#8cc665] text-white" : "text-gray-700 hover:bg-gray-50"}`}
+          >
+            Home
+          </Link>
+
+          {/* Mobile Shop Collapsible Category Tree */}
+          <div className="border border-zinc-200/80 rounded-2xl overflow-hidden bg-zinc-50">
+            <Link
+              href="/shop"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-between p-3.5 font-black uppercase text-xs tracking-wide text-[#1e73be] bg-blue-50/50 border-b border-zinc-200/60"
+            >
+              <span className="flex items-center gap-2">
+                <Store size={16} /> Tutti i Prodotti Shop
+              </span>
+              <span className="text-[10px] bg-[#1e73be] text-white px-2 py-0.5 rounded-md font-bold">Vedi Tutti</span>
+            </Link>
+
+            <div className="p-2 space-y-1">
+              {SHOP_CATEGORIES.map((cat) => {
+                const isExpanded = mobileExpandedCat === cat.slug;
+                return (
+                  <div key={cat.slug} className="rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setMobileExpandedCat(isExpanded ? null : cat.slug)}
+                      className="w-full flex items-center justify-between p-2.5 text-xs font-bold text-zinc-800 hover:bg-zinc-200/60 rounded-xl transition"
+                    >
+                      <span>{cat.title}</span>
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? "rotate-180 text-[#1e73be]" : "text-zinc-400"}`} />
+                    </button>
+
+                    {isExpanded && (
+                      <div className="pl-3 pr-2 py-2 bg-white space-y-3 rounded-xl border border-zinc-100 my-1">
+                        {cat.subcategories.map((sub) => (
+                          <div key={sub.name} className="space-y-1">
+                            <Link
+                              href={`/shop?cat=${encodeURIComponent(cat.slug)}&sub=${encodeURIComponent(sub.name)}`}
+                              onClick={() => setMenuOpen(false)}
+                              className="text-[11px] font-black uppercase text-zinc-800 hover:text-[#1e73be] block border-l-2 border-[#8cc665] pl-2"
+                            >
+                              {sub.name}
+                            </Link>
+
+                            {sub.items && sub.items.length > 0 && (
+                              <div className="pl-3 flex flex-wrap gap-1 pt-1">
+                                {sub.items.map((item) => (
+                                  <Link
+                                    key={item}
+                                    href={`/shop?search=${encodeURIComponent(item)}`}
+                                    onClick={() => setMenuOpen(false)}
+                                    className="text-[10px] font-semibold bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-md hover:bg-blue-50 hover:text-[#1e73be]"
+                                  >
+                                    {item}
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <nav className="flex-1 p-4">
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/"
-                  onClick={() => setMenuOpen(false)}
-                  className={`block p-4 rounded-xl font-bold uppercase text-sm tracking-wide ${pathname === "/" ? "bg-[#8cc665] text-white" : "text-gray-700 hover:bg-gray-50"}`}
-                >
-                  Home
-                </Link>
-              </li>
-              {navLinks.map((item) => (
-                <li key={item.name}>
-                  <Link
-                    href={item.link}
-                    onClick={() => setMenuOpen(false)}
-                    className={`block p-4 rounded-xl font-bold uppercase text-sm tracking-wide ${pathname === item.link ? "bg-[#8cc665] text-white" : "text-gray-700 hover:bg-gray-50"}`}
-                  >
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
+          {navLinks.map((item) => (
+            <Link
+              key={item.name}
+              href={item.link}
+              onClick={() => setMenuOpen(false)}
+              className={`block p-3.5 rounded-2xl font-bold uppercase text-xs tracking-wide ${pathname === item.link ? "bg-[#8cc665] text-white" : "text-gray-700 hover:bg-gray-50"}`}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </nav>
       </aside>
     </header>
   );
