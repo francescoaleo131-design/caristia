@@ -16,7 +16,7 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
   const [useGiftCard, setUseGiftCard] = useState(true);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  const subtotale = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const subtotale = items.reduce((acc, item) => acc + (item.scontato * item.quantity), 0);
 
   const scontoGiftCard = useGiftCard 
     ? Math.min(subtotale, giftCardBalance) 
@@ -98,7 +98,7 @@ export default function CarrelloClient({ giftCardBalance }: CarrelloClientProps)
                 <img src={item.image_url} alt={item.name} className="w-20 h-20 object-contain" />
                 <div className="flex-grow">
                   <h2 className="text-lg font-bold">{item.name}</h2>
-                  <p className="text-blue-600 font-semibold">{item.price.toFixed(2)}€</p>
+                  <p className="text-blue-600 font-semibold">{item.scontato.toFixed(2)}€</p>
                 </div>
                 <div className="flex items-center border border-slate-200 rounded-lg bg-white">
                   <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="px-3 py-1 hover:bg-slate-50">-</button>
