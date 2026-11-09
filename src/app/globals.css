@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -153,13 +152,14 @@ select {
   html {
     @apply font-sans;
   }
+}
+
 [class*="WidgetTitle__HeaderContainer"], 
 [class*="BadgeContainer"],
 div[href*="elfsight.com"], 
 a[href*="elfsight.com"] {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    height: 0 !important;
-}
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  height: 0 !important;
 }
