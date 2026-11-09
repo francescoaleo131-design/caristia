@@ -7,12 +7,23 @@ interface Prodotto {
   name: string;
   price: number;
   category: string | null;
-  image_url: string;
+  image_url: string | null;
+  sku: string | null; 
 }
 
 interface NegozioPageProps {
   searchParams: Promise<{ search?: string; cat?: string; sub?: string }>;
 }
+
+const getCloudinaryImageUrl = (sku: string | null, fallbackUrl: string | null) => {
+  const CLOUD_NAME = 'tuo-cloud-name';
+
+  if (sku) {
+    return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/w_400,f_auto,q_auto/${sku}`;
+  }
+
+  return fallbackUrl || '/images/placeholder.jpg';
+};
 
 export default async function NegozioPage({ searchParams }: NegozioPageProps) {
   const { search, cat, sub } = await searchParams;
@@ -152,36 +163,41 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
               </div>
             ) : prodotti && prodotti.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-                {prodotti.map((p: Prodotto) => (
-                  <Link href={`/shop/${p.id}`} key={p.id} className="group cursor-pointer">
-                    <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden mb-4 transition-all group-hover:shadow-xl group-hover:shadow-slate-100/80">
-                      <div className="aspect-square relative overflow-hidden bg-slate-50">
-                        <img
-                          src={p.image_url}
-                          alt={p.name}
-                          className="object-contain w-full h-full p-4 transition-transform duration-500 group-hover:scale-110"
-                        />
-                      </div>
-                    </div>
+                {prodotti.map((p: Prodotto) => {
+                  // Genera l'URL dell'immagine usando lo SKU su Cloudinary
+                  const imageUrl = getCloudinaryImageUrl(p.sku, p.image_url);
 
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">
-                        {p.category || 'Generale'}
-                      </p>
-                      <h2 className="text-lg font-bold text-slate-800 group-hover:text-[#1e73be] transition-colors leading-tight">
-                        {p.name}
-                      </h2>
-                      <div className="flex items-center justify-between pt-2">
-                        <span className="text-2xl font-black text-slate-900">
-                          {p.price.toFixed(2)}€
-                        </span>
-                        <span className="text-[#1e73be] text-xs font-black uppercase tracking-wider group-hover:underline">
-                          Dettagli →
-                        </span>
+                  return (
+                    <Link href={`/shop/${p.id}`} key={p.id} className="group cursor-pointer">
+                      <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden mb-4 transition-all group-hover:shadow-xl group-hover:shadow-slate-100/80">
+                        <div className="aspect-square relative overflow-hidden bg-slate-50">
+                          <img
+                            src={imageUrl}
+                            alt={p.name}
+                            className="object-contain w-full h-full p-4 transition-transform duration-500 group-hover:scale-110"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                          {p.category || 'Generale'}
+                        </p>
+                        <h2 className="text-lg font-bold text-slate-800 group-hover:text-[#1e73be] transition-colors leading-tight">
+                          {p.name}
+                        </h2>
+                        <div className="flex items-center justify-between pt-2">
+                          <span className="text-2xl font-black text-slate-900">
+                            {p.price.toFixed(2)}€
+                          </span>
+                          <span className="text-[#1e73be] text-xs font-black uppercase tracking-wider group-hover:underline">
+                            Dettagli →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div className="border-2 border-dashed border-slate-200 rounded-3xl p-16 text-center space-y-3">
