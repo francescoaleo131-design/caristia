@@ -90,7 +90,7 @@ export default async function ProdottoPage({ params }: Props) {
             </h1>
 
             <div className="text-4xl font-black text-blue-600 mb-8 tracking-tighter">
-              {prodotto.price.toFixed(2)}€
+              {prodotto.scontato.toFixed(2)}€
             </div>
 
             <div className="h-px bg-slate-100 w-full mb-8"></div>

@@ -5,7 +5,7 @@ import { SHOP_CATEGORIES } from '@/config/categories';
 interface Prodotto {
   id: string;
   name: string;
-  price: number;
+  scontato: number;
   category: string | null;
   image_url: string | null;
   sku: string | null; 
@@ -188,7 +188,7 @@ export default async function NegozioPage({ searchParams }: NegozioPageProps) {
                         </h2>
                         <div className="flex items-center justify-between pt-2">
                           <span className="text-2xl font-black text-slate-900">
-                            {(p.price ?? 0).toFixed(2)}€
+                            {(p.scontato ?? 0).toFixed(2)}€
                           </span>
                           <span className="text-[#1e73be] text-xs font-black uppercase tracking-wider group-hover:underline">
                             Dettagli →
